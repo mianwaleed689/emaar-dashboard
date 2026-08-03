@@ -437,6 +437,9 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
   /* How many filters are narrowing the list. Shown on the Filters button so it
      is obvious the list is not everything — the commonest confusion in any
      filtered table is not knowing a filter is on. */
+  /* With a lead open the list becomes a rail rather than a squeezed table. */
+  const compact = Boolean(selectedLead);
+
   const activeFilterCount = [activeStage,filterService,filterSource,filterBudget,
                              filterAgent,filterManager].filter(v=>v&&v!=="all").length;
   const clearFilters = useCallback(()=>{
@@ -1032,7 +1035,13 @@ try{
       )}
 
       {/*  MAIN CONTENT  */}
-      <div style={{display:"grid",gridTemplateColumns:selectedLead?"1fr 360px":"1fr",gap:0,alignItems:"start"}}>
+      {/* When a lead is open, the panel is what is being read and the list is
+          only there to switch between people. So the list gets a fixed narrow
+          rail and the panel takes everything else. The other way round left
+          580px of empty rail beside a 400px panel doing all the work. */}
+      <div style={{display:"grid",
+                   gridTemplateColumns:selectedLead?"296px minmax(0,1fr)":"1fr",
+                   gap:14,alignItems:"start"}}>
 
         {/*  TABLE VIEW  ─────────────────────────────────────────────────────
             With no leads at all, the board drew eleven empty stage columns each
@@ -1042,7 +1051,13 @@ try{
         {(view==="table"||allLeads.length===0)&&(
           <div>
             {/* Column headings over nothing are furniture. They appear with the rows. */}
-            {allLeads.length>0&&(
+            {/* COLUMN HEADINGS ONLY WHEN THERE ARE COLUMNS.
+                With a lead open the list has about 690px, and the fixed columns
+                alone came to 672px — so every cell collapsed into its neighbour
+                and the headings ran together as "CLIENTSTAGE". A master–detail
+                list becomes a rail when the detail opens; it does not try to
+                stay a table in a third of the width. */}
+            {allLeads.length>0&&!compact&&(
             <div style={{display:"grid",gridTemplateColumns:"2.4fr 118px 130px 108px 128px 140px 48px",padding:"8px 4px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
               {/* The ID column is gone. It showed the last four characters of a
                   Firestore document id — "#7JpU" — which is not a reference
@@ -1081,10 +1096,37 @@ try{
               const isGV=parseFloat(lead.budget||0)>=GV_MIN;
               return (
                 <div key={lead.id||i} onClick={()=>setSelectedLead(isSel?null:lead)}
-                  style={{display:"grid",gridTemplateColumns:"2.4fr 118px 130px 108px 128px 140px 48px",padding:"11px 4px",borderBottom:"1px solid "+T.border+"40",cursor:"pointer",background:isSel?"rgba(212,168,67,0.04)":"transparent",transition:"background 0.1s",borderLeft:isSel?"3px solid "+T.gold:"3px solid transparent"}}
+                  style={compact
+                    ? {display:"flex",flexDirection:"column",gap:3,padding:"10px 10px",
+                       borderBottom:"1px solid "+T.border+"40",cursor:"pointer",
+                       background:isSel?"rgba(212,168,67,0.06)":"transparent",
+                       borderLeft:isSel?"3px solid "+T.gold:"3px solid transparent"}
+                    : {display:"grid",gridTemplateColumns:"2.4fr 118px 130px 108px 128px 140px 48px",padding:"11px 4px",borderBottom:"1px solid "+T.border+"40",cursor:"pointer",background:isSel?"rgba(212,168,67,0.04)":"transparent",transition:"background 0.1s",borderLeft:isSel?"3px solid "+T.gold:"3px solid transparent"}}
                   onMouseEnter={e=>!isSel&&(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
                   onMouseLeave={e=>!isSel&&(e.currentTarget.style.background="transparent")}
                 >
+                  {/* THE RAIL. Two lines: who and why, then the facts that fit.
+                      Everything else is in the panel beside it, which is where
+                      the reader is already looking. */}
+                  {compact ? (<>
+                    <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0}}>
+                      <div title={attention(lead).reason}
+                        style={{width:6,height:6,borderRadius:"50%",background:attention(lead).color,flexShrink:0}}/>
+                      <span style={{fontSize:12,fontWeight:isSel?700:500,color:T.white,
+                                    overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                        {lead.name||"Unnamed"}
+                      </span>
+                      {isGV&&<span title={`Budget is at or above AED ${(GV_MIN/1e6).toFixed(0)}M, the property route to a 10-year Golden Visa.`}
+                        style={{fontSize:8.5,color:T.gold,whiteSpace:"nowrap",flexShrink:0}}>GV</span>}
+                    </div>
+                    <div style={{display:"flex",alignItems:"baseline",gap:8,minWidth:0}}>
+                      <span style={{fontSize:9.5,color:attention(lead).color,
+                                    overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>
+                        {attention(lead).reason}
+                      </span>
+                      {lead.budget?<span style={{fontSize:9.5,color:T.gold,whiteSpace:"nowrap"}}>{fmtB(lead.budget)}</span>:null}
+                    </div>
+                  </>) : (<>
                   {/* One client column. The urgency dot moved here, beside the
                       name it describes, instead of sitting in its own column
                       next to a meaningless id. */}
@@ -1126,6 +1168,7 @@ try{
                   <div style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
                     {lead.phone&&<a href={"https://wa.me/"+clnPhone(lead.phone)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{padding:"3px 6px",borderRadius:5,background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.2)",textDecoration:"none",fontSize:9,color:"#25D366",fontWeight:700}}>WA</a>}
                   </div>
+                  </>)}
                 </div>
               );
             })}
@@ -1365,15 +1408,26 @@ try{
                 {canManage&&<button type="button" onClick={()=>setShowAssign(selectedLead)} style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(139,92,246,0.1)",border:"1px solid rgba(139,92,246,0.3)",color:"#8B5CF6",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>Reassign</button>}
                 {parseFloat(selectedLead.budget||0)>=GV_MIN&&<span style={{fontSize:10,padding:"4px 8px",borderRadius:7,background:"rgba(212,168,67,0.15)",color:T.gold,fontWeight:700}}> Golden Visa</span>}
               </div>
-              <div style={{marginTop:8}}>
-                <div style={{fontSize:9,color:T.textMuted,marginBottom:4,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Change Status</div>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                  {PIPELINE.map(p=>(
-                    <button key={p.key} type="button" onClick={()=>updateStatus(selectedLead.id,p.key)}
-                      style={{fontSize:9,padding:"3px 7px",borderRadius:8,border:"1px solid "+((selectedLead.status||"New Lead")===p.key?p.color:T.border),background:(selectedLead.status||"New Lead")===p.key?p.bg:"transparent",color:(selectedLead.status||"New Lead")===p.key?p.color:T.textMuted,cursor:"pointer",fontWeight:(selectedLead.status||"New Lead")===p.key?700:400,fontFamily:"'Outfit',sans-serif"}}>
-                      {p.key}
-                    </button>
-                  ))}
+              {/* CHANGING THE STAGE.
+                  This was eleven chips wrapped across a narrow panel — the same
+                  crowding the filter bar had, in a third of the width. One
+                  control, and each option carries its meaning as a tooltip so
+                  nobody has to guess whether a buyer is "Potential" or
+                  "Resale/buy/Rent". */}
+              <div style={{marginTop:10}}>
+                <div style={{fontSize:9,color:T.textMuted,marginBottom:4,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Stage</div>
+                <select value={selectedLead.status||"New Lead"}
+                  onChange={e=>updateStatus(selectedLead.id,e.target.value)}
+                  title={STAGE_MEANING[selectedLead.status||"New Lead"]}
+                  style={{width:"100%",padding:"7px 9px",background:"rgba(255,255,255,0.04)",
+                          border:"1px solid "+((PIPELINE.find(x=>x.key===(selectedLead.status||"New Lead"))||{}).color||T.border),
+                          borderRadius:7,color:(PIPELINE.find(x=>x.key===(selectedLead.status||"New Lead"))||{}).color||T.white,
+                          fontSize:11.5,fontWeight:700,outline:"none",cursor:"pointer",
+                          fontFamily:"'Outfit',sans-serif"}}>
+                  {PIPELINE.map(p=><option key={p.key} value={p.key}>{p.key}</option>)}
+                </select>
+                <div style={{fontSize:10,color:T.textMuted,marginTop:4,lineHeight:1.5}}>
+                  {STAGE_MEANING[selectedLead.status||"New Lead"]}
                 </div>
               </div>
             </div>
@@ -1383,6 +1437,103 @@ try{
               ))}
             </div>
             <div style={{padding:"13px 15px",flex:1}}>
+
+              {drawerTab==="profile"&&(()=>{
+                const att=attention(selectedLead);
+                return (
+                  <div>
+                    {/* Was "AI LEAD SCORE — 65/100 Warm", a number with no defensible
+                        basis. This states the fact and the next action instead. */}
+                    <div style={{padding:"10px 12px",borderRadius:8,background:att.color+"0E",border:"1px solid "+att.color+"25",marginBottom:12}}>
+                      <div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.7,marginBottom:3}}>Why this one now</div>
+                      <div style={{fontSize:13,fontWeight:700,color:att.color,lineHeight:1.35}}>{att.reason}</div>
+                      <div style={{fontSize:10,color:T.textMuted,marginTop:5,lineHeight:1.5}}>
+                        {att.urgent
+                          ? "This is one of the leads the list puts first. Log a call or a message below and it moves down."
+                          : "Nothing is overdue on this one. It sits below anything uncontacted or overdue."}
+                      </div>
+                    </div>
+                    <button type="button" onClick={()=>{setShowBook(selectedLead);setBookAt("");setBookWhat("");}}
+                      title="Arrange a viewing. It goes in your week and on this lead's history."
+                      style={{width:"100%",padding:"9px",borderRadius:8,border:"1px solid "+T.gold+"55",
+                              background:"rgba(212,168,67,0.08)",color:T.gold,fontSize:11.5,fontWeight:700,
+                              cursor:"pointer",marginBottom:12,fontFamily:"'Outfit',sans-serif"}}>
+                      Book a viewing
+                    </button>
+                    {/* Seventeen fields in one flat column meant a 660px eye-run
+                        from every label to its value, and blank rows that said
+                        nothing at all. Now three groups in two columns, and a
+                        missing value states which kind of missing it is.
+
+                        `chase` marks what an agent should go and get: no email
+                        on a buyer is a gap. The ad-tracking fields are not —
+                        a walk-in has no campaign, and printing "Campaign: not
+                        given" on every manual lead is noise, not information. */}
+                    {[
+                      {group:"How to reach them", fields:[
+                        {label:"Phone",       value:selectedLead.phone,   link:"tel:"+selectedLead.phone, chase:true},
+                        {label:"WhatsApp",    value:selectedLead.phone?"Open":null, link:selectedLead.phone?"https://wa.me/"+clnPhone(selectedLead.phone):null, ext:true},
+                        {label:"Email",       value:selectedLead.email,   link:selectedLead.email?"mailto:"+selectedLead.email:null, chase:true},
+                        {label:"Nationality", value:selectedLead.nationality||"", chase:true},
+                      ]},
+                      {group:"What they are after", fields:[
+                        {label:"Budget",      value:fmtB(selectedLead.budget), chase:true},
+                        {label:"Service",     value:selectedLead.serviceType||selectedLead.type||"", chase:true},
+                        {label:"Community",   value:selectedLead.community||"", chase:true},
+                        {label:"Timeline",    value:selectedLead.timeline||"", chase:true},
+                        {label:"Request",     value:selectedLead.requestType||""},
+                        {label:"Project",     value:selectedLead.project||""},
+                      ]},
+                      {group:"Where it came from", fields:[
+                        {label:"Source",      value:selectedLead.source||""},
+                        {label:"Channel",     value:selectedLead.channel||""},
+                        {label:"Campaign",    value:selectedLead.campaign||""},
+                        {label:"AD Name",     value:selectedLead.adName||""},
+                        {label:"AD Account",  value:selectedLead.adAccount||""},
+                        {label:"Assigned To", value:selectedLead.assignedToName||"Unassigned",color:"#8B5CF6"},
+                        {label:"Added",       value:fmtD(selectedLead.createdAt)},
+                      ]},
+                    ].map(sec=>{
+                      /* A field shows if it has a value, or if it is one an agent
+                         ought to chase. Everything else stays out of the way. */
+                      const show=sec.fields.filter(f=>f.value||f.chase);
+                      if(!show.length) return null;
+                      return (
+                        <div key={sec.group} style={{marginBottom:14}}>
+                          <div style={{fontSize:9,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase",
+                                       color:T.textMuted,marginBottom:6}}>{sec.group}</div>
+                          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",
+                                       columnGap:18,rowGap:0}}>
+                            {show.map((f,i)=>(
+                              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",
+                                                   gap:10,padding:"5px 0",borderBottom:"1px solid "+T.border+"30"}}>
+                                <span style={{fontSize:11,color:T.textMuted,flexShrink:0}}>{f.label}</span>
+                                {f.link
+                                  ?<a href={f.link} target={f.ext?"_blank":"_self"} rel="noopener noreferrer"
+                                      style={{fontSize:11,color:T.gold,fontWeight:600,textDecoration:"none",
+                                              overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.value}</a>
+                                  :f.value
+                                    ?<span style={{fontSize:11,color:f.color||T.white,fontWeight:600,textAlign:"right",
+                                                   overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.value}</span>
+                                    :<span title="Nobody has recorded this yet. Ask the client next time you speak to them."
+                                           style={{fontSize:10.5,color:T.textMuted,opacity:0.55,fontStyle:"italic",
+                                                   whiteSpace:"nowrap"}}>not asked yet</span>
+                                }
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {selectedLead.comment&&<div style={{marginTop:9,padding:"8px 10px",background:"rgba(255,255,255,0.03)",borderRadius:7,fontSize:11,color:T.textSecondary,lineHeight:1.6}}><div style={{fontSize:9,color:T.textMuted,marginBottom:3,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Comment</div>{selectedLead.comment}</div>}
+                  </div>
+                );
+              })()}
+
+              {/* Removing somebody sits at the foot of their record, after
+                  everything you would want to read before deciding. It was
+                  the first control under the tabs, above the client's own
+                  details, which is the wrong thing to offer first. */}
               {drawerTab==="profile"&&canManage&&(
                 <div style={{marginBottom:12}}>
                   {confirmDelete?.id===selectedLead.id ? (
@@ -1407,59 +1558,6 @@ try{
                 </div>
               )}
 
-              {drawerTab==="profile"&&(()=>{
-                const att=attention(selectedLead);
-                return (
-                  <div>
-                    {/* Was "AI LEAD SCORE — 65/100 Warm", a number with no defensible
-                        basis. This states the fact and the next action instead. */}
-                    <div style={{padding:"10px 12px",borderRadius:8,background:att.color+"0E",border:"1px solid "+att.color+"25",marginBottom:12}}>
-                      <div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.7,marginBottom:3}}>Why this one now</div>
-                      <div style={{fontSize:13,fontWeight:700,color:att.color,lineHeight:1.35}}>{att.reason}</div>
-                      <div style={{fontSize:10,color:T.textMuted,marginTop:5,lineHeight:1.5}}>
-                        {att.urgent
-                          ? "This is one of the leads the list puts first. Log a call or a message below and it moves down."
-                          : "Nothing is overdue on this one. It sits below anything uncontacted or overdue."}
-                      </div>
-                    </div>
-                    <button type="button" onClick={()=>{setShowBook(selectedLead);setBookAt("");setBookWhat("");}}
-                      title="Arrange a viewing. It goes in your week and on this lead's history."
-                      style={{width:"100%",padding:"9px",borderRadius:8,border:"1px solid "+T.gold+"55",
-                              background:"rgba(212,168,67,0.08)",color:T.gold,fontSize:11.5,fontWeight:700,
-                              cursor:"pointer",marginBottom:12,fontFamily:"'Outfit',sans-serif"}}>
-                      Book a viewing
-                    </button>
-                    {[
-                      {label:"Phone",       value:selectedLead.phone,   link:"tel:"+selectedLead.phone},
-                      {label:"WhatsApp",    value:selectedLead.phone?"Open":null, link:selectedLead.phone?"https://wa.me/"+clnPhone(selectedLead.phone):null, ext:true},
-                      {label:"Email",       value:selectedLead.email,   link:selectedLead.email?"mailto:"+selectedLead.email:null},
-                      {label:"Budget",      value:fmtB(selectedLead.budget)},
-                      {label:"Service",     value:selectedLead.serviceType||selectedLead.type||""},
-                      {label:"Request",     value:selectedLead.requestType||""},
-                      {label:"Project",     value:selectedLead.project||""},
-                      {label:"Source",      value:selectedLead.source||""},
-                      {label:"Channel",     value:selectedLead.channel||""},
-                      {label:"Campaign",    value:selectedLead.campaign||""},
-                      {label:"AD Name",     value:selectedLead.adName||""},
-                      {label:"AD Account",  value:selectedLead.adAccount||""},
-                      {label:"Nationality", value:selectedLead.nationality||""},
-                      {label:"Community",   value:selectedLead.community||""},
-                      {label:"Timeline",    value:selectedLead.timeline||""},
-                      {label:"Assigned To", value:selectedLead.assignedToName||"Unassigned",color:"#8B5CF6"},
-                      {label:"Added",       value:fmtD(selectedLead.createdAt)},
-                    ].map((f,i)=>(
-                      <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid "+T.border+"30"}}>
-                        <span style={{fontSize:11,color:T.textMuted,flexShrink:0}}>{f.label}</span>
-                        {f.link
-                          ?<a href={f.link} target={f.ext?"_blank":"_self"} rel="noopener noreferrer" style={{fontSize:11,color:T.gold,fontWeight:600,textDecoration:"none"}}>{f.value}</a>
-                          :<span style={{fontSize:11,color:f.color||T.white,fontWeight:600,textAlign:"right",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis"}}>{f.value||""}</span>
-                        }
-                      </div>
-                    ))}
-                    {selectedLead.comment&&<div style={{marginTop:9,padding:"8px 10px",background:"rgba(255,255,255,0.03)",borderRadius:7,fontSize:11,color:T.textSecondary,lineHeight:1.6}}><div style={{fontSize:9,color:T.textMuted,marginBottom:3,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Comment</div>{selectedLead.comment}</div>}
-                  </div>
-                );
-              })()}
               {drawerTab==="activity"&&(
                 <div>
                   <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:12,maxHeight:260,overflowY:"auto"}}>
