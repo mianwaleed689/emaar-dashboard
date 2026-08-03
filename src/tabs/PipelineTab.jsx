@@ -127,6 +127,9 @@ export default function PipelineTab({
   const blocked = useMemo(() => open.map(d => ({ d, why: canAdvance(d) }))
     .filter(x => !x.why.ok && x.why.missing.length), [open]);
 
+  /* See the blockers panel below for why this is not simply blocked.length. */
+  const showBlocked = blocked.length > 0 && all.length > 1;
+
   const expiring = useMemo(() => open.flatMap(d =>
     expiringDocuments(d).filter(e => e.daysLeft <= 14).map(e => ({ ...e, deal: d }))
   ).sort((a, b) => a.daysLeft - b.daysLeft), [open]);
@@ -486,8 +489,20 @@ export default function PipelineTab({
         {moneyScope === "own" && <Figure label="Owed to you" value={fmt(myMoney.owedToYou)} accent="#10B981" note={myMoney.note} />}
       </div>
 
-      {/* WHAT IS HOLDING DEALS UP */}
-      {(blocked.length > 0 || expiring.length > 0) && (
+      {/* WHAT IS HOLDING DEALS UP
+
+          A summary that lists everything it summarises is not a summary. With
+          a single deal on the books, this panel printed the same sentence the
+          deal card below it already prints, and the department strip above
+          prints a third time — an agent reads three lines and looks for three
+          problems. The blocked list therefore appears once there is more than
+          one deal to condense; it still spans all three journeys, which the
+          list below does not, so it earns its place as soon as it has anything
+          to add.
+
+          An expiring or expired document is not summary — it is a deadline,
+          and it shows whatever the count. */}
+      {(showBlocked || expiring.length > 0) && (
         <div style={{ ...card, margin: "0 4px 12px", padding: "12px 14px" }}>
           <div style={{ ...muted, marginBottom: 8 }}>What is holding deals up</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -502,7 +517,7 @@ export default function PipelineTab({
                 </span>
               </div>
             ))}
-            {blocked.slice(0, 8).map(({ d, why }) => (
+            {showBlocked && blocked.slice(0, 8).map(({ d, why }) => (
               <div key={d.id} onClick={() => { setJourney(d.journey); setSelected(d); }}
                    style={{ display: "flex", gap: 9, alignItems: "baseline", cursor: "pointer" }}>
                 <span style={{ color: T.textMuted, fontSize: 10.5, fontWeight: 700, flexShrink: 0 }}>Blocked</span>
@@ -537,14 +552,20 @@ export default function PipelineTab({
         </button>
       </div>
 
-      {/* STAGE RAIL */}
+      {/* STAGE RAIL
+
+          Eleven stages at a 92px floor need 1062px inside a container that has
+          about 985px, so the rail scrolled sideways and sliced the last card
+          down the middle. A funnel has to read as one left-to-right
+          progression — you cannot see the shape of it through a scrollbar.
+          The cards shrink to fit instead, and the labels wrap. */}
       {mine.length > 0 && (
-        <div style={{ display: "flex", gap: 5, padding: "12px 4px", overflowX: "auto" }}>
+        <div style={{ display: "flex", gap: 5, padding: "12px 4px" }}>
           {J.stages.map(s => {
             const n = mine.filter(d => d.stage === s.key).length;
             return (
               <div key={s.key} title={s.what}
-                style={{ flex: "1 0 92px", padding: "8px 9px", borderRadius: 8, textAlign: "center",
+                style={{ flex: "1 1 0", minWidth: 0, padding: "8px 6px", borderRadius: 8, textAlign: "center",
                          background: n ? `${J.colour}10` : "rgba(255,255,255,0.02)",
                          border: `1px solid ${n ? J.colour + "40" : T.border}` }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: n ? J.colour : T.textMuted, fontFamily: "'Fraunces',serif" }}>{n}</div>
