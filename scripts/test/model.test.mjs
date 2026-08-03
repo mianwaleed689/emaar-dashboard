@@ -12,6 +12,8 @@ import { JOURNEYS, DOCUMENTS, canAdvance, requiredDocuments, conditionalDocument
          isComplete } from "../../src/crm/model/journeys.js";
 import { computeCommission, dealTotals, agentStatement, agencyStatement,
          SIDES_FOR, fmt } from "../../src/crm/model/commission.js";
+import { canAdvertise, complianceProgress, listingCompliance, PORTALS,
+         POSTED_NOTE, LISTING_REQUIREMENTS } from "../../src/crm/model/listing.js";
 import { LAW, SICK_TOTAL_DAYS, annualLeaveBalance, sickLeaveEntitlement,
          probationStatus, noticePeriod, gratuity, finalSettlement,
          complianceRegister, canBroker } from "../../src/crm/model/hr.js";
@@ -23,7 +25,16 @@ const ok = (name, cond, got) => {
 };
 const near = (a, b, tol = 1) => Math.abs(a - b) <= tol;
 const head = t => console.log(`\n── ${t} ${"─".repeat(Math.max(0, 60 - t.length))}`);
-const ago  = n => new Date(Date.now() - n * 86400000).toISOString();
+
+/* One frozen instant for the whole run.
+   `ago(-9)` used to build a date from Date.now(), and the function under test
+   then called Date.now() again a few milliseconds later — so a gap of 9 days
+   measured 8.9999 days, Math.floor took it to 8, and "expires in 9 days"
+   failed at random. A test that fails intermittently is worse than no test,
+   because it trains you to re-run instead of read. Every date here is measured
+   from NOW, and NOW is passed into anything that would otherwise ask the clock. */
+const NOW  = Date.now();
+const ago  = n => new Date(NOW - n * 86400000).toISOString();
 
 /* ════════════════════════ JOURNEYS ════════════════════════ */
 head("JOURNEYS — the deal cannot skip its paperwork");
@@ -52,14 +63,14 @@ ok("  explains the Land Department will refuse",
    appointments. */
 const nocOld = { journey: "secondary", stage: "trustee",
                  documents: { NOC: { receivedAt: ago(34) } } };
-const exp = expiringDocuments(nocOld);
+const exp = expiringDocuments(nocOld, NOW);
 ok("a 34-day-old NOC reports as expired", exp[0]?.expired === true, exp[0]);
 ok("  and says how many days ago", /expired 4 days ago/.test(exp[0]?.note || ""), exp[0]?.note);
 
 const nocFresh = { journey: "secondary", stage: "trustee",
                    documents: { NOC: { receivedAt: ago(26) } } };
-ok("a 26-day-old NOC warns with 4 days left", expiringDocuments(nocFresh)[0]?.daysLeft === 4,
-   expiringDocuments(nocFresh)[0]?.daysLeft);
+ok("a 26-day-old NOC warns with 4 days left", expiringDocuments(nocFresh, NOW)[0]?.daysLeft === 4,
+   expiringDocuments(nocFresh, NOW)[0]?.daysLeft);
 
 ok("resale has no EOI stage", !JOURNEYS.secondary.stages.some(s => s.key === "eoi"));
 ok("resale has no SPA stage", !JOURNEYS.secondary.stages.some(s => s.key === "spa"));
@@ -147,10 +158,10 @@ ok("sick leave totals 90 days", SICK_TOTAL_DAYS === 90);
 ok("  in bands of 15 / 30 / 45",
    LAW.sickFullPayDays === 15 && LAW.sickHalfPayDays === 30 && LAW.sickUnpaidDays === 45);
 
-const newJoiner = annualLeaveBalance({ joinedAt: ago(120), takenDays: 0 });
+const newJoiner = annualLeaveBalance({ joinedAt: ago(120), takenDays: 0, asOf: NOW });
 ok("a 4-month joiner has not vested 30 days", newJoiner.vested === false);
 ok("  they have accrued about 9", near(newJoiner.accrued, 9, 2), newJoiner.accrued);
-const settled = annualLeaveBalance({ joinedAt: ago(800), takenDays: 12, carriedOver: 5 });
+const settled = annualLeaveBalance({ joinedAt: ago(800), takenDays: 12, carriedOver: 5, asOf: NOW });
 ok("a settled employee has 30 + 5 − 12 = 23 left", settled.remaining === 23, settled.remaining);
 
 /* The calculation payroll gets wrong by hand: bands run ACROSS one absence. */
@@ -178,7 +189,7 @@ const sickOver = sickLeaveEntitlement({ daysRequested: 20, alreadyTakenThisYear:
 ok("the 90-day annual limit is enforced", sickOver.allowed === 5 && sickOver.refused === 15,
    { allowed: sickOver.allowed, refused: sickOver.refused });
 
-const prob = probationStatus({ joinedAt: ago(30), probationMonths: 9 });
+const prob = probationStatus({ joinedAt: ago(30), probationMonths: 9, asOf: NOW });
 ok("a 9-month probation is capped at 6", prob.months === 6, prob.months);
 ok("  with a warning explaining why", /cannot be extended or renewed/.test(prob.warning || ""), prob.warning);
 
@@ -189,26 +200,26 @@ ok("120 days' notice is capped at 90",
 ok("60 days agreed is honoured", noticePeriod({ contractNoticeDays: 60 }).applied === 60);
 
 /* GRATUITY — basic only, 21 days/yr for 5 years then 30, capped at 2 years' pay. */
-const g3 = gratuity({ basicMonthlySalary: 12000, joinedAt: ago(Math.round(3 * 365.25)) });
+const g3 = gratuity({ basicMonthlySalary: 12000, joinedAt: ago(Math.round(3 * 365.25)), lastDay: NOW });
 ok("3 years on AED 12,000 basic = 63 days = AED 25,200",
    near(g3.amount, 25200, 60), g3.amount);
 ok("  computed on basic only, at AED 400 a day", g3.dailyRate === 400, g3.dailyRate);
 
-const g8 = gratuity({ basicMonthlySalary: 12000, joinedAt: ago(Math.round(8 * 365.25)) });
+const g8 = gratuity({ basicMonthlySalary: 12000, joinedAt: ago(Math.round(8 * 365.25)), lastDay: NOW });
 ok("8 years = 5×21 + 3×30 = 195 days = AED 78,000", near(g8.amount, 78000, 120), g8.amount);
 
-const g11m = gratuity({ basicMonthlySalary: 12000, joinedAt: ago(330) });
+const g11m = gratuity({ basicMonthlySalary: 12000, joinedAt: ago(330), lastDay: NOW });
 ok("under one year of service earns no gratuity", g11m.amount === 0, g11m.amount);
 ok("  and says why", /below 1 year of continuous service/.test(g11m.note), g11m.note);
 
-const gLong = gratuity({ basicMonthlySalary: 10000, joinedAt: ago(Math.round(30 * 365.25)) });
+const gLong = gratuity({ basicMonthlySalary: 10000, joinedAt: ago(Math.round(30 * 365.25)), lastDay: NOW });
 ok("30 years is capped at 2 years' pay = AED 240,000", gLong.amount === 240000, gLong.amount);
 ok("  and reports that it was capped", gLong.capped === true);
 ok("  the workings show the cap", gLong.workings.some(w => /capped/.test(w)), gLong.workings);
 
 const fs = finalSettlement({
   basicMonthlySalary: 12000, monthlySalary: 20000,
-  joinedAt: ago(Math.round(3 * 365.25)), unusedLeaveDays: 12,
+  joinedAt: ago(Math.round(3 * 365.25)), lastDay: NOW, unusedLeaveDays: 12,
   outstandingCommission: 45000, deductions: [{ label: "Salary advance", amount: 5000 }],
 });
 ok("a final settlement adds gratuity + leave + commission − deductions",
@@ -223,7 +234,7 @@ const reg = complianceRegister([
   { id: "u1", name: "Sara", kind: "person", expiries: { brn: ago(-12), visa: ago(-200) } },
   { id: "u2", name: "Omar", kind: "person", expiries: { brn: ago(9) } },        // lapsed
   { id: "o1", name: "The agency", kind: "org", expiries: { orn: ago(-45) } },
-]);
+], NOW);
 ok("an expired broker card is surfaced", reg.expired === 1, reg.expired);
 ok("  worst first", reg.rows[0].subject === "Omar", reg.rows[0].subject);
 ok("  in words", /Broker card \(BRN\) for Omar expired 9 days ago/.test(reg.rows[0].note), reg.rows[0].note);
@@ -232,14 +243,81 @@ ok("a visa 200 days out is not raised yet", !reg.rows.some(r => r.key === "visa"
 ok("the headline names the expired count", /has already expired/.test(reg.headline), reg.headline);
 
 ok("an agent with a lapsed BRN cannot broker",
-   canBroker({ name: "Omar", expiries: { brn: ago(9) } }).ok === false);
+   canBroker({ name: "Omar", expiries: { brn: ago(9) } }, NOW).ok === false);
 ok("  and is told their listings are affected",
-   /listing held under it is not compliant/.test(canBroker({ name: "Omar", expiries: { brn: ago(9) } }).reason));
+   /listing held under it is not compliant/.test(canBroker({ name: "Omar", expiries: { brn: ago(9) } }, NOW).reason));
 ok("an agent 20 days from expiry can still broker, with a warning",
-   canBroker({ name: "Sara", expiries: { brn: ago(-20) } }).ok === true &&
-   canBroker({ name: "Sara", expiries: { brn: ago(-20) } }).warn === true);
+   canBroker({ name: "Sara", expiries: { brn: ago(-20) } }, NOW).ok === true &&
+   canBroker({ name: "Sara", expiries: { brn: ago(-20) } }, NOW).warn === true);
 ok("an agent with no BRN recorded cannot broker",
-   canBroker({ name: "New", expiries: {} }).ok === false);
+   canBroker({ name: "New", expiries: {} }, NOW).ok === false);
+
+/* ════════════════════════ LISTINGS ════════════════════════ */
+head("LISTINGS — nothing may be advertised without the paperwork");
+
+const v0 = canAdvertise({}, null, null, NOW);
+ok("a bare listing cannot be advertised", v0.ok === false);
+ok("  every reason is given, not just the first", v0.blocking.length === 2, v0.blocking.length);
+ok("  Form A is named", v0.blocking.some(x => x.key === "formA"));
+ok("  the Trakheesi permit is named", v0.blocking.some(x => x.key === "permitNumber"));
+ok("  the summary fits one row", /2 things stop this being advertised/.test(v0.summary), v0.summary);
+
+ok("Form A alone is not enough — the permit is still missing",
+   canAdvertise({ formA: { signedAt: ago(3) } }, null, null, NOW).blocking.map(x => x.key).join() === "permitNumber",
+   canAdvertise({ formA: { signedAt: ago(3) } }, null, null, NOW).blocking.map(x => x.key));
+
+const good = { formA: { signedAt: ago(10) }, permitNumber: "71-2026-4412", permitExpiresAt: ago(-40) };
+ok("Form A + a live permit clears it", canAdvertise(good, null, null, NOW).ok === true, canAdvertise(good, null, null, NOW).blocking);
+
+const expired = { ...good, permitExpiresAt: ago(6) };
+const ve = canAdvertise(expired, null, null, NOW);
+ok("an expired permit blocks it", ve.ok === false);
+ok("  saying how long ago, and that adverts are now a violation",
+   /expired 6 days ago/.test(ve.blocking[0].fail) && /violation/.test(ve.blocking[0].fail),
+   ve.blocking[0].fail);
+
+const vs = canAdvertise({ ...good, permitExpiresAt: ago(-9) }, null, null, NOW);
+ok("a permit 9 days out warns but does not block", vs.ok === true && vs.warnings.length === 1);
+ok("  with the days remaining", /expires in 9 days/.test(vs.warnings[0].note), vs.warnings[0].note);
+
+ok("a permit with no expiry recorded warns nobody will be told",
+   /nobody will be warned/.test(canAdvertise({ formA: { signedAt: ago(10) }, permitNumber: "X" }, null, null, NOW).warnings[0]?.note || ""));
+
+/* The link between HR and listings — why they share a database. */
+const vb = canAdvertise(good, { name: "Omar", expiries: { brn: ago(5) } }, null, NOW);
+ok("a lapsed broker card blocks that agent's listing", vb.ok === false);
+ok("  naming the broker card", vb.blocking.some(x => x.key === "brokerValid"));
+ok("an agent 20 days from BRN expiry warns only",
+   canAdvertise(good, { name: "Sara", expiries: { brn: ago(-20) } }, null, NOW).ok === true);
+ok("an expired agency ORN blocks everything",
+   canAdvertise(good, null, { expiries: { orn: ago(15) } }, NOW).ok === false);
+
+const prog = complianceProgress(good, { name: "S", expiries: { brn: ago(-200) } });
+ok("progress is 4 of 4 when everything is in place", prog.done === 4 && prog.total === 4, prog);
+
+/* The number that should frighten an owner. */
+const agency = listingCompliance(
+  [{ id: "1", agentId: "a", ...good, postedTo: ["pf", "bayut"] },   // live and compliant
+   { id: "2", agentId: "a", ...expired, postedTo: ["pf"] },         // LIVE ON AN EXPIRED PERMIT
+   { id: "3", agentId: "a" }],                                      // draft, nothing done
+  { a: { name: "Sara", expiries: { brn: ago(-300) } } }, NOW);
+ok("an agency is told how many adverts are running that should not be",
+   agency.violating === 1, agency.violating);
+ok("  and to take them down",
+   /marked as posted but/.test(agency.headline) && /[Tt]ake it down/.test(agency.headline), agency.headline);
+/* Of the three: one is live and compliant, one is live on an expired permit,
+   one is an untouched draft. So one clear and two blocked — and only the live
+   one that breaches counts as a violation. A draft nobody advertised is not. */
+ok("  one is clear, two are blocked", agency.clear === 1 && agency.blocked === 2,
+   { clear: agency.clear, blocked: agency.blocked });
+ok("  a draft that was never advertised is not a violation",
+   agency.violatingRows.every(r => r.listing.id !== "3"));
+
+ok("the portal buttons state plainly that nothing is published for you",
+   /does not publish to portals/.test(POSTED_NOTE) && /changes nothing on the portal/.test(POSTED_NOTE));
+ok("three portals are offered", PORTALS.length === 3, PORTALS.length);
+ok("every requirement explains itself in plain words",
+   LISTING_REQUIREMENTS.every(r => r.what.length > 30 && r.fail.length > 30));
 
 console.log(`\n${"═".repeat(64)}`);
 console.log(`  ${pass} passed, ${fail} failed`);

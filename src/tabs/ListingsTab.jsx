@@ -8,6 +8,8 @@ import { SvgIcons } from "../components/Icons";
 import TabIntro from "../components/TabIntro";
 import TabProvenance from "../components/TabProvenance";
 import { tabCopy } from "../data/tabCopy";
+import { canAdvertise, listingCompliance, complianceProgress,
+         PORTALS as COMPLIANT_PORTALS, POSTED_NOTE } from "../crm/model/listing";
 function ListingsTab({ liveNeighbourhoods=[],
   listings, listingsLoading,
   listingForm, setListingForm,
@@ -73,12 +75,14 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
                   agentId:   firebaseUser?.uid,
                   agentName: userName || firebaseUser?.email,
                   orgId:     orgId || null,
-                  publishedTo: [],
+                  postedTo: [],
+                  formA: listingForm.formASignedAt ? { signedAt: listingForm.formASignedAt } : null,
+                  permitExpiresAt: listingForm.permitExpiresAt || null,
                   views: 0, leads: 0,
                   createdAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),
                 });
-                setListingForm({ title:"", type:"Apartment", beds:"1", baths:"1", size:"", price:"", community:"", building:"", unitNo:"", floor:"", description:"", permitNo:"", status:"Available", furnishing:"Unfurnished", offplan:false });
+                setListingForm({ title:"", type:"Apartment", beds:"1", baths:"1", size:"", price:"", community:"", building:"", unitNo:"", floor:"", description:"", permitNo:"", permitExpiresAt:"", formASignedAt:"", status:"Available", furnishing:"Unfurnished", offplan:false });
                 setShowNewListing(false);
               } catch(e) { console.error(e); }
               setListingFormLoading(false);
@@ -93,19 +97,59 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
             };
 
             // Mark published to portal
-            const markPublished = async (id, portalKey) => {
+            /* RECORDING THAT YOU POSTED IT — NOT PUBLISHING IT.
+               This ran as `window.open(portal.url); markPublished(...)`: it
+               opened the portal's generic "post a property" page and immediately
+               wrote publishedTo with a green tick beside it. Nothing had been
+               posted. The agency's own database then claimed the listing was
+               live on Property Finder.
+
+               In a business where advertising without a valid permit is a RERA
+               violation, a false record of having advertised is the worst thing
+               to keep — it is the record you would be judged on.
+
+               Two changes. The wording now says what it is: you posted it, and
+               this notes that you did. And it refuses when the listing does not
+               meet the advertising rules, because ticking "posted" on a listing
+               with no permit records a violation in your own system. */
+            const markPosted = async (id, portalKey, portalUrl) => {
+              const listing = listings.find(l => l.id === id);
+              const already = (listing?.postedTo || listing?.publishedTo || []);
+              const adding  = !already.includes(portalKey);
+
+              if (adding) {
+                const verdict = canAdvertise(listing, null, null);
+                if (!verdict.ok) {
+                  window.alert(
+                    "This listing cannot be advertised yet.\n\n" +
+                    verdict.blocking.map(b => "• " + b.fail).join("\n\n") +
+                    "\n\nRecording it as posted would put a violation in your own records."
+                  );
+                  return;                      // and the portal is NOT opened
+                }
+                /* The portal opens only once the listing is cleared. This used to
+                   happen first and unconditionally, so an agent was sent off to
+                   post something that was not allowed to be posted. */
+                if (portalUrl) window.open(portalUrl, "_blank", "noopener");
+              }
+
               setPublishingId(id + portalKey);
               try {
-                const listing = listings.find(l => l.id === id);
-                const published = listing?.publishedTo || [];
-                const updated = published.includes(portalKey)
-                  ? published.filter(p => p !== portalKey)
-                  : [...published, portalKey];
-                await setDoc(doc(db, "listings", id), { publishedTo: updated, updatedAt: new Date().toISOString() }, { merge: true });
-                if (selectedListing?.id === id) setSelectedListing(l => l ? {...l, publishedTo: updated} : l);
-              } catch(e) { console.error(e); }
+                const updated = adding ? [...already, portalKey] : already.filter(p => p !== portalKey);
+                await setDoc(doc(db, "listings", id),
+                  { postedTo: updated, publishedTo: updated, updatedAt: new Date().toISOString() },
+                  { merge: true });
+                if (selectedListing?.id === id) {
+                  setSelectedListing(l => l ? { ...l, postedTo: updated, publishedTo: updated } : l);
+                }
+              } catch (e) {
+                console.error("[listings] could not record the posting:", e);
+                window.alert("That could not be saved. Nothing has been recorded.");
+              }
               setPublishingId(null);
             };
+            /* Kept so nothing still calling the old name breaks silently. */
+            const markPublished = markPosted;
 
             // Delete listing
             const deleteListing = async (id) => {
@@ -137,6 +181,39 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
 
             {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
 
+              {/* ADVERTS RUNNING THAT SHOULD NOT BE.
+                  This is the one number on the tab an owner needs before any
+                  other: listings their own records say are posted, which do not
+                  meet the advertising rules. Nothing surfaced it before, because
+                  nothing checked. */}
+              {(() => {
+                const c = listingCompliance(listings || [], {}, null);
+                if (!c.violating && !c.blocked) return null;
+                const bad = c.violating > 0;
+                return (
+                  <div style={{ margin:"0 0 16px", padding:"12px 15px", borderRadius:10,
+                                background: bad ? "rgba(239,68,68,0.07)" : "rgba(245,158,11,0.06)",
+                                border: `1px solid ${bad ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.26)"}` }}>
+                    <div style={{ fontSize:12, fontWeight:700, color: bad ? "#EF4444" : "#F59E0B", marginBottom:4 }}>
+                      {bad ? "Adverts running that should not be" : "Listings that cannot be advertised yet"}
+                    </div>
+                    <div style={{ fontSize:11, color:T.textSecondary, lineHeight:1.6 }}>
+                      {c.headline}{" "}
+                      {bad && "Advertising without a valid permit is a RERA violation, and your own records currently show these as posted."}
+                    </div>
+                    {bad && (
+                      <div style={{ marginTop:7, display:"flex", flexDirection:"column", gap:3 }}>
+                        {c.violatingRows.slice(0, 5).map(r => (
+                          <div key={r.listing.id} style={{ fontSize:10.5, color:T.textMuted, lineHeight:1.5 }}>
+                            <b style={{ color:T.textSecondary }}>{r.listing.title || r.listing.community || "Untitled listing"}</b>
+                            {" — "}{r.verdict.blocking[0].fail}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
@@ -215,7 +292,9 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
                   {filtered.map((l, i) => {
                     const sc = STATUS_CFG[l.status||"Available"] || STATUS_CFG.Available;
                     const isDuplicate = checkDuplicate(l.unitNo, l.building);
-                    const publishedPortals = l.publishedTo || [];
+                    /* postedTo is the honest name; publishedTo is read as well so
+                       records written before this change still show. */
+                    const publishedPortals = l.postedTo || l.publishedTo || [];
                     return (
                       <div key={l.id||i}
                         style={{ background:T.card, border:`1px solid ${isDuplicate?"rgba(239,68,68,0.4)":T.border}`, borderRadius:14, overflow:"hidden", transition:"all 0.15s" }}
@@ -256,29 +335,53 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
                             {l.price > 0 ? `AED ${parseFloat(l.price)>=1e6?(parseFloat(l.price)/1e6).toFixed(2)+"M":parseFloat(l.price).toLocaleString()}` : "Price TBD"}
                           </div>
 
-                          {/* Trakheesi permit */}
-                          {l.permitNo ? (
-                            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10, padding:"5px 10px", background:"rgba(20,184,166,0.08)", borderRadius:6 }}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={T.teal} strokeWidth="2" strokeLinecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                              <span style={{ fontSize:10, color:T.teal, fontWeight:600 }}>Permit: {l.permitNo}</span>
-                            </div>
-                          ) : (
-                            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10, padding:"5px 10px", background:"rgba(245,158,11,0.06)", borderRadius:6 }}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                              <span style={{ fontSize:10, color:"#F59E0B" }}>No Trakheesi permit</span>
-                            </div>
-                          )}
+                          {/* MAY THIS BE ADVERTISED?
+                              The permit number alone was shown as a green shield,
+                              which reads as "compliant". It is one of four things
+                              that have to be true, and a permit that has expired
+                              looks identical to a live one. This states the
+                              verdict, and every reason behind it. */}
+                          {(() => {
+                            const v = canAdvertise(l, null, null);
+                            const p = complianceProgress(l, null);
+                            const colour = v.ok ? (v.warnings.length ? "#F59E0B" : "#10B981") : "#EF4444";
+                            return (
+                              <div style={{ marginBottom:10, padding:"7px 10px", borderRadius:7,
+                                            background:`${colour}0E`, border:`1px solid ${colour}33` }}>
+                                <div style={{ display:"flex", justifyContent:"space-between", gap:8, alignItems:"baseline" }}>
+                                  <span style={{ fontSize:10, color:colour, fontWeight:700 }}>
+                                    {v.ok ? (v.warnings.length ? "Cleared, but expiring" : "Cleared to advertise")
+                                          : "Cannot be advertised"}
+                                  </span>
+                                  <span style={{ fontSize:9.5, color:T.textMuted }}>{p.done} of {p.total}</span>
+                                </div>
+                                <div style={{ fontSize:9.5, color:T.textMuted, marginTop:3, lineHeight:1.5 }}>
+                                  {v.ok && v.warnings.length ? v.warnings[0].note : v.summary}
+                                </div>
+                                {l.permitNo && (
+                                  <div style={{ fontSize:9.5, color:T.textSecondary, marginTop:3 }}>
+                                    Permit {l.permitNo}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
 
-                          {/* Portal syndication */}
+                          {/* WHERE YOU POSTED IT.
+                              Was headed "Portal Syndication" — a word that means
+                              an automatic feed. There is no feed. This opens the
+                              portal and notes that you posted it there. */}
                           <div style={{ marginBottom:10 }}>
-                            <div style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>Portal Syndication</div>
+                            <div title={POSTED_NOTE}
+                              style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, marginBottom:6 }}>Where you posted it</div>
                             <div style={{ display:"flex", gap:5 }}>
                               {PORTALS.map(portal => {
                                 const isPublished = publishedPortals.includes(portal.key);
                                 const isLoading   = publishingId === l.id + portal.key;
                                 return (
                                   <button key={portal.key} type="button"
-                                    onClick={()=>{ window.open(portal.url,"_blank"); markPublished(l.id, portal.key); }}
+                                    onClick={()=>markPosted(l.id, portal.key, portal.url)}
+                                    title={POSTED_NOTE}
                                     disabled={isLoading}
                                     style={{ flex:1, padding:"6px 4px", borderRadius:6, border:`1px solid ${isPublished?portal.color:T.border}`, background:isPublished?`${portal.color}15`:"transparent", color:isPublished?portal.color:T.textMuted, fontSize:9, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", transition:"all 0.12s", display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
                                     {isLoading ? (
@@ -393,7 +496,8 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
                                   {isPublished && <span style={{ fontSize:9, color:portal.color }}>Published</span>}
                                 </div>
                                 <button type="button"
-                                  onClick={()=>{ window.open(portal.url,"_blank"); markPublished(selectedListing.id, portal.key); }}
+                                  onClick={()=>markPosted(selectedListing.id, portal.key, portal.url)}
+                                  title={POSTED_NOTE}
                                   style={{ padding:"5px 12px", borderRadius:6, border:`1px solid ${portal.color}40`, background:isPublished?`${portal.color}15`:"transparent", color:portal.color, fontSize:10, fontWeight:700, cursor:"pointer" }}>
                                   {isPublished ? "Republish" : "Publish →"}
                                 </button>
@@ -482,10 +586,34 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
                           </select>
                         </div>
                         <div>
-                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Trakheesi Permit No.</div>
+                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Trakheesi permit number</div>
                           <input value={listingForm.permitNo||""} onChange={e=>setListingForm(f=>({...f,permitNo:e.target.value}))}
-                            placeholder="Required for advertising"
+                            placeholder="The number printed on the permit"
+                            title="This number has to appear on the advert itself, and the advert has to match the permit."
                             style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid ${listingForm.permitNo?"rgba(20,184,166,0.3)":"rgba(245,158,11,0.3)"}`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                        </div>
+                      </div>
+
+                      {/* THE TWO FIELDS THAT DID NOT EXIST.
+                          The tab held a permit NUMBER but no expiry, so a lapsed
+                          permit looked exactly like a live one and nothing could
+                          warn anybody. And there was nowhere at all to record the
+                          Form A — the document without which none of this may be
+                          advertised in the first place. */}
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                        <div>
+                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Permit expires on</div>
+                          <input type="date" value={listingForm.permitExpiresAt||""}
+                            onChange={e=>setListingForm(f=>({...f,permitExpiresAt:e.target.value}))}
+                            title="Without this nobody can be warned before the permit lapses, and an advert running on a lapsed permit is a violation from that day."
+                            style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid ${T.border}`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+                        </div>
+                        <div>
+                          <div style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:5 }}>Form A signed on</div>
+                          <input type="date" value={listingForm.formASignedAt||""}
+                            onChange={e=>setListingForm(f=>({...f,formASignedAt:e.target.value}))}
+                            title="The owner's written appointment of your agency. Nothing may be advertised without it — no portal, no social media, no billboard."
+                            style={{ width:"100%", padding:"10px 14px", background:T.bg, border:`1px solid ${listingForm.formASignedAt?"rgba(20,184,166,0.3)":"rgba(245,158,11,0.3)"}`, borderRadius:9, color:T.textPrimary, fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" }}/>
                         </div>
                       </div>
                       {/* Permit warning */}

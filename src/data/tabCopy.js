@@ -284,15 +284,29 @@ export const TAB_COPY = {
     },
   },
 
+  /* This claimed the product publishes listings to the portals and that
+     "publishing sends them to the portals you connect". Neither is true: there
+     is no portal integration and nothing is connected. The buttons open the
+     portal in a new tab and record that you posted it yourself. Corrected here
+     because a customer reads this before they read anything else on the tab. */
   "Listings": {
     title: "Listings",
-    what: "The properties you are marketing — create them, keep them current and " +
-          "publish them to the portals.",
+    what: "The properties you are marketing, and whether each one may lawfully " +
+          "be advertised yet.",
+    detail: "Before a Dubai property can be advertised anywhere — a portal, your " +
+            "own website, social media or a billboard — the owner must have signed " +
+            "a Form A, a Trakheesi permit must have been issued against it and still " +
+            "be valid, and the broker holding it must have a current broker card. " +
+            "Each listing shows which of those four are in place.",
     includes: "Listings you have created",
+    excludes: "Automatic posting to Property Finder, Bayut or dubizzle. There is no " +
+              "portal integration — the portal buttons open the site and record that " +
+              "you posted it.",
     provenance: {
       kind: "own",
       sources: [{ name: "Your own listings" }],
-      method: "Your own records. Publishing sends them to the portals you connect.",
+      method: "Your own records. Nothing here is sent to a portal by us; " +
+              "marking a portal records that you posted it yourself.",
     },
   },
 

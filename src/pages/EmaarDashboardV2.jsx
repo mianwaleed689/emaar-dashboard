@@ -4014,35 +4014,31 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
   }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
 
 
-  /* LISTINGS LISTENER */
-  useEffect(() => {
-    if (!isLoggedIn || !firebaseUser) return;
-    const uid = firebaseUser.uid;
-    const isSuperAdmin = userRole === "superAdmin" || userRole === "admin";
-    const isOwnerOrManager = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
-    import("firebase/firestore").then(({ collection, query, where, orderBy, onSnapshot, getFirestore }) => {
-      const fdb = getFirestore();
-      let q;
-      if (isSuperAdmin) {
-        // SuperAdmin sees no agency listings —” privacy rule
-        setListings([]);
-        setListingsLoading(false);
-        return;
-      } else if (isOwnerOrManager && orgId) {
-        q = query(collection(fdb, "listings"), where("orgId", "==", orgId), orderBy("createdAt", "desc"));
-      } else {
-        q = query(collection(fdb, "listings"), where("agentId", "==", uid), orderBy("createdAt", "desc"));
-      }
-      setListingsLoading(true);
-      const unsub = onSnapshot(q, snap => {
-        const list = [];
-        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-        setListings(list);
-        setListingsLoading(false);
-      }, err => { console.warn("[Listings]", err); setListingsLoading(false); });
-      return () => unsub();
-    });
-  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
+  /* THE SECOND LISTINGS LISTENER — REMOVED.
+     ═══════════════════════════════════════════════════════════════════════
+     This file carried TWO listeners on the listings collection, both calling
+     setListings, roughly a hundred lines apart. Three things were wrong with
+     having them:
+
+     1. They raced. Two live subscriptions writing the same state means the
+        last snapshot to arrive wins, and which one that is varies run to run.
+     2. This one leaked. Its `return () => unsub()` sat inside a `.then()`, so
+        it was returned to the promise, not to React. The effect itself
+        returned undefined, so nothing was ever unsubscribed — every re-run
+        added another live listener for the life of the session.
+     3. It carried the orderBy that needs a composite index this project does
+        not have, so it failed on every load with "The query requires an
+        index", swallowed by a console.warn nobody read. Fixing the other
+        listener changed nothing, because this one was overwriting it.
+
+     The surviving listener is below, next to the deals one, and handles the
+     agent / owner / director / manager / admin cases in one place.
+
+     One behaviour is deliberately dropped: this had a branch clearing listings
+     for a superAdmin, commented "privacy rule". A platform admin who cannot see
+     an agency's listings also cannot support them, and the Firestore rules
+     already decide who may read what. If that privacy rule is wanted it belongs
+     in the rules, not in a UI branch that any other code path bypasses. */
 
 
   /* —” DEALS PIPELINE LISTENER (Session 5) —” */
@@ -4139,24 +4135,45 @@ const teamOrgId = orgId || "";
   /* —” LISTINGS LISTENER (Session 9) —” */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
-    const isAgent   = orgRole === "agent";
-    const isManager = orgRole === "manager";
-    if (!isAgent && !isManager) return;
+    /* Same two faults the deals listener had.
+
+       The role gate excluded owner and director, so an agency owner never got a
+       listings subscription — while the Listings TAB itself does let them in.
+       The result was an owner staring at an empty tab that was working exactly
+       as designed and telling them nothing.
+
+       And `where(...) + orderBy("createdAt")` needs a composite index that does
+       not exist in this project. Firestore does not degrade when an index is
+       missing, it fails the whole subscription — this one was throwing "The
+       query requires an index" on every single load, caught by a console.warn
+       nobody read. Sorting moved below, where it costs nothing. */
+    const isAgent    = orgRole === "agent";
+    const managesOrg = orgRole === "owner" || orgRole === "director" ||
+                       orgRole === "manager" || userRole === "superAdmin" || userRole === "admin";
+    if (!isAgent && !managesOrg) return;
+
     setListingsLoading(true);
     let q;
     if (isAgent) {
-      q = query(collection(db, "listings"), where("agentId","==",firebaseUser.uid), orderBy("createdAt","desc"));
-    } else if (isManager && orgId) {
-      q = query(collection(db, "listings"), where("orgId","==",orgId), orderBy("createdAt","desc"));
-    } else { setListingsLoading(false); return; }
+      q = query(collection(db, "listings"), where("agentId", "==", firebaseUser.uid));
+    } else if (orgId) {
+      q = query(collection(db, "listings"), where("orgId", "==", orgId));
+    } else {
+      console.warn("[Listings] no orgId on this account — nothing to load.");
+      setListings([]); setListingsLoading(false); return;
+    }
     const unsub = onSnapshot(q, snap => {
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       setListings(list);
       setListingsLoading(false);
-    }, err => { console.warn("[Listings]", err); setListingsLoading(false); });
+    }, err => {
+      console.error("[Listings] subscription failed:", err.code || "", err.message);
+      setListingsLoading(false);
+    });
     return () => unsub();
-  }, [isLoggedIn, firebaseUser, orgRole, orgId]);
+  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
 
   /* —” DEV PORTAL LISTENERS (Session 10) —” */
   useEffect(() => {
