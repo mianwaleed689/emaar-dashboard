@@ -11,7 +11,8 @@ import { JOURNEYS, DOCUMENTS, canAdvance, requiredDocuments, conditionalDocument
          allDocuments, expiringDocuments, currentStage, progressOf,
          isComplete } from "../../src/crm/model/journeys.js";
 import { computeCommission, dealTotals, agentStatement, agencyStatement,
-         SIDES_FOR, fmt } from "../../src/crm/model/commission.js";
+         SIDES_FOR, fmt, nextStep, applyState, STATE_ORDER,
+         STATES } from "../../src/crm/model/commission.js";
 import { canAdvertise, complianceProgress, listingCompliance, PORTALS,
          POSTED_NOTE, LISTING_REQUIREMENTS } from "../../src/crm/model/listing.js";
 import { LAW, SICK_TOTAL_DAYS, annualLeaveBalance, sickLeaveEntitlement,
@@ -258,6 +259,39 @@ ok("an agent 20 days from expiry can still broker, with a warning",
    canBroker({ name: "Sara", expiries: { brn: ago(-20) } }, NOW).warn === true);
 ok("an agent with no BRN recorded cannot broker",
    canBroker({ name: "New", expiries: {} }, NOW).ok === false);
+
+
+/* ── ACCOUNTS MOVING A LINE ALONG ─────────────────────────────────────────── */
+head("COMMISSION STATES — the queue Accounts actually works");
+
+ok("a new line is waiting to be invoiced", nextStep({}).to === "invoiced", nextStep({}));
+ok("  and is told what to record",  /Invoice number/.test(nextStep({}).asks), nextStep({}).asks);
+ok("an invoiced line is waiting for the money",
+   nextStep({ state: "invoiced" }).to === "received");
+ok("  warned only to mark it when the funds have landed",
+   /actually in the account/.test(nextStep({ state: "invoiced" }).why));
+ok("a received line owes the agent",  nextStep({ state: "received" }).to === "paid");
+ok("a paid line is closed",           nextStep({ state: "paid" }).done === true);
+ok("  and says so",  /invoiced, collected and paid out/.test(nextStep({ state: "paid" }).note));
+
+const l0 = { base: 3e6, ratePct: 2, state: "due" };
+const l1 = applyState(l0, "invoiced", { id: "f1", name: "Noor" }, "INV-2026-0412");
+ok("moving it on records the new state",  l1.state === "invoiced");
+ok("  stamps when",                        Boolean(l1.invoicedAt));
+ok("  keeps the reference given",          l1.invoicedRef === "INV-2026-0412");
+ok("  and who did it",                     l1.history[0].by === "Noor", l1.history[0]);
+ok("  as a normal forward step",           l1.history[0].correction === false);
+
+const l2 = applyState(l1, "due", { id: "f1", name: "Noor" }, "Invoice cancelled");
+ok("moving BACKWARDS is allowed — invoices get cancelled", l2.state === "due");
+ok("  but it is recorded as a correction, not silently overwritten",
+   l2.history[1].correction === true, l2.history[1]);
+ok("  and the whole history is kept",  l2.history.length === 2);
+
+ok("the four states are in the order money actually moves",
+   STATE_ORDER.join(",") === "due,invoiced,received,paid");
+ok("each state explains itself",
+   Object.values(STATES).every(s => s.what && s.what.length > 25));
 
 /* ════════════════════════ LISTINGS ════════════════════════ */
 head("LISTINGS — nothing may be advertised without the paperwork");

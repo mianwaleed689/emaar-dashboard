@@ -53,12 +53,13 @@ import {
 import {
   computeCommission, dealTotals, agencyStatement, agentStatement,
   COMMISSION_DEFAULTS, defaultRateFor, SIDES, SIDES_FOR, STATES, fmt,
+  nextStep, applyState,
 } from "../crm/model/commission";
 import { migrateDeals, migrateCommission } from "../crm/model/migrate";
 import { viewerFrom, scopeFor, intentFor, visibleRecords, DEPARTMENTS } from "../crm/model/org";
 import { whoseTurn, myWork, workByDepartment, stepRecord, stepQuality,
          dealTimeline, HANDOVER_NOTE } from "../crm/model/workflow";
-import { onStageChange } from "../crm/model/notify";
+import { onStageChange, notificationsFor } from "../crm/model/notify";
 
 const card  = { background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`, borderRadius: 12 };
 const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7, textTransform: "uppercase" };
@@ -257,6 +258,51 @@ export default function PipelineTab({
     }
     setBusy(false);
   }, [form, orgId, uid, userName, firebaseUser, say]);
+
+  /* ACCOUNTS MOVING A LINE ALONG.
+     due → invoiced → received → paid. Each step is a different real-world event
+     with a different piece of evidence, and asking for that evidence at the
+     moment it exists is the only way it gets written down at all. The two that
+     concern other people also notify them: the agent is told when the money
+     lands, and again when their share goes out. */
+  const moveCommission = useCallback(async (d, index, to, detail) => {
+    setBusy(true);
+    try {
+      const lines = [...(Array.isArray(d.commissionLines) ? d.commissionLines : migrateCommission(d))];
+      lines[index] = applyState(lines[index], to,
+        { id: uid, name: userName || firebaseUser?.email || "" }, detail || "");
+
+      await setDoc(doc(db, "deals", d.id),
+        { commissionLines: lines, updatedAt: new Date().toISOString() }, { merge: true });
+      setSelected(s => s?.id === d.id ? { ...s, commissionLines: lines } : s);
+
+      if (to === "received" || to === "paid") {
+        try {
+          const roster = (teamMembers || []).map(m => ({
+            id: m.uid || m.id, name: m.name || m.email,
+            department: m.department || (m.orgRole === "owner" || m.orgRole === "director" ? "management" : "sales"),
+            seniority: m.seniority, managerId: m.managerId,
+          }));
+          const c = computeCommission(lines[index]);
+          const notes = notificationsFor(
+            to === "received" ? "commission_received" : "commission_paid",
+            { dealId: d.id, dealName: d.client || d.leadName || "A deal",
+              agentId: d.agentId, agentName: d.agentName || "the agent",
+              amount: fmt(c.gross), agentShare: fmt(c.agentShare), byId: uid },
+            roster);
+          await Promise.all(notes.map(n =>
+            addDoc(collection(db, "notifications"), { ...n, orgId: orgId || "" })));
+        } catch (e) {
+          console.error("[pipeline] commission saved but notifications failed:", e);
+        }
+      }
+      say(to === "paid" ? "Agent marked as paid." : `Marked ${STATES[to].label.toLowerCase()}.`);
+    } catch (e) {
+      console.error("[pipeline] commission state change failed:", e);
+      say("Could not save that. Nothing has changed.", true);
+    }
+    setBusy(false);
+  }, [say, uid, userName, firebaseUser, teamMembers, orgId]);
 
   const remove = useCallback(async d => {
     setBusy(true);
@@ -582,6 +628,8 @@ export default function PipelineTab({
             onAdvance={note => advance(selected, note)}
             onSetStage={s => setStage(selected, s)}
             onDoc={(k, v) => markDocument(selected, k, v)}
+            canMoveMoney={moneyScope === "org"}
+            onMoney={(i, to, detail) => moveCommission(selected, i, to, detail)}
             onDelete={() => remove(selected)} />
         )}
       </div>
@@ -702,7 +750,9 @@ const Sel = ({ value, onChange, children }) =>
   <select value={value} onChange={e => onChange(e.target.value)} style={inpStyle}>{children}</select>;
 
 /** One deal: where it is, what it is missing, and what it is worth. */
-function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canDelete, busy }) {
+function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canDelete, busy,
+                    canMoveMoney, onMoney }) {
+  const [moneyRef, setMoneyRef] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [note, setNote] = useState("");
   const turn = whoseTurn(deal);
@@ -901,6 +951,65 @@ function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canD
                     : c.workings.map((w, k) => (
                         <div key={k} style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.65 }}>{w}</div>
                       ))}
+
+                  {/* THE QUEUE ACCOUNTS ACTUALLY WORKS.
+                      The four states were modelled and shown from the start, and
+                      nothing let anybody click them — so the tab told Accounts
+                      "what can be invoiced, what is outstanding, who is owed a
+                      payout" and gave them no way to answer it. */}
+                  {canMoveMoney && (() => {
+                    const step = nextStep(l);
+                    /* The audit trail is rendered whether the line is open or
+                       closed. An earlier version returned early once it was
+                       paid, so the record of who invoiced it and when the money
+                       landed disappeared at exactly the moment somebody would
+                       want to check it. */
+                    const history = (l.history || []).length > 0 && (
+                      <div style={{ marginTop: 6 }}>
+                        {l.history.map((h, k) => (
+                          <div key={k} style={{ fontSize: 9.5, lineHeight: 1.5,
+                                                color: h.correction ? "#F59E0B" : T.textMuted }}>
+                            {h.correction ? "Corrected back to " : "Moved to "}{STATES[h.to]?.label || h.to}
+                            {h.by ? ` by ${h.by}` : ""}
+                            {h.detail ? ` — ${h.detail}` : ""}
+                            {" · "}{new Date(h.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short" })}
+                          </div>
+                        ))}
+                      </div>
+                    );
+
+                    if (step.done) {
+                      return (
+                        <div style={{ marginTop: 7, paddingTop: 7, borderTop: `1px solid ${T.border}` }}>
+                          <div style={{ fontSize: 10, color: "#10B981" }}>{step.note}</div>
+                          {history}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div style={{ marginTop: 7, paddingTop: 7, borderTop: `1px solid ${T.border}` }}>
+                        <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.55, marginBottom: 5 }}>{step.why}</div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          <input value={moneyRef[i] || ""} onChange={e => setMoneyRef(m => ({ ...m, [i]: e.target.value }))}
+                            placeholder={step.asks}
+                            style={{ flex: "1 1 130px", minWidth: 110, padding: "5px 8px",
+                                     background: "rgba(255,255,255,0.04)", border: `1px solid ${T.border}`,
+                                     borderRadius: 6, color: T.white, fontSize: 10.5, outline: "none",
+                                     fontFamily: "'Outfit',sans-serif" }} />
+                          <button type="button" disabled={busy}
+                            onClick={() => { onMoney(i, step.to, moneyRef[i] || ""); setMoneyRef(m => ({ ...m, [i]: "" })); }}
+                            title={step.why}
+                            style={{ padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
+                                     background: STATES[step.to].colour, color: "#0A0E1A",
+                                     fontSize: 10.5, fontWeight: 700, fontFamily: "'Outfit',sans-serif",
+                                     whiteSpace: "nowrap" }}>
+                            {step.action}
+                          </button>
+                        </div>
+                        {history}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}

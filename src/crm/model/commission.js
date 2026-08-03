@@ -71,6 +71,61 @@ export const STATES = {
 
 export const STATE_ORDER = ["due", "invoiced", "received", "paid"];
 
+/**
+ * What Accounts is being asked to do next on this line, and what they must
+ * record when they do it.
+ *
+ * The states are not decoration — each one is a different real-world event with
+ * a different piece of evidence behind it, and asking for that evidence at the
+ * moment it exists is the only way it ever gets written down.
+ */
+export const NEXT_STATE = {
+  due:      { to: "invoiced", action: "Raise the invoice",
+              asks: "Invoice number",
+              why: "A VAT invoice has to be issued before anybody can be chased for payment." },
+  invoiced: { to: "received", action: "Mark as received",
+              asks: "Date the money arrived",
+              why: "Only mark this when the funds are actually in the account — the agent is told they are owed as soon as you do." },
+  received: { to: "paid",     action: "Mark the agent paid",
+              asks: "Date the agent was paid",
+              why: "This closes the line and tells the agent their share has gone out." },
+  paid:     null,
+};
+
+/** Can this line move on, and what would that mean? */
+export function nextStep(line = {}) {
+  const state = line.state || "due";
+  const step = NEXT_STATE[state];
+  if (!step) return { done: true, note: "This line is closed — invoiced, collected and paid out." };
+  return { done: false, ...step, from: state };
+}
+
+/**
+ * Move one line on, keeping a record of who and when.
+ *
+ * Going BACKWARDS is allowed — an invoice gets cancelled, a payment bounces,
+ * and a system that refuses to admit that forces somebody to keep the truth in
+ * a spreadsheet instead. But it is recorded as a correction rather than
+ * silently overwritten, because money moving backwards is exactly the thing an
+ * auditor will ask about.
+ */
+export function applyState(line = {}, to, by = {}, detail = "", now = new Date()) {
+  const from = line.state || "due";
+  const forward = STATE_ORDER.indexOf(to) > STATE_ORDER.indexOf(from);
+  return {
+    ...line,
+    state: to,
+    [`${to}At`]: now.toISOString(),
+    ...(detail ? { [`${to}Ref`]: detail } : {}),
+    history: [...(line.history || []), {
+      from, to, at: now.toISOString(),
+      by: by.name || "", byId: by.id || "",
+      detail: detail || "",
+      correction: !forward,
+    }],
+  };
+}
+
 const money = n => Math.round((Number(n) || 0) * 100) / 100;
 const pct   = (amount, p) => money((Number(amount) || 0) * (Number(p) || 0) / 100);
 
