@@ -28,13 +28,70 @@ So there are now **three axes**:
 
 | Axis | Values |
 |---|---|
-| **Department** | Sales · Listings & marketing · Conveyancing · Finance · HR · Admin & PRO · Management · IT |
+| **Department** | Sales · **Sales admin** · Listings & marketing · Conveyancing · **Accounts** · HR · Admin & PRO · Management · IT |
 | **Seniority** | Staff · Team leader · Manager · Director · Owner |
 | **Scope** | none · own · team · org — *derived, never typed in* |
 
 Seniority widens scope by exactly **one** step. Only director and above reach the
 whole organisation — a manager runs a team, and seeing across teams is what a
 director is for.
+
+---
+
+## 2a. THE TWO THAT WERE MISSING
+
+Added 2026-08-03 after the owner asked *"don't forget about the sales admin and
+accounts"*. Both were genuine gaps, and each would have caused a specific
+problem.
+
+### Sales admin
+
+Not Admin & PRO, and **not a junior agent**. It is the person who keeps the
+sales floor moving: preparing Form A and Form F, applying for Trakheesi permits,
+booking viewings, chasing signatures, keeping the CRM honest.
+
+Without this department they would have been entered as an agent — **given a
+commission split they do not have, and asked for a broker card they do not
+need.**
+
+| | |
+|---|---|
+| Leads, deals, listings | **All of them, from day one** — they are not building a personal book, they are the person the whole floor hands things to |
+| Compliance register | Yes — permits are their job |
+| Client contact | **Yes** — booking a viewing means telephoning somebody |
+| Money | **No.** They earn no commission and have no business seeing anyone else's |
+| Broker cards | Can check a colleague's is current; cannot see their passport |
+
+### Accounts
+
+Raises the commission invoice, chases the payment, pays the agents, runs
+payroll.
+
+The first version of this model **denied Accounts the client's identity.** That
+reads cautious and is simply wrong about the job: a VAT invoice is addressed to
+somebody, and without the client's name it cannot be raised at all. Corrected.
+
+| | |
+|---|---|
+| Deals | **All of them** — every deal is an invoice |
+| Money | All of it |
+| Client contact | **Yes** — required to raise a compliant tax invoice |
+| The roster and salaries | **Yes** — payroll covers everybody |
+| Passports, visas, Emirates IDs, medical | **No.** Those stay with HR |
+| Leads | No — they are not a sales function |
+
+That last row is a new gate: **`canSeePersonalDocuments()`**. Seeing a *person*
+is not seeing their *documents*. Accounts needs the roster and the salaries and
+has no reason at all to hold a colleague's passport scan. HR and Admin/PRO need
+them, because renewals are their job. Everybody always sees their own.
+
+The **broker card is the exception** and is deliberately widely visible —
+`canSeeBrokerCard()`. It is not a private paper, it is a licence to trade, and
+anyone deciding whether a colleague may hold a listing or take a lead has to be
+able to see whether it is current.
+
+When something is withheld the People tab **says so** — *"3 personal documents
+are not shown to you"* — rather than quietly returning a shorter list.
 
 ---
 
@@ -86,14 +143,17 @@ Marketing needs to know Property Finder converts better than Bayut. They have no
 business with the buyer's mobile number. Finance needs the commission on a deal,
 not the client's passport.
 
-| | May see client name, phone, email |
-|---|---|
-| Sales | **yes** — they are the ones calling |
-| Conveyancing | **yes** — they run the transfer |
-| Management | yes |
-| Listings & marketing | **no** — figures only |
-| Finance | **no** |
-| HR, Admin, IT | **no** |
+| | Client name, phone, email | Salaries | Passports, visas, medical | Broker cards |
+|---|---|---|---|---|
+| Sales | **yes** — they are the ones calling | own only | own only | yes |
+| Sales admin | **yes** — viewings mean phone calls | no | own only | yes |
+| Conveyancing | **yes** — they run the transfer | no | own only | yes |
+| Accounts | **yes** — a VAT invoice needs a name | **yes** | **no** | no |
+| HR | no | **yes** | **yes** | yes |
+| Admin & PRO | no | no | **yes** | yes |
+| Listings & marketing | **no** — figures only | no | own only | yes |
+| Management | yes | **yes** | **yes** | yes |
+| IT | no | no | no | no |
 
 And pay is gated separately again: **HR, Finance and Management** may see what
 anyone earns. A **sales manager may not** — they manage performance, not salary.

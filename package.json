@@ -26,7 +26,7 @@
     "dev": "vite",
     "preview": "vite preview",
     "build": "vite build",
-    "test": "react-scripts test",
+    "test": "node scripts/test/all.mjs",
     "eject": "react-scripts eject",
     "predeploy": "cross-env DISABLE_ESLINT_PLUGIN=true react-scripts build",
     "deploy": "gh-pages -d build",

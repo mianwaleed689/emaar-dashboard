@@ -44,7 +44,8 @@
 import React, { useState, useMemo } from "react";
 import { T } from "../data";
 import {
-  DEPARTMENTS, SENIORITY, scopeFor, canSeePay, intentFor, rankOf,
+  DEPARTMENTS, SENIORITY, scopeFor, canSeePay, canSeePersonalDocuments,
+  canSeeBrokerCard, intentFor, rankOf,
 } from "../crm/model/org";
 import {
   LAW, SICK_TOTAL_DAYS, LEAVE_TYPES, TRACKED_EXPIRIES, OFFBOARDING_STEPS,
@@ -149,8 +150,9 @@ export default function PeopleTab({
           </button>
         </div>
         <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6, maxWidth: 800 }}>
-          {intent?.question} Every department is here — sales, listings, conveyancing,
-          finance, HR, admin and management — not only the people who work leads.
+          {intent?.question} Every department is here — sales, sales admin, listings,
+          conveyancing, accounts, HR, admin &amp; PRO and management — not only the people
+          who work leads.
         </div>
 
         {showHelp && (
@@ -193,7 +195,7 @@ export default function PeopleTab({
           <Directory people={shown} all={visible} dept={dept} setDept={setDept}
                      byDept={byDept} onOpen={setSelected} me={me} />
         )}
-        {section === "compliance" && <Compliance register={register} people={visible} />}
+        {section === "compliance" && <Compliance register={register} people={visible} me={me} />}
         {section === "leave"      && <Leave people={visible} me={me} />}
         {section === "leaving"    && <Leaving people={visible} me={me} />}
       </div>
@@ -324,7 +326,18 @@ const Chip = ({ on, onClick, tip, children }) => (
   </button>
 );
 
-function Compliance({ register, people }) {
+function Compliance({ register, people, me }) {
+  /* Accounts sees the roster because payroll covers everybody, and has no
+     business at all with a colleague's passport. Visibility of a PERSON is not
+     visibility of their DOCUMENTS, so the register is filtered to what this
+     viewer may actually hold — with the broker card always shown, because that
+     is a licence to trade rather than a private paper. */
+  const mayHold  = p => canSeePersonalDocuments(me, p);
+  const mayBroker = canSeeBrokerCard(me);
+  const rows = register.rows.filter(r =>
+    r.key === "brn" ? mayBroker : (r.kind === "org" || mayHold(r.subjectId)));
+  const hidden = register.rows.length - rows.length;
+  register = { ...register, rows };
   return (
     <div>
       <div style={{ fontSize: 11.5, color: T.textSecondary, lineHeight: 1.65, marginBottom: 12, maxWidth: 780 }}>
@@ -334,6 +347,17 @@ function Compliance({ register, people }) {
         stops being compliant the same day</b> — which no standalone HR system can see and
         no standalone CRM knows about.
       </div>
+
+      {hidden > 0 && (
+        <div style={{ ...card, padding: "10px 13px", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.6 }}>
+            {hidden} personal document{hidden === 1 ? "" : "s"} {hidden === 1 ? "is" : "are"} not shown
+            to you. Passports, visas, Emirates IDs and medical cover are visible to HR, to
+            Admin &amp; PRO, and to each person about themselves. Broker cards are shown to
+            everyone who needs to know whether a colleague may lawfully work.
+          </div>
+        </div>
+      )}
 
       {register.rows.length === 0 ? (
         <div style={{ ...card, padding: "26px 18px", textAlign: "center" }}>

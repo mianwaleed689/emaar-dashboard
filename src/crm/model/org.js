@@ -41,12 +41,26 @@
 export const DEPARTMENTS = {
   sales:        { key: "sales",        label: "Sales",
                   what: "Brokers and their managers. The only department that needs a broker card." },
+  /* SALES ADMIN is not Admin & PRO, and it is not a junior agent. It is the
+     person who keeps the sales floor moving: preparing Form A and Form F,
+     applying for Trakheesi permits, booking viewings, chasing signatures,
+     keeping the CRM honest. They handle clients constantly but never hold a
+     listing and never earn a commission. Leaving them out meant they would
+     have been entered as an agent — given a commission split they do not have
+     and asked for a broker card they do not need. */
+  salesAdmin:   { key: "salesAdmin",   label: "Sales admin",
+                  what: "Supports the sales floor: paperwork, permits, viewings, chasing signatures. Handles clients, holds no listings, earns no commission." },
   listings:     { key: "listings",     label: "Listings & marketing",
                   what: "Prepares listings, obtains Trakheesi permits, posts to the portals." },
   conveyancing: { key: "conveyancing", label: "Conveyancing",
                   what: "Takes a signed deal to the trustee office. Chases NOCs and paperwork." },
-  finance:      { key: "finance",      label: "Finance",
-                  what: "Invoices commission, collects it, runs payroll." },
+  /* ACCOUNTS raises the tax invoice, chases the money, pays the agents and runs
+     payroll. That means they legitimately need the CLIENT's identity — a VAT
+     invoice is addressed to somebody — which an earlier version of this file
+     denied them. It also means they see the roster and salaries, but not
+     passports and medical records: see canSeePersonalDocuments(). */
+  finance:      { key: "finance",      label: "Accounts",
+                  what: "Raises the commission invoices, chases payment, pays the agents, runs payroll." },
   hr:           { key: "hr",           label: "HR",
                   what: "People, contracts, leave, documents, payroll input." },
   admin:        { key: "admin",        label: "Admin & PRO",
@@ -80,9 +94,17 @@ export const SCOPE = { none: "none", own: "own", team: "team", org: "org" };
 const BASE = {
   //                leads      deals      listings   people     money      compliance
   sales:        { leads:"own",  deals:"own",  listings:"own",  people:"none", money:"own",  compliance:"own"  },
+  /* Sales admin works across the whole floor from day one — they are not an
+     agent with a small book, they are the person the whole floor hands things
+     to. But no money: they do not earn commission and have no business seeing
+     what anyone else earns. */
+  salesAdmin:   { leads:"org",  deals:"org",  listings:"org",  people:"none", money:"none", compliance:"org"  },
   listings:     { leads:"none", deals:"org",  listings:"org",  people:"none", money:"none", compliance:"org"  },
   conveyancing: { leads:"none", deals:"org",  listings:"none", people:"none", money:"none", compliance:"org"  },
-  finance:      { leads:"none", deals:"org",  listings:"none", people:"none", money:"org",  compliance:"none" },
+  /* Accounts needs the roster to run payroll, hence people:"org" — paired with
+     canSeePersonalDocuments(), which keeps passports and medical records with
+     HR where they belong. */
+  finance:      { leads:"none", deals:"org",  listings:"none", people:"org",  money:"org",  compliance:"none" },
   hr:           { leads:"none", deals:"none", listings:"none", people:"org",  money:"none", compliance:"org"  },
   admin:        { leads:"none", deals:"none", listings:"none", people:"org",  money:"none", compliance:"org"  },
   management:   { leads:"org",  deals:"org",  listings:"org",  people:"org",  money:"org",  compliance:"org"  },
@@ -149,7 +171,16 @@ function legacySeniority(user = {}) {
 export function canSeeClientContact(user = {}) {
   if (user.platformAdmin) return true;
   const dept = user.department || legacyDepartment(user);
-  return ["sales", "conveyancing", "management"].includes(dept);
+  /* Accounts is here because a VAT invoice is addressed to somebody. An earlier
+     version of this file denied them the client's identity, which would have
+     made it impossible to raise a compliant tax invoice — a rule that reads
+     cautious and is simply wrong about the job.
+
+     Sales admin is here because booking a viewing means telephoning the client.
+
+     Listings & marketing stays out: they need to know Property Finder converts
+     better than Bayut, and have no business with the buyer's mobile number. */
+  return ["sales", "salesAdmin", "conveyancing", "finance", "management"].includes(dept);
 }
 
 /** May this person see what anybody else earns? */
@@ -158,6 +189,34 @@ export function canSeePay(user = {}, aboutUserId) {
   if (user.id && user.id === aboutUserId) return true;          // always your own
   const dept = user.department || legacyDepartment(user);
   return ["hr", "finance", "management"].includes(dept);
+}
+
+/**
+ * May this person see somebody's passport, visa, Emirates ID or medical cover?
+ *
+ * Separate from both scope and pay, because Accounts needs the ROSTER and the
+ * SALARIES to run payroll while having no reason at all to hold a colleague's
+ * passport scan. Visibility of a person is not visibility of their documents.
+ *
+ * HR and Admin/PRO need them — renewals are their job. Management sees
+ * everything. Everybody always sees their own.
+ */
+export function canSeePersonalDocuments(user = {}, aboutUserId) {
+  if (user.platformAdmin) return true;
+  if (user.id && user.id === aboutUserId) return true;
+  const dept = user.department || legacyDepartment(user);
+  return ["hr", "admin", "management"].includes(dept);
+}
+
+/**
+ * The broker card is the exception: it is not private, it is a licence to
+ * trade. Anyone who has to know whether a colleague may lawfully hold a
+ * listing or take a lead needs to see whether it is current.
+ */
+export function canSeeBrokerCard(user = {}) {
+  if (user.platformAdmin) return true;
+  const dept = user.department || legacyDepartment(user);
+  return ["sales", "salesAdmin", "listings", "conveyancing", "hr", "admin", "management"].includes(dept);
 }
 
 /** Which tabs this person should be offered at all. */
