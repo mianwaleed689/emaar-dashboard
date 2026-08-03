@@ -4107,7 +4107,11 @@ const teamOrgId = orgId || "";
 
   /* —” ORG PROFILE LISTENER (Session 8) —” */
   useEffect(() => {
-    if (!isLoggedIn || !firebaseUser || orgRole !== "manager" || !orgId) return;
+    /* This listener feeds the Agency tab its organisation record. Keyed on the
+       literal "manager", it never ran for an owner or a director, so the person
+       who owns the agency saw an empty agency profile. */
+    const managesOrg = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
+    if (!isLoggedIn || !firebaseUser || !managesOrg || !orgId) return;
     const unsub = onSnapshot(doc(db, "organisations", orgId), snap => {
       if (snap.exists()) {
         const d = snap.data();

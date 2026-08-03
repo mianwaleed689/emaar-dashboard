@@ -137,7 +137,37 @@ const join = readFileSync("src/pages/JoinPage.jsx", "utf8");
 ok("JoinPage's owner notification now has somebody to find",
    /orgRole","==","owner"/.test(join.replace(/\s/g, "")) && /orgRole:\s*"owner"/.test(created));
 
+/* ── AN OWNER IS NOT THE STRING "manager" ─────────────────────────────────── */
+head("NO GATE LOCKS THE OWNER OUT OF THEIR OWN AGENCY");
+
+/* Signup used to record the founder as orgRole "manager", so every gate written
+   as `orgRole === "manager"` happened to work by accident. Recording the founder
+   as an owner — which is what they are — turned each of those into a locked
+   door: the Agency tab told the person who owns the agency "Manager access
+   only", and the organisation listener never fired for them, so their agency
+   profile came back empty.
+
+   Fixing one bug exposing another is the pattern of this whole sweep, so the
+   guard is written broadly: anywhere a file compares orgRole to "manager",
+   owner and director must appear beside it. */
+const GATED = [
+  "src/tabs/AgencyTab.jsx",
+  "src/tabs/ComplianceTab.jsx",
+  "src/pages/EmaarDashboardV2.jsx",
+  "src/tabs/TeamTab.jsx",
+];
+for (const f of GATED) {
+  const lines = readFileSync(f, "utf8").split("\n");
+  const bad = lines.filter((l, i) => {
+    if (!/orgRole\s*[!=]==?\s*["']manager["']/.test(l)) return false;
+    const near = lines.slice(Math.max(0, i - 2), i + 3).join(" ");
+    return !/["']owner["']/.test(near) || !/["']director["']/.test(near);
+  });
+  ok(`${f.split("/").pop()} never gates on "manager" alone`,
+     bad.length === 0, bad.map(b => b.trim().slice(0, 80)));
+}
+
+
 console.log(`\n${"═".repeat(62)}`);
 console.log(`  ${pass} passed, ${fail} failed`);
-/* ── SIGNUP: THE FIRST THING A CUSTOMER EVER DOES ─────────────────────────── */
 process.exit(fail ? 1 : 0);

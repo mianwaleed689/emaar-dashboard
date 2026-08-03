@@ -26,7 +26,12 @@ const COMPLIANCE_SOURCES = [
 function ComplianceTab({ reraCard, setReraCard, reraCardLoading, setReraCardLoading, reraCardSaved, setReraCardSaved, waTemplate, setWaTemplate, firebaseUser, orgRole, userName }) {
 
             const isAgent   = orgRole === "agent";
-            const isManager = orgRole === "manager";
+            /* An agency OWNER is not the string "manager". These gates predate
+               owners existing: signup used to record the founder as a manager, so
+               comparing to that one word happened to work. Now that the founder is
+               written as an owner — which is what they are — the literal check
+               locked them out of their own agency. */
+            const isManager = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
 
             // RERA expiry calculation
             const reraExpiry    = reraCard.expiry ? new Date(reraCard.expiry) : null;

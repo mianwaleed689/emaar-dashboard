@@ -27,7 +27,12 @@ function AgencyTab({
   const _copy = tabCopy("Agency");
 
 
-            const isManager = orgRole === "manager";
+            /* An agency OWNER is not the string "manager". These gates predate
+               owners existing: signup used to record the founder as a manager, so
+               comparing to that one word happened to work. Now that the founder is
+               written as an owner — which is what they are — the literal check
+               locked them out of their own agency. */
+            const isManager = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
             if (!isManager) return (
               <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:16 }}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
@@ -96,7 +101,13 @@ function AgencyTab({
               return { label:"Valid",       color:T.green };
             };
 
-            const agents = teamMembers.filter(u => u.orgRole === "agent" || u.orgRole === "manager");
+            /* Everyone in the agency, not only the two job titles this happened
+               to list. An owner or a director is a person on the roster and
+               commonly holds a broker card of their own, so excluding them hid
+               the founder from their own agency's people — and hid whether
+               their BRN was about to expire. */
+            const agents = teamMembers.filter(u =>
+              ["agent", "manager", "director", "owner"].includes(u.orgRole));
             const plan = orgProfile?.plan || "free";
             const planColors = { free:T.textMuted, pro:T.teal, enterprise:"#8B5CF6" };
 
