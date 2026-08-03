@@ -109,6 +109,20 @@ ok("Leads asks a manager who is idle",
 ok("Leads asks the owner which sources are worth the money",
    /worth the money/.test(intentFor(owner, "leads").question));
 ok("Leads is never offered to Accounts",  intentFor(accounts, "leads") === null);
+/* Scope alone was giving Sales admin and Accounts the OWNER's question. Both
+   see every deal; neither opens the tab for the reason an owner does. */
+ok("Accounts is asked about invoicing, not forecasting",
+   /invoiced.*outstanding.*payout/i.test(intentFor(accounts, "deals").question),
+   intentFor(accounts, "deals"));
+ok("Sales admin is asked about paperwork, not billing",
+   /paperwork is outstanding/i.test(intentFor(salesAdmin, "deals").question),
+   intentFor(salesAdmin, "deals"));
+ok("  and never about money, which they cannot see",
+   !/bill|invoic|revenue/i.test(intentFor(salesAdmin, "deals").question));
+ok("Conveyancing is asked about NOCs and trustee appointments",
+   /NOC.*trustee/i.test(intentFor(coord, "deals").question), intentFor(coord, "deals"));
+ok("the owner still gets the owner's question",
+   /what did we bill/i.test(intentFor(owner, "deals").question));
 ok("Money is never offered to sales admin", intentFor(salesAdmin, "money") === null);
 ok("People tells HR it is the whole company",
    /not only sales/.test(intentFor(hr, "people").question));

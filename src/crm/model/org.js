@@ -262,9 +262,39 @@ export const VIEW_INTENT = {
   },
 };
 
+/* SOME DEPARTMENTS DO A DIFFERENT JOB AT THE SAME SCOPE.
+   Scope alone was deciding the question a tab asks, which gave Sales admin and
+   Accounts the OWNER's question — "what did we bill, what landed, what is
+   stuck?" Sales admin cannot see money at all, so that question is unanswerable
+   for them; Accounts is not forecasting, they are invoicing and chasing. Both
+   see every deal, and both open the tab for something completely different.
+
+   Only the departments whose job genuinely differs are listed. Everyone else
+   falls through to the scope-based wording above. */
+const DEPT_INTENT = {
+  salesAdmin: {
+    leads:    { title: "All leads",    question: "What has come in, who is it with, and what is still unassigned?" },
+    deals:    { title: "All deals",    question: "What paperwork is outstanding, and which deal is waiting on me?" },
+    listings: { title: "All listings", question: "Which listings need a Form A or a permit before they can go out?" },
+  },
+  finance: {
+    deals:    { title: "All deals",    question: "What can be invoiced, what is outstanding, and who is owed a payout?" },
+    money:    { title: "Revenue",      question: "Billed, collected, outstanding, and owed to agents." },
+  },
+  conveyancing: {
+    deals:    { title: "All deals",    question: "Which NOC is expiring, and whose trustee appointment is next?" },
+  },
+  listings: {
+    deals:    { title: "All deals",    question: "Which deals came from which listing?" },
+    listings: { title: "All listings", question: "What is not compliant, and whose permit expires this week?" },
+  },
+};
+
 export const intentFor = (user, area) => {
   const s = scopeFor(user, area);
-  return s === SCOPE.none ? null : VIEW_INTENT[area]?.[s] || null;
+  if (s === SCOPE.none) return null;
+  const dept = user.department || legacyDepartment(user);
+  return DEPT_INTENT[dept]?.[area] || VIEW_INTENT[area]?.[s] || null;
 };
 
 /**
