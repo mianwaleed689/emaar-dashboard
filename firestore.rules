@@ -260,6 +260,28 @@ service cloud.firestore {
       );
     }
 
+    /* VIEWINGS.
+       An agent's week. Scoped to the agency, and an agent may only create or
+       change their own — a viewing is a record of where somebody physically
+       was, so it should not be editable by a colleague. Managers and above may
+       reassign or correct one, because cover is a real thing. */
+    match /viewings/{viewingId} {
+      allow read: if isAuthed() && (
+        isSuperAdmin() || isSameOrg(resource.data.orgId)
+      );
+      allow create: if isAuthed() && (
+        isSuperAdmin() || isSameOrg(request.resource.data.orgId)
+      );
+      allow update: if isAuthed() && (
+        isSuperAdmin() ||
+        (isManager() && isSameOrg(resource.data.orgId)) ||
+        ('agentId' in resource.data && resource.data.agentId == uid())
+      ) && (isSuperAdmin() || request.resource.data.orgId == resource.data.orgId);
+      allow delete: if isAuthed() && (
+        isSuperAdmin() || (isManager() && isSameOrg(resource.data.orgId))
+      );
+    }
+
     // ── LISTINGS ─────────────────────────────────────────────────
     /* LISTINGS. Same create fault as /deals: a single `allow write` gated on
        `resource.data`, which is null before the document exists, so nobody

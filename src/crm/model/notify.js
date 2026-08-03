@@ -109,6 +109,27 @@ export const EVENTS = {
     body:  c => "Nobody has called, messaged or emailed them yet. Speed to first contact is the strongest thing you control.",
   },
 
+  viewing_tomorrow: {
+    key: "viewing_tomorrow", area: "leads", urgency: "soon",
+    audience: ["agent"],
+    title: c => `${c.count} viewing${c.count === 1 ? "" : "s"} tomorrow`,
+    body:  c => `${c.list} Confirm with each client tonight — a client who forgets is a wasted morning.`,
+  },
+
+  viewing_unwritten: {
+    key: "viewing_unwritten", area: "leads", urgency: "now",
+    audience: ["agent"],
+    title: c => `${c.propertyName || "A viewing"} was never written up`,
+    body:  c => `${c.note} The seller will ask what they said, and right now there is no answer on file.`,
+  },
+
+  viewing_clash: {
+    key: "viewing_clash", area: "leads", urgency: "now",
+    audience: ["agent"],
+    title: c => "Two viewings too close together",
+    body:  c => c.note,
+  },
+
   lead_unassigned: {
     key: "lead_unassigned", area: "leads", urgency: "now",
     audience: ["dept:salesAdmin", "manager"],

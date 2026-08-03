@@ -165,6 +165,48 @@ const closed = { ...waiting, id: "L5", status: "Closed Deal" };
 ok("a closed lead is not chased",
    !sweep({ people: PEOPLE, leads: [closed] }, new Set(), NOW).some(n => n.event === "lead_unanswered"));
 
+/* ── VIEWINGS ─────────────────────────────────────────────────────────────── */
+head("VIEWINGS — an agent's week is the thing they actually do");
+
+const unwritten = { id: "v1", agentId: "ag1", leadId: "L1", propertyName: "Marina Gate 1104",
+                    at: agoDays(2), outcome: "scheduled" };
+const uw = sweep({ people: PEOPLE, viewings: [unwritten] }, new Set(), NOW);
+ok("a viewing still marked Booked two days on is chased",
+   uw.some(n => n.event === "viewing_unwritten"), uw.map(n => n.event));
+ok("  to the agent whose viewing it was",
+   uw.some(n => n.event === "viewing_unwritten" && n.userId === "ag1"));
+ok("  and it says why it matters",
+   /seller will ask what they said/.test(uw.find(n => n.event === "viewing_unwritten")?.body || ""),
+   uw.find(n => n.event === "viewing_unwritten")?.body);
+
+const writtenUp = { ...unwritten, id: "v2", outcome: "done", feedback: "Liked it, worried about service charge." };
+ok("a viewing written up properly is left alone",
+   !sweep({ people: PEOPLE, viewings: [writtenUp] }, new Set(), NOW).some(n => n.event === "viewing_unwritten"));
+
+const tomorrowAt = new Date(NOW + 86400000);
+tomorrowAt.setHours(11, 0, 0, 0);
+const tmw = sweep({ people: PEOPLE, viewings: [
+  { id: "v3", agentId: "ag1", at: tomorrowAt.toISOString(), propertyName: "Unit A", leadName: "Sarah" },
+  { id: "v4", agentId: "ag1", at: new Date(tomorrowAt.getTime() + 4 * 3600000).toISOString(),
+    propertyName: "Unit B", leadName: "Omar" },
+] }, new Set(), NOW);
+const t2 = tmw.find(n => n.event === "viewing_tomorrow");
+ok("tomorrow's viewings are sent as ONE message, not one each",
+   tmw.filter(n => n.event === "viewing_tomorrow").length === 1, tmw.filter(n => n.event === "viewing_tomorrow").length);
+ok("  counting them",       /2 viewings tomorrow/.test(t2?.title || ""), t2?.title);
+ok("  naming each client",  /Sarah/.test(t2?.body || "") && /Omar/.test(t2?.body || ""), t2?.body);
+ok("  and saying to confirm tonight",
+   /Confirm with each client tonight/.test(t2?.body || ""));
+
+const clash = sweep({ people: PEOPLE, viewings: [
+  { id: "v5", agentId: "ag1", at: new Date(NOW + 86400000).toISOString(), propertyName: "Marina Gate" },
+  { id: "v6", agentId: "ag1", at: new Date(NOW + 86400000 + 20 * 60000).toISOString(), propertyName: "JVC Villa" },
+] }, new Set(), NOW);
+ok("two viewings 20 minutes apart are flagged as a clash",
+   clash.some(n => n.event === "viewing_clash"), clash.map(n => n.event));
+ok("  warning a client will be left waiting",
+   /left waiting/.test(clash.find(n => n.event === "viewing_clash")?.body || ""));
+
 /* ── THE LOG ──────────────────────────────────────────────────────────────── */
 head("A SILENT NIGHT IS DISTINGUISHABLE FROM A BROKEN ONE");
 

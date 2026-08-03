@@ -116,11 +116,12 @@ module.exports = async function handler(req, res) {
           continue;
         }
 
-        const [people, deals, listings, leads] = await Promise.all([
+        const [people, deals, listings, leads, viewings] = await Promise.all([
           db.collection("users").where("orgId", "==", orgId).get(),
           db.collection("deals").where("orgId", "==", orgId).get(),
           db.collection("listings").where("orgId", "==", orgId).get(),
           db.collection("leads").where("orgId", "==", orgId).get(),
+          db.collection("viewings").where("orgId", "==", orgId).get(),
         ]);
 
         const data = {
@@ -137,6 +138,7 @@ module.exports = async function handler(req, res) {
           deals:    deals.docs.map(d => ({ id: d.id, ...d.data() })),
           listings: listings.docs.map(d => ({ id: d.id, ...d.data() })),
           leads:    leads.docs.map(d => ({ id: d.id, ...d.data() })),
+          viewings: viewings.docs.map(d => ({ id: d.id, ...d.data() })),
         };
 
         const due = sweep(data, sent, now);
@@ -156,7 +158,8 @@ module.exports = async function handler(req, res) {
 
         console.log(`[watch] ${orgId}: ${sweepSummary(due)} ` +
                     `(${data.people.length} people, ${data.deals.length} deals, ` +
-                    `${data.listings.length} listings, ${data.leads.length} leads)`);
+                    `${data.listings.length} listings, ${data.leads.length} leads, ` +
+                    `${data.viewings.length} viewings)`);
       } catch (err) {
         console.error(`[watch] ${orgId} failed:`, err.message);
         summary.errors.push(`${orgId}: ${err.message}`);

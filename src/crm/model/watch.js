@@ -32,6 +32,7 @@ import { expiringDocuments, currentStage, isComplete } from "./journeys.js";
 import { whoseTurn } from "./workflow.js";
 import { notificationsFor } from "./notify.js";
 import { responseTime } from "./intake.js";
+import { statusOf, clashes, diary } from "./viewing.js";
 
 const DAY = 86400000;
 const daysUntil = (d, now) => d ? Math.floor((new Date(d).getTime() - now) / DAY) : null;
@@ -191,6 +192,44 @@ export function sweep(data = {}, sent = new Set(), now = Date.now()) {
                waited: band >= 24 ? "more than a day" : `${hours} hours` });
       }
     }
+  });
+
+  /* ── VIEWINGS ─────────────────────────────────────────────────────────
+     An agent's week is viewings, and two things go wrong with them: the one
+     nobody wrote up, and the two booked half an hour apart in different
+     communities. */
+  const viewings = data.viewings || [];
+
+  viewings.forEach(v => {
+    const st = statusOf(v, now);
+    if (st.key === "unclosed") {
+      /* Chased once a day while it stays open. It is outstanding work, not a
+         reminder about a date — and it stops the moment somebody closes it. */
+      const day = new Date(now).toISOString().slice(0, 10);
+      push(key("viewing_unwritten", v.id, day), "viewing_unwritten",
+           { leadId: v.leadId, agentId: v.agentId,
+             propertyName: v.propertyName, note: st.note });
+    }
+  });
+
+  /* Tomorrow's list, once, the evening before. */
+  const tomorrow = new Date(now + DAY).toISOString().slice(0, 10);
+  const byAgent = {};
+  viewings.filter(v => (v.outcome || "scheduled") === "scheduled" &&
+                       (v.at || "").slice(0, 10) === tomorrow)
+          .forEach(v => { (byAgent[v.agentId] = byAgent[v.agentId] || []).push(v); });
+
+  Object.entries(byAgent).forEach(([agentId, list]) => {
+    push(key("viewing_tomorrow", agentId, tomorrow), "viewing_tomorrow", {
+      agentId, count: list.length,
+      list: list.map(v => `${new Date(v.at).toLocaleTimeString("en-AE", { hour: "2-digit", minute: "2-digit" })} ${v.propertyName || "a property"}${v.leadName ? ` with ${v.leadName}` : ""}.`).join(" "),
+    });
+  });
+
+  clashes(viewings).forEach(cl => {
+    const day = new Date(cl.second.at).toISOString().slice(0, 10);
+    push(key("viewing_clash", cl.first.id, cl.second.id, day), "viewing_clash",
+         { agentId: cl.first.agentId, note: cl.note });
   });
 
   return out;
