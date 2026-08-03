@@ -26,8 +26,29 @@ service cloud.firestore {
       return isSuperAdmin() ||
         (isAuthed() && 'role' in getUserData() && getUserData().role == 'admin');
     }
+    /* WHO MAY MANAGE AN AGENCY'S DATA.
+       This was `orgRole == 'manager' || isAdmin()`. The words 'owner' and
+       'director' did not appear anywhere in this file, while the application
+       defines five roles — superAdmin, owner, director, manager, agent — and
+       sixteen rules gate on this one function.
+
+       The effect: an agency OWNER could not read or write their own deals,
+       listings or team records. The Pipeline tab told them "contact your agency
+       manager to access the deal pipeline", and even had they got past that, the
+       database would have refused them. The person who buys the software was the
+       one person locked out of it.
+
+       Owner and director sit ABOVE manager in the app's own hierarchy, so both
+       are included here. Tenant isolation is unaffected: every caller still has
+       to pass isSameOrg() separately, so this widens who inside an agency may
+       act, never which agency's data they can reach. */
     function isManager() {
-      return isAuthed() && (getUserData().orgRole == 'manager' || isAdmin());
+      return isAuthed() && (
+        getUserData().orgRole == 'owner'   ||
+        getUserData().orgRole == 'director'||
+        getUserData().orgRole == 'manager' ||
+        isAdmin()
+      );
     }
     function isAgent() {
       return isAuthed() && getUserData().orgRole == 'agent';
@@ -160,16 +181,49 @@ service cloud.firestore {
     }
 
     // ── DEALS ────────────────────────────────────────────────────
+    /* DEALS.
+       Two faults made this collection unusable, on top of the owner lockout
+       fixed in isManager() above.
+
+       1. CREATE WAS IMPOSSIBLE. A single `allow write` gated on
+          `resource.data.orgId`. On a create the document does not exist yet, so
+          `resource` is null, reading `.data.orgId` errors, and an errored
+          condition denies the whole request. Nobody below superAdmin could ever
+          create a deal. Create is split out and reads request.resource.data,
+          which is the incoming document — the same shape /leads already uses.
+
+       2. THE OWNERSHIP FIELD WAS WRONG. The rule checked `assignedTo`; every
+          write path in the app sets `agentId`. So `assignedTo` was always
+          undefined and an agent could not touch their own deal. Both fields are
+          accepted, because older records may carry either.
+
+       Tenant isolation is unchanged and still mandatory: orgId must match on
+       create, and cannot be changed on update. */
     match /deals/{dealId} {
+      function ownsDeal() {
+        return isAssignedAgent(resource.data.assignedTo) ||
+               ('agentId' in resource.data && resource.data.agentId == uid());
+      }
+
       allow read: if isAuthed() && (
         isSuperAdmin() ||
         (isManager() && isSameOrg(resource.data.orgId)) ||
-        isAssignedAgent(resource.data.assignedTo)
+        ownsDeal()
       );
-      allow write: if isAuthed() && (
+
+      allow create: if isAuthed() && hasCRM() && (
+        isSuperAdmin() || isSameOrg(request.resource.data.orgId)
+      );
+
+      allow update: if isAuthed() && (
         isSuperAdmin() ||
         (isManager() && isSameOrg(resource.data.orgId)) ||
-        isAssignedAgent(resource.data.assignedTo)
+        ownsDeal()
+      /* A deal may never be moved into another agency. */
+      ) && (isSuperAdmin() || request.resource.data.orgId == resource.data.orgId);
+
+      allow delete: if isAuthed() && (
+        isSuperAdmin() || (isManager() && isSameOrg(resource.data.orgId))
       );
     }
 

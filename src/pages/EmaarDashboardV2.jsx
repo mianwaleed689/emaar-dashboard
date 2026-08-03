@@ -4048,24 +4048,54 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
   /* —” DEALS PIPELINE LISTENER (Session 5) —” */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser) return;
-    const isAgent   = orgRole === "agent";
-    const isManager = orgRole === "manager";
-    if (!isAgent && !isManager) return;
+    /* WHO GETS A DEALS LISTENER AT ALL.
+       This read `if (!isAgent && !isManager) return;` — so for an OWNER, a
+       DIRECTOR or a superAdmin the subscription never started and `deals` stayed
+       an empty array for ever. A deal written by that owner saved to Firestore
+       correctly and then never appeared on screen, which reads exactly like a
+       failed save. The team listener immediately below this one already gets
+       this right; this one was simply missed.
+
+       Together with the Pipeline tab's own role gate, the missing Firestore
+       imports and the deals security rules, this was the fourth of four
+       independent reasons the deal pipeline did not work for the person who
+       owns the agency. */
+    const isAgent    = orgRole === "agent";
+    const managesOrg = orgRole === "owner" || orgRole === "director" ||
+                       orgRole === "manager" || userRole === "superAdmin" || userRole === "admin";
+    if (!isAgent && !managesOrg) return;
+
     setDealsLoading(true);
     let dealsQ;
+    /* No orderBy: `where(orgId) + orderBy(createdAt)` needs a composite index
+       that does not exist in this project, and when one is missing Firestore
+       fails the whole subscription rather than degrading. Listings already
+       fails this way. Sorting happens below, where it costs nothing at the
+       volumes one agency produces. */
     if (isAgent) {
-      dealsQ = query(collection(db, "deals"), where("agentId","==",firebaseUser.uid), orderBy("createdAt","desc"));
-    } else if (isManager && orgId) {
-      dealsQ = query(collection(db, "deals"), where("orgId","==",orgId), orderBy("createdAt","desc"));
-    } else { setDealsLoading(false); return; }
+      dealsQ = query(collection(db, "deals"), where("agentId", "==", firebaseUser.uid));
+    } else if (orgId) {
+      dealsQ = query(collection(db, "deals"), where("orgId", "==", orgId));
+    } else {
+      /* A manager with no organisation has nothing to subscribe to. Saying so
+         beats an empty screen that looks like a loading failure. */
+      console.warn("[Deals] no orgId on this account — nothing to load.");
+      setDeals([]); setDealsLoading(false); return;
+    }
     const unsub = onSnapshot(dealsQ, snap => {
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       setDeals(list);
       setDealsLoading(false);
-    }, err => { console.warn("[Deals]", err); setDealsLoading(false); });
+    }, err => {
+      console.error("[Deals] subscription failed:", err.code || "", err.message);
+      setDealsLoading(false);
+    });
     return () => unsub();
-  }, [isLoggedIn, firebaseUser, orgRole, orgId]);
+    /* userRole belongs here now that superAdmin and admin can subscribe — without
+       it the listener would not restart when the role resolves after first paint. */
+  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
 
   /* —” TEAM MEMBERS LISTENER (Session 7) —” */
   useEffect(() => {
