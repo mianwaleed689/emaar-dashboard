@@ -4,6 +4,11 @@ import { doc, setDoc, collection } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { PRICING, PRICING_NAMES, PRICING_LABELS, PLAN_FEATURES, SEATS, PUBLIC_PLANS } from "../config/pricing";
 import { TRIAL_DURATION_MS, TRIAL_DURATION_DAYS } from "../utils/constants";
+/* This page advertised a 14-day trial in two places while writing a
+   TRIAL_DURATION_MS of SEVEN days into the account, so every agency was
+   promised twice what it received — on the screen where it signed up, and
+   again in the Terms it ticked on the way past. The figure is now read from
+   the constant that actually governs the trial, so the two cannot drift. */
 
 const T = {
   bg:          "#04090F",
@@ -337,7 +342,7 @@ export default function AgencySignup() {
           {step === 3 && (
             <div style={{ padding:"28px 28px 24px" }}>
               <div style={{ fontFamily:"'Fraunces',serif", fontSize:20, fontWeight:900, color:T.white, marginBottom:4 }}>Choose your plan</div>
-              <div style={{ fontSize:12, color:T.textMuted, marginBottom:24 }}>Start with a 14-day free trial on Pro or Enterprise  no credit card required</div>
+              <div style={{ fontSize:12, color:T.textMuted, marginBottom:24 }}>{`Start with a ${TRIAL_DURATION_DAYS}-day free trial — no credit card required`}</div>
               <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
                 {PLANS.map(plan => (
                   <div key={plan.key} onClick={()=>setSelectedPlan(plan.key)}
@@ -348,7 +353,7 @@ export default function AgencySignup() {
                           {selectedPlan===plan.key && <div style={{ width:8, height:8, borderRadius:"50%", background:plan.color }}/>}
                         </div>
                         <span style={{ fontSize:14, fontWeight:700, color:selectedPlan===plan.key?plan.color:T.textPrimary }}>{plan.label}</span>
-                        {plan.key !== "free" && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:10, background:`${plan.color}18`, color:plan.color, fontWeight:700 }}>14-day trial</span>}
+                        {plan.key !== "free" && <span style={{ fontSize:9, padding:"2px 7px", borderRadius:10, background:`${plan.color}18`, color:plan.color, fontWeight:700 }}>{TRIAL_DURATION_DAYS}-day trial</span>}
                       </div>
                       <span style={{ fontSize:14, fontWeight:700, color:plan.color }}>{plan.price}</span>
                     </div>

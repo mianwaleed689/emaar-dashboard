@@ -17,7 +17,7 @@ export default function Terms() {
       <p>You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized access. We reserve the right to suspend or terminate accounts that violate these Terms.</p>
 
       <h2>4. Subscription Plans</h2>
-      <p>DXB Analytics offers Free, Pro (AED 299/month), and Enterprise (AED 799/month) plans. Paid plans include a 14-day free trial. Subscriptions auto-renew unless cancelled before the next billing cycle. Refunds are handled on a case-by-case basis per UAE consumer protection law.</p>
+      <p>DXB Analytics offers Free, Individual agent (AED 300/month), and Agency (AED 500/month, including up to 10 agent seats) plans. Paid plans include a 7-day free trial. Subscriptions auto-renew unless cancelled before the next billing cycle. Refunds are handled on a case-by-case basis per UAE consumer protection law.</p>
 
       <h2>5. Acceptable Use</h2>
       <p>You agree not to: (a) use the Service for any unlawful purpose; (b) resell or redistribute data without permission; (c) attempt to reverse-engineer, scrape, or automate access; (d) upload malicious content; (e) impersonate other users or agencies; (f) share your account credentials with others.</p>

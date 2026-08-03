@@ -8,6 +8,12 @@
 import React, { useState } from "react";
 import { T } from "../data";
 import { Icons } from "./Icons";
+/* Prices come from one file. These buttons said AED 99 — the price before
+   the repricing to AED 300 — which is the number a customer read at the
+   moment they decided to pay. Three times wrong, on the one screen where
+   being wrong is a misquote rather than a typo. */
+import { PRICING_DISPLAY } from "../config/pricing";
+import { PRICING_META } from "../data/landingFacts";
 
 /* ─── LOADING SKELETON ─── */
 export const LoadingSkeleton = ({ rows = 6, cols = 3 }) => (
@@ -197,7 +203,7 @@ export const ProGate = ({ children, isPro, message = "Upgrade to Pro to unlock t
               <div key={i} style={{ fontSize: 11, color: T.textSecondary, textAlign: "left", paddingLeft: 4 }}>✓ {f}</div>
             ))}
           </div>
-          <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>Unlock Pro — AED 99/mo →</button>
+          <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "11px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3 }}>{`Unlock Pro — ${PRICING_DISPLAY.pro}/mo →`}</button>
           <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8 }}>7-day money-back guarantee · Cancel anytime</div>
         </div>
       </div>
@@ -239,8 +245,8 @@ export const ProGateFullPage = ({ tabName, onUpgrade }) => {
             </div>
           ))}
         </div>
-        <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>Upgrade to Pro — AED 99/mo →</button>
-        <div style={{ fontSize: 11, color: T.textMuted }}>7-day free trial · Cancel anytime · Money-back guarantee</div>
+        <button type="button" onClick={onUpgrade} style={{ width: "100%", padding: "14px 0", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, color: T.bg, border: "none", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit', sans-serif", letterSpacing: 0.3, marginBottom: 10 }}>{`Upgrade to Pro — ${PRICING_DISPLAY.pro}/mo →`}</button>
+        <div style={{ fontSize: 11, color: T.textMuted }}>{PRICING_META.trialDays}-day free trial · Cancel anytime · Money-back guarantee</div>
       </div>
     </div>
   );
