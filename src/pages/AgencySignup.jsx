@@ -383,8 +383,22 @@ export default function AgencySignup() {
               <div style={{ fontSize:13, color:T.textMuted, marginBottom:8, lineHeight:1.6 }}>
                 <strong style={{ color:T.gold }}>{createdOrg?.name}</strong> has been registered.
               </div>
-              <div style={{ fontSize:12, color:T.textMuted, marginBottom:28, padding:"12px 16px", background:"rgba(245,158,11,0.06)", border:"1px solid rgba(245,158,11,0.2)", borderRadius:9 }}>
-                Your account is <strong style={{ color:"#F59E0B" }}>pending approval</strong> by our team. You'll receive an email within 24 hours once activated.
+              {/* THIS SAID THE ACCOUNT WAS "PENDING APPROVAL BY OUR TEAM" AND
+                  PROMISED AN EMAIL WITHIN 24 HOURS. None of that was true.
+                  "pending approval" appeared nowhere else in the product: there
+                  is no approval queue, nothing gates the dashboard on it, and no
+                  such email is sent. The account is live the moment it is made —
+                  the Go to Dashboard button directly below it worked all along.
+
+                  The cost was not just inaccuracy. A new agency read it, closed
+                  the tab to wait for a mail that would never arrive, and spent
+                  part of a SEVEN day trial waiting. The last thing a customer
+                  reads on the way in should not send them away. */}
+              <div style={{ fontSize:12, color:T.textMuted, marginBottom:28, padding:"12px 16px", background:"rgba(16,185,129,0.06)", border:"1px solid rgba(16,185,129,0.2)", borderRadius:9, lineHeight:1.6 }}>
+                Your <strong style={{ color:T.green }}>{TRIAL_DURATION_DAYS}-day trial is active now</strong> — nothing to wait for.
+                We have sent a verification link to <strong style={{ color:T.white }}>{managerForm.email.trim()}</strong>;
+                confirming it keeps your account recoverable if you forget your password.
+                Invite your agents from the Team tab whenever you are ready.
               </div>
               <a href="/dashboard"
                 style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"12px 28px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:13, fontWeight:700, textDecoration:"none", fontFamily:"'Outfit',sans-serif" }}>

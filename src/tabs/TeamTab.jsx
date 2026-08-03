@@ -6,10 +6,11 @@
 */
 
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { initializeApp, deleteApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, updateDoc, collection, query, where, getDocs, arrayUnion } from "firebase/firestore";
 import { DEPARTMENTS, SENIORITY } from "../crm/model/org";
-import { auth, db } from "../firebase";
+import { auth, db, firebaseConfig } from "../firebase";
 import PhoneInput from "../components/PhoneInput";
 import NationalitySelect from "../components/NationalitySelect";
 import { T } from "../data";
@@ -137,14 +138,37 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
     if(!/[0-9]/.test(form.password)){ notify("Password needs at least 1 number","error"); return; }
     setCreating(true);
     try {
-      // Save current manager session before creating new user
-      const managerEmail    = firebaseUser?.email || "";
-      const managerUid      = firebaseUser?.uid   || "";
-      const managerPassword = null; // we don't have it — use Admin SDK in production
+      const managerEmail = firebaseUser?.email || "";
+      const managerUid   = firebaseUser?.uid   || "";
 
-      // Create Firebase Auth account
-      const cred = await createUserWithEmailAndPassword(auth, form.email.trim(), form.password);
-      const agentUid = cred.user.uid;
+      /* ── CREATING A USER MUST NOT LOG THE CREATOR OUT ──────────────────
+         createUserWithEmailAndPassword signs the new account in on whichever
+         Firebase app it is given. Called on the primary app — as it was here —
+         it silently replaced the owner's session with the agent's. An owner
+         adding their first agent was ejected from their own agency and left
+         looking at the product as that agent, and it survived a reload.
+
+         Verified in a browser on a real signup: after adding "ZZ Agent
+         Fatima" the page read "Welcome, ZZ Agent Fatima". The previous code
+         knew — it kept a `managerPassword = null` with a note to use the
+         Admin SDK in production — but shipped anyway, so every agency hit
+         this on the first agent they ever added.
+
+         The fix needs no backend. A SECOND Firebase app instance has its own
+         auth state, so the new account is created and signed out there while
+         the primary session carries on untouched. The Firestore writes below
+         deliberately stay on the primary `db`: they must run as the manager,
+         which is what the security rules expect. */
+      const helperApp = initializeApp(firebaseConfig, `agent-create-${Date.now()}`);
+      let agentUid;
+      try {
+        const helperAuth = getAuth(helperApp);
+        const cred = await createUserWithEmailAndPassword(helperAuth, form.email.trim(), form.password);
+        agentUid = cred.user.uid;
+        await signOut(helperAuth);
+      } finally {
+        await deleteApp(helperApp).catch(() => {});
+      }
 
       // Create users doc
       await setDoc(doc(db,"users",agentUid),{
@@ -187,7 +211,14 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
           name:    form.name.trim(),
           email:   form.email.trim(),
           phone:   form.phone.trim(),
-          orgRole: "agent",
+          /* This was hardcoded "agent", so an org member created as a Manager
+             or Director was recorded as an agent here while the users doc said
+             otherwise — two records of the same person disagreeing. */
+          orgRole: form.seniority === "owner" ? "owner"
+                 : form.seniority === "director" ? "director"
+                 : form.seniority === "manager" ? "manager" : "agent",
+          department: form.department || "sales",
+          seniority:  form.seniority || "staff",
           orgId,
           managerId: managerUid,
           status:  "active",

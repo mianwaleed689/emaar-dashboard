@@ -118,6 +118,29 @@ service cloud.firestore {
              'crmPlan', 'subscriptionStatus', 'verified', 'verifiedLevel', 'kycLevel', 'suspended'
            ]);
 
+      /* AN AGENCY OWNER CREATES THEIR OWN STAFF.
+         Only self-creation was allowed here, which looked safe and was — but
+         it meant a manager adding an agent could not write that agent's user
+         document. The Team tab got away with it for the worst possible reason:
+         it created the auth account on the primary Firebase app, which SIGNED
+         THE NEW AGENT IN, so the write ran as the agent writing their own
+         document and passed. The bug was holding the feature up. Fixing the
+         session theft in TeamTab.jsx made this denial visible, verified in a
+         browser as "Missing or insufficient permissions".
+
+         The same guards as the update clause below: an org admin, the new
+         person must land in the creator's OWN agency, no minting of admins,
+         and none of the billing or verification fields. */
+      allow create: if isOrgAdmin()
+        && request.resource.data.orgId == userOrgId()
+        && (!('role' in request.resource.data) || request.resource.data.role in ['user', 'agent'])
+        && (!('orgRole' in request.resource.data)
+            || request.resource.data.orgRole in ['owner', 'director', 'manager', 'agent'])
+        && (!('tier' in request.resource.data) || request.resource.data.tier in ['free', 'pro_trial'])
+        && !request.resource.data.keys().hasAny([
+             'crmPlan', 'subscriptionStatus', 'verified', 'verifiedLevel', 'kycLevel', 'suspended'
+           ]);
+
       // After sign-up the privileged fields are frozen for the owner.
       // Admins may still manage users, but only a superAdmin can mint a superAdmin.
       allow update: if isAuthed() && (
