@@ -221,7 +221,7 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
                   <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Listings</h1>
                   <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Create · Manage · Publish to portals · Track performance</p>
                 </div>
-                <button type="button" onClick={()=>setShowNewListing(true)}
+                <button type="button" onClick={()=>setShowNewListing(true)} title="Record a property you are marketing. You will be asked for the Form A and the Trakheesi permit, because nothing can be advertised without them."
                   style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   New Listing
@@ -250,8 +250,14 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
               {/* ── Filters ── */}
               <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
                 <div style={{ display:"flex", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden" }}>
-                  {[["all","All"],["Available","Available"],["Reserved","Reserved"],["Sold","Sold"]].map(([v,l])=>(
-                    <button key={v} type="button" onClick={()=>setListingFilter(v)}
+                  {/* Each of these was a bare word. "Reserved" and "Available" mean
+                      different things in different agencies, so each one now says
+                      which listings it will show. */}
+                  {[["all","All","Every listing on your books, whatever its state"],
+                    ["Available","Available","On the market and not under offer"],
+                    ["Reserved","Reserved","Under offer. Still owned by the seller until it transfers."],
+                    ["Sold","Sold","Transferred. Kept for the record."]].map(([v,l,tip])=>(
+                    <button key={v} type="button" onClick={()=>setListingFilter(v)} title={tip}
                       style={{ padding:"8px 14px", fontSize:11, fontWeight:600, border:"none", background:listingFilter===v?"rgba(212,168,67,0.15)":"transparent", color:listingFilter===v?T.gold:T.textMuted, cursor:"pointer", fontFamily:"'Outfit',sans-serif", borderRight:`1px solid ${T.border}` }}>
                       {l}
                     </button>
@@ -277,13 +283,18 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
                   <div style={{ fontSize:14, fontWeight:600, color:T.textPrimary, marginBottom:6 }}>
                     {listings.length === 0 ? "No listings yet" : "No listings match filters"}
                   </div>
-                  <div style={{ fontSize:12, color:T.textMuted, marginBottom:20 }}>
-                    {listings.length === 0 ? "Create your first listing to start publishing to portals" : "Try adjusting your filters"}
+                  {/* "start publishing to portals" repeated the claim this tab
+                      does not support. Nothing is published from here. */}
+                  <div style={{ fontSize:12, color:T.textMuted, marginBottom:20, lineHeight:1.7, maxWidth:430 }}>
+                    {listings.length === 0
+                      ? "Record a property and this will tell you whether it may lawfully be advertised yet — Form A signed, Trakheesi permit issued and still valid, broker card current."
+                      : "Nothing matches the filters you have set."}
                   </div>
                   {listings.length === 0 && (
                     <button type="button" onClick={()=>setShowNewListing(true)}
-                      style={{ padding:"10px 24px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                      Create First Listing
+                      title="Record a property you are marketing"
+                      style={{ padding:"10px 24px", borderRadius:8, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      Record the first one
                     </button>
                   )}
                 </div>

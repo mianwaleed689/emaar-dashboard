@@ -731,10 +731,15 @@ export default function NeighbourhoodsTab({liveNeighbourhoods=[],handleTabChange
           <option value="airport">Sort: nearest airport</option>
         </select>
         <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2}}>
-          {[{k:"grid",icon:""},{k:"table",icon:""}].map(v=>(
-            <button key={v.k} type="button" onClick={()=>setView(v.k)}
-              style={{padding:"5px 10px",borderRadius:5,border:view===v.k?"1px solid "+T.gold:"1px solid transparent",background:view===v.k?"rgba(212,168,67,0.15)":"transparent",color:view===v.k?T.gold:"#94A3B8",cursor:"pointer",fontSize:13}}>
-              {v.icon}
+          {/* Both of these carried an empty icon string, so the whole switcher
+              rendered as two blank 22x12px boxes and the table view could only
+              be found by clicking what looked like nothing. Same fault as the
+              Map's view switcher and the My Leads one. */}
+          {[{k:"grid", l:"Cards", tip:"Each community as a card"},
+            {k:"table",l:"Table", tip:"All communities in one sortable table"}].map(v=>(
+            <button key={v.k} type="button" onClick={()=>setView(v.k)} title={v.tip}
+              style={{padding:"5px 12px",borderRadius:5,border:view===v.k?"1px solid "+T.gold:"1px solid transparent",background:view===v.k?"rgba(212,168,67,0.15)":"transparent",color:view===v.k?T.gold:"#94A3B8",cursor:"pointer",fontSize:11,fontWeight:view===v.k?700:500,fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap"}}>
+              {v.l}
             </button>
           ))}
         </div>
