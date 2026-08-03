@@ -5586,7 +5586,8 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
               showNewDeal={showNewDeal} setShowNewDeal={setShowNewDeal}
               selectedDeal={selectedDeal} setSelectedDeal={setSelectedDeal}
               pipelineType={pipelineType} setPipelineType={setPipelineType}
-              firebaseUser={firebaseUser} orgId={orgId} orgName={orgProfile?.name} orgRole={orgRole} userName={userName}
+              firebaseUser={firebaseUser} orgId={orgId} orgName={orgProfile?.name}
+              orgRole={orgRole} userRole={userRole} userName={userName}
             />
           )}
 

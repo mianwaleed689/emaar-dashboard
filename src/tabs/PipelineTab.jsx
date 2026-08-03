@@ -55,7 +55,9 @@ import {
   COMMISSION_DEFAULTS, defaultRateFor, SIDES, SIDES_FOR, STATES, fmt,
 } from "../crm/model/commission";
 import { migrateDeals, migrateCommission } from "../crm/model/migrate";
-import { viewerFrom, scopeFor, intentFor, visibleRecords } from "../crm/model/org";
+import { viewerFrom, scopeFor, intentFor, visibleRecords, DEPARTMENTS } from "../crm/model/org";
+import { whoseTurn, myWork, workByDepartment, stepRecord, stepQuality,
+         dealTimeline, HANDOVER_NOTE } from "../crm/model/workflow";
 
 const card  = { background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`, borderRadius: 12 };
 const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7, textTransform: "uppercase" };
@@ -112,6 +114,13 @@ export default function PipelineTab({
   const money   = useMemo(() => agencyStatement(lines), [lines]);
   const myMoney = useMemo(() => agentStatement(lines, uid), [lines, uid]);
 
+  /* WHOSE DESK EVERYTHING IS ON.
+     The owner's brief was a system where every individual's work is defined and
+     nobody has to walk over and ask where a deal is. `mine` is that list for
+     this person; `byDept` is the same question for the whole company. */
+  const mine_work = useMemo(() => myWork(all, me), [all, me]);
+  const byDept    = useMemo(() => workByDepartment(all), [all]);
+
   /* Everything blocked, and by what — the report a manager actually opens. */
   const blocked = useMemo(() => open.map(d => ({ d, why: canAdvance(d) }))
     .filter(x => !x.why.ok && x.why.missing.length), [open]);
@@ -122,23 +131,43 @@ export default function PipelineTab({
 
   /* ── WRITES — every one of these previously threw ReferenceError ───────── */
 
-  const advance = useCallback(async d => {
+  /* Moving a deal on REQUIRES a note. That is the whole point of the workflow:
+     the next person picks the deal up from what you wrote, and an empty note
+     means they have to come and ask you — which is the thing this exists to
+     stop. The note is checked for substance, not just presence, because "ok"
+     tells the next person nothing. */
+  const advance = useCallback(async (d, note) => {
     const gate = canAdvance(d);
-    if (!gate.ok) { say(gate.reason, true); return; }
+    if (!gate.ok) { say(gate.reason, true); return false; }
+
+    const step = stepRecord(d, nextStage(d).key,
+      { id: uid, name: userName || firebaseUser?.email || "", department: me.department || "sales" },
+      note || "");
+    const quality = stepQuality(step);
+    if (!quality.ok) { say(quality.why, true); return false; }
+
     setBusy(true);
     try {
       const to = nextStage(d).key;
-      await setDoc(doc(db, "deals", d.id),
-        { stage: to, journey: d.journey, needsReview: false, updatedAt: new Date().toISOString() },
-        { merge: true });
-      setSelected(s => s?.id === d.id ? { ...s, stage: to, needsReview: false } : s);
-      say(`Moved to ${stagesOf(d).find(s => s.key === to)?.label}.`);
+      await setDoc(doc(db, "deals", d.id), {
+        stage: to, journey: d.journey, needsReview: false,
+        steps: [...(d.steps || []), step],
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+      setSelected(s => s?.id === d.id
+        ? { ...s, stage: to, needsReview: false, steps: [...(s.steps || []), step] } : s);
+      const turn = whoseTurn({ ...d, stage: to });
+      say(`Moved to ${stagesOf(d).find(s => s.key === to)?.label}.` +
+          (turn.done ? "" : ` Now with ${turn.departmentLabel}.`));
+      setBusy(false);
+      return true;
     } catch (e) {
       console.error("[pipeline] advance failed:", e);
       say("Could not save that — the deal has not moved.", true);
+      setBusy(false);
+      return false;
     }
-    setBusy(false);
-  }, [say]);
+  }, [say, uid, userName, firebaseUser, me]);
 
   const setStage = useCallback(async (d, stage) => {
     setBusy(true);
@@ -300,6 +329,60 @@ export default function PipelineTab({
         )}
       </div>
 
+      {/* ON YOUR DESK — the list that replaces walking over and asking.
+          Every deal in the agency currently waiting on THIS person's
+          department, blocked ones first, each with the instruction. */}
+      {mine_work.total > 0 && (
+        <div style={{ ...card, margin: "12px 4px", padding: "13px 15px",
+                      borderColor: mine_work.blocked ? "rgba(239,68,68,0.3)" : T.gold + "44" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 9 }}>
+            <span style={{ ...muted, color: mine_work.blocked ? "#EF4444" : T.gold }}>On your desk</span>
+            <span style={{ fontSize: 11, color: T.textSecondary }}>{mine_work.headline}</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {mine_work.items.slice(0, 6).map(({ deal: d, turn }) => (
+              <div key={d.id} onClick={() => { setJourney(d.journey); setSelected(d); }}
+                style={{ cursor: "pointer", display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, minWidth: 74, flexShrink: 0,
+                               color: turn.blocked ? "#EF4444" : T.gold }}>
+                  {turn.blocked ? "Blocked" : turn.stageLabel}
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 11.5, color: T.white, fontWeight: 600 }}>
+                    {d.client || d.leadName || "Untitled deal"}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: T.textSecondary, lineHeight: 1.5 }}>
+                    {turn.blocked ? turn.blockedBy : turn.does}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* WHERE EVERY DEAL IS SITTING — for anyone who sees the whole agency. */}
+      {scope === "org" && byDept.length > 0 && (
+        <div style={{ ...card, margin: "0 4px 12px", padding: "13px 15px" }}>
+          <div style={{ ...muted, marginBottom: 9 }}>Which department each deal is waiting on</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {byDept.map(d => (
+              <div key={d.department} title={`${d.total} deal${d.total === 1 ? "" : "s"} with ${d.label}${d.blocked ? `, ${d.blocked} blocked` : ""}`}
+                style={{ flex: "1 1 150px", minWidth: 140, padding: "9px 11px", borderRadius: 8,
+                         background: d.blocked ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.02)",
+                         border: `1px solid ${d.blocked ? "rgba(239,68,68,0.28)" : T.border}` }}>
+                <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Fraunces',serif",
+                              color: d.blocked ? "#EF4444" : T.gold }}>{d.total}</div>
+                <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 2 }}>{d.label}</div>
+                {d.blocked > 0 && (
+                  <div style={{ fontSize: 9.5, color: "#EF4444", marginTop: 2 }}>{d.blocked} blocked</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* DEALS THE OLD PIPELINE COULD NOT DESCRIBE */}
       {needsReview.length > 0 && (
         <div style={{ margin: "12px 4px", padding: "12px 14px", borderRadius: 10,
@@ -445,6 +528,16 @@ export default function PipelineTab({
                   ))}
                 </div>
 
+                {/* Whose turn, on the card, so nobody has to open it to find out. */}
+                {(() => { const turn = whoseTurn(d);
+                  if (turn.done) return null;
+                  return (
+                    <div style={{ fontSize: 10.5, color: T.textMuted, marginBottom: 5 }}>
+                      With <b style={{ color: turn.blocked ? "#EF4444" : T.textSecondary }}>{turn.departmentLabel}</b>
+                      {" — "}{turn.does}
+                    </div>
+                  );
+                })()}
                 <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
                   <span style={{ fontSize: 11, fontWeight: 700, color: J.colour }}>{st.label}</span>
                   <span style={{ fontSize: 11, color: gate.ok ? T.textMuted : "#F59E0B", lineHeight: 1.5 }}>
@@ -461,7 +554,7 @@ export default function PipelineTab({
         {selected && (
           <DealPanel deal={selected} busy={busy} canDelete={seesAll}
             onClose={() => setSelected(null)}
-            onAdvance={() => advance(selected)}
+            onAdvance={note => advance(selected, note)}
             onSetStage={s => setStage(selected, s)}
             onDoc={(k, v) => markDocument(selected, k, v)}
             onDelete={() => remove(selected)} />
@@ -586,6 +679,9 @@ const Sel = ({ value, onChange, children }) =>
 /** One deal: where it is, what it is missing, and what it is worth. */
 function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canDelete, busy }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [note, setNote] = useState("");
+  const turn = whoseTurn(deal);
+  const timeline = dealTimeline(deal);
   const J = journeyOf(deal);
   const gate = canAdvance(deal);
   const req  = requiredDocuments(deal);
@@ -646,10 +742,40 @@ function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canD
           </div>
         </div>
 
-        {/* THE GATE */}
+        {/* WHOSE TURN, WHAT THEY MUST DO, AND THE NOTE THAT HANDS IT ON. */}
+        {!turn.done && (
+          <div style={{ padding: "11px 13px", borderRadius: 8,
+                        background: "rgba(255,255,255,0.025)", border: `1px solid ${T.border}` }}>
+            <div style={{ ...muted, marginBottom: 5 }}>Whose turn</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: turn.blocked ? "#EF4444" : T.gold, marginBottom: 4 }}>
+              {turn.departmentLabel}
+            </div>
+            <div style={{ fontSize: 11.5, color: T.textSecondary, lineHeight: 1.6 }}>{turn.does}</div>
+            {turn.records && (
+              <div style={{ fontSize: 10.5, color: T.textMuted, lineHeight: 1.6, marginTop: 6 }}>
+                <b style={{ color: T.textSecondary }}>Write down:</b> {turn.records}
+              </div>
+            )}
+          </div>
+        )}
+
         {!isComplete(deal) && (
           <div>
-            <button type="button" onClick={onAdvance} disabled={busy || !gate.ok}
+            {/* A deal does not move without a note. The next person picks it up
+                from what you wrote; an empty note means they have to come and
+                ask, which is the thing this whole workflow exists to stop. */}
+            <div style={{ ...muted, marginBottom: 5 }}>What did you do?</div>
+            <textarea value={note} onChange={e => setNote(e.target.value)} rows={3}
+              placeholder={turn.records ? `e.g. ${turn.records}` : "What you did, and anything the next person needs to know."}
+              style={{ width: "100%", padding: "8px 10px", background: "rgba(255,255,255,0.04)",
+                       border: `1px solid ${T.border}`, borderRadius: 7, color: T.white, fontSize: 11.5,
+                       outline: "none", resize: "vertical", boxSizing: "border-box",
+                       fontFamily: "'Outfit',sans-serif", lineHeight: 1.5 }} />
+            <div style={{ fontSize: 9.5, color: T.textMuted, margin: "5px 0 8px", lineHeight: 1.55 }}>
+              {HANDOVER_NOTE}
+            </div>
+            <button type="button" onClick={async () => { const ok = await onAdvance(note); if (ok) setNote(""); }}
+              disabled={busy || !gate.ok}
               style={{ width: "100%", padding: 10, borderRadius: 8, border: "none", fontFamily: "'Outfit',sans-serif",
                        background: gate.ok ? "linear-gradient(135deg,#D4A843,#B8902E)" : "rgba(255,255,255,0.05)",
                        color: gate.ok ? "#0A0E1A" : T.textMuted, fontSize: 12, fontWeight: 700,
@@ -657,6 +783,35 @@ function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canD
               {gate.ok ? `Move to ${nextStage(deal).label}` : "Cannot move on yet"}
             </button>
             {!gate.ok && <div style={{ fontSize: 10.5, color: "#F59E0B", marginTop: 6, lineHeight: 1.6 }}>{gate.reason}</div>}
+          </div>
+        )}
+
+        {/* WHAT HAS HAPPENED SO FAR — who did what, when, in their words. */}
+        {timeline.length > 0 && (
+          <div>
+            <div style={{ ...muted, marginBottom: 7 }}>What has happened</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              {timeline.map((st, i) => (
+                <div key={i} style={{ paddingLeft: 10, borderLeft: `2px solid ${st.quality.ok ? T.border : "rgba(245,158,11,0.5)"}` }}>
+                  <div style={{ fontSize: 10.5, color: T.textSecondary, fontWeight: 600 }}>
+                    {st.summary}
+                    <span style={{ color: T.textMuted, fontWeight: 400 }}>
+                      {" · "}{new Date(st.at).toLocaleDateString("en-AE", { day: "2-digit", month: "short" })}
+                      {st.byDepartment ? ` · ${DEPARTMENTS[st.byDepartment]?.label || st.byDepartment}` : ""}
+                    </span>
+                  </div>
+                  {st.note && <div style={{ fontSize: 11, color: T.white, lineHeight: 1.55, marginTop: 2 }}>{st.note}</div>}
+                  {!st.quality.ok && (
+                    <div style={{ fontSize: 10, color: "#F59E0B", marginTop: 2, lineHeight: 1.5 }}>{st.quality.why}</div>
+                  )}
+                  {st.fileCount > 0 && (
+                    <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
+                      {st.fileCount} file{st.fileCount === 1 ? "" : "s"} attached
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

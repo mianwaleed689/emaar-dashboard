@@ -1,0 +1,60 @@
+rules_version = '2';
+
+/**
+ * FILE STORAGE — DEAL PAPERWORK.
+ *
+ * This file did not exist. `getStorage()` was exported from src/firebase.js and
+ * nothing had ever been uploaded, so the bucket ran on whatever default it was
+ * created with — which is either "nobody can write" or, worse, "any signed-in
+ * user can read everything". Neither is acceptable for a product holding one
+ * agency's Form F next to another's.
+ *
+ * THE SHAPE
+ *   orgs/{orgId}/deals/{dealId}/{fileName}
+ *
+ * The organisation is in the PATH rather than in the file's metadata, because
+ * Storage rules cannot read a Firestore document cheaply enough to check it on
+ * every request. Putting the tenant in the path makes isolation a string
+ * comparison that cannot be got wrong.
+ *
+ * The user's own organisation is read from their Firestore user record. That is
+ * one read per request, which is the price of doing this correctly.
+ */
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthed() { return request.auth != null; }
+    function userOrg() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.orgId;
+    }
+    function isPlatformAdmin() {
+      let u = firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+      return ('role' in u && (u.role == 'admin' || u.role == 'superAdmin'))
+          || ('superAdmin' in u && u.superAdmin == true);
+    }
+
+    /* Deal paperwork — Form A, Form F, the NOC, the title deed, Ejari. */
+    match /orgs/{orgId}/deals/{dealId}/{fileName} {
+      allow read: if isAuthed() && (isPlatformAdmin() || userOrg() == orgId);
+
+      /* 20 MB is generous for a scanned contract and mean enough that nobody
+         uses the deal file as a video store. The content type is restricted
+         because an HTML file served from this bucket would run as our origin. */
+      allow write: if isAuthed()
+        && (isPlatformAdmin() || userOrg() == orgId)
+        && request.resource.size < 20 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType == 'application/pdf');
+
+      /* Deleting evidence is not a normal action. Nothing in the app offers it,
+         and the rule says so rather than leaving it to the UI. */
+      allow delete: if isPlatformAdmin();
+    }
+
+    /* Anything not matched above is denied, which is the default and is left
+       explicit so a future path cannot be added without a rule. */
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
