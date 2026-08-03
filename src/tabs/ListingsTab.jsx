@@ -200,7 +200,11 @@ function ListingsTab({ liveNeighbourhoods=[],
 
             return (<>
 
-            {_copy && <TabIntro title={_copy.title} what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
+            {/* No title here. The heading below is scope-aware — it says "All
+                listings" to a manager and only their own to an agent — so this
+                one printed a second, less informative "Listings" a hundred
+                pixels above it. */}
+            {_copy && <TabIntro what={_copy.what} detail={_copy.detail} includes={_copy.includes} excludes={_copy.excludes} warning={_copy.warning}/>}
 
               {/* ADVERTS RUNNING THAT SHOULD NOT BE.
                   This is the one number on the tab an owner needs before any
