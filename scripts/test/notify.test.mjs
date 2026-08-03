@@ -165,6 +165,25 @@ ok("the summary counts what is unread",  sum.unread === 2, sum);
 ok("  and says how many need you now",   /1 thing needs you now/.test(sum.headline), sum.headline);
 ok("an empty inbox says so plainly",     /Nothing needs you/.test(inboxSummary([], "ag1").headline));
 
+/* ── THE FIELDS THE APP ACTUALLY READS ────────────────────────────────────── */
+head("FIELD NAMES — the mismatch that would have failed invisibly");
+
+const one = notificationsFor("lead_assigned",
+  { leadName: "Sarah", source: "Bayut", agentId: "ag1" }, PEOPLE)[0];
+
+/* The dashboard's listener orders by createdAt, and Firestore OMITS any
+   document missing the field it orders by. A notification written with only
+   `at` would never have appeared at all — no error, no empty state, just
+   silence. The existing panel also renders `message`, not `body`. */
+ok("every notification carries createdAt, which the listener orders by",
+   Boolean(one.createdAt), one);
+ok("  and `message`, which the panel renders", Boolean(one.message), one.message);
+ok("  message matches body",  one.message === one.body);
+ok("  createdAt matches at",  one.createdAt === one.at);
+ok("  and `type`, which the panel routes on", one.type === "lead_assigned");
+ok("  read starts false",     one.read === false);
+ok("  addressed to the right person", one.userId === "ag1");
+
 console.log(`\n${"═".repeat(62)}`);
 console.log(`  ${pass} passed, ${fail} failed`);
 console.log("═".repeat(62));

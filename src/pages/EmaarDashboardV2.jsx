@@ -6251,19 +6251,35 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
             )}
             {notifications.length === 0 ? (
               <div style={{ padding: 40, textAlign: "center", color: T.textMuted }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>🔔</div>
-                <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 4 }}>No notifications yet</div>
-                <div style={{ fontSize: 11 }}>Set alerts on project cards ★ to get notified of price changes.</div>
+                {/* This said "set alerts on project cards to get notified of price
+                    changes", which was the only thing that ever sent one. Deals,
+                    leads, listings, commission and compliance all notify now. */}
+                <div style={{ fontSize: 13, color: T.textSecondary, marginBottom: 6 }}>Nothing needs you</div>
+                <div style={{ fontSize: 11, lineHeight: 1.6, maxWidth: 300, margin: "0 auto" }}>
+                  You will be told here when a deal reaches your desk, a lead is assigned
+                  to you, a document or permit is about to expire, or your commission is
+                  paid.
+                </div>
               </div>
             ) : notifications.map((n, i) => (
-              <div key={n.id} onClick={() => { markNotifRead(n.id); setShowNotifications(false); if(n.type==="new_launch") { handleTabChange("Projects"); if(n.projectNumbers&&n.projectNumbers.length>0) setProjSearch(n.projectNumbers.join(" ")); } else if(n.type==="completed"||n.type==="cancelled"||n.type==="progress") { handleTabChange("Projects"); if(n.projectName){ const proj=activeProjects.find(p=>(p.name||p.project)===n.projectName); if(proj)setSelectedProject(proj); } } else if(n.type==="stale_leads"||n.type==="lead_assigned") handleTabChange("My Leads"); }} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
+              <div key={n.id} onClick={() => { markNotifRead(n.id); setShowNotifications(false); if(n.type==="new_launch") { handleTabChange("Projects"); if(n.projectNumbers&&n.projectNumbers.length>0) setProjSearch(n.projectNumbers.join(" ")); } else if(n.type==="completed"||n.type==="cancelled"||n.type==="progress") { handleTabChange("Projects"); if(n.projectName){ const proj=activeProjects.find(p=>(p.name||p.project)===n.projectName); if(proj)setSelectedProject(proj); } } else if(n.type==="stale_leads"||n.type==="lead_assigned") handleTabChange("My Leads"); else if(n.area==="deals"||n.area==="money") handleTabChange("Pipeline"); else if(n.area==="leads") handleTabChange("My Leads"); else if(n.area==="listings") handleTabChange("Listings"); else if(n.area==="compliance"||n.area==="people") handleTabChange("People"); }} style={{ padding: "14px 20px", borderBottom: `1px solid ${T.border}`, cursor: "pointer", background: n.read ? "transparent" : "rgba(212,168,67,0.04)", transition: "background 0.2s" }}
                 onMouseEnter={e => e.currentTarget.style.background = T.surfaceAlt}
                 onMouseLeave={e => e.currentTarget.style.background = n.read ? "transparent" : "rgba(212,168,67,0.04)"}>
+                {/* Urgency is carried as a stripe rather than only in colour on the
+                    text, so what needs doing now is visible before anything is read. */}
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>{n.icon || "🔔"}</span>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ width: 3, alignSelf: "stretch", borderRadius: 2, flexShrink: 0,
+                                background: n.urgency === "now" ? "#EF4444"
+                                          : n.urgency === "soon" ? "#F59E0B"
+                                          : n.urgency ? "#3B82F6" : T.border }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, fontWeight: n.read ? 400 : 700, color: n.read ? T.textSecondary : T.white, marginBottom: 3 }}>{n.title || "Update"}</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>{n.message}</div>
+                    <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.55 }}>{n.message || n.body}</div>
+                    {/* Why it reached YOU — the difference between a useful
+                        notification and one that makes you open the app to find out. */}
+                    {n.why && (
+                      <div style={{ fontSize: 10, color: T.textSecondary, marginTop: 4, fontStyle: "italic" }}>{n.why}</div>
+                    )}
                     <div style={{ fontSize: 10, color: T.textMuted, marginTop: 5 }}>{n.createdAt ? new Date(n.createdAt).toLocaleDateString("en-AE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</div>
                   </div>
                   {!n.read && <div style={{ width: 8, height: 8, borderRadius: "50%", background: T.gold, flexShrink: 0, marginTop: 4 }} />}

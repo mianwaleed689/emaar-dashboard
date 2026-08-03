@@ -237,10 +237,18 @@ export function notificationsFor(eventKey, ctx = {}, people = [], now = new Date
   const title = typeof ev.title === "function" ? ev.title(ctx) : ev.title;
   const body  = typeof ev.body  === "function" ? ev.body(ctx)  : ev.body;
 
+  /* FIELD NAMES MATCH WHAT THE APP ALREADY READS.
+     The dashboard's notification listener orders by `createdAt`, and Firestore
+     OMITS any document missing the field it orders by — so a notification
+     written with only `at` would never have appeared at all, silently. The
+     existing panel also renders `message`, not `body`. Both are emitted, with
+     the richer names kept alongside, and a test asserts the pair stays in step
+     because this is exactly the kind of mismatch that fails invisibly. */
   const base = allowed.map(r => ({
     userId: r.userId, why: r.why,
-    title, body, urgency: ev.urgency, area: ev.area,
-    event: eventKey, at: now.toISOString(), read: false,
+    title, body, message: body,
+    urgency: ev.urgency, area: ev.area, event: eventKey, type: eventKey,
+    at: now.toISOString(), createdAt: now.toISOString(), read: false,
     dealId: ctx.dealId || null, leadId: ctx.leadId || null, listingId: ctx.listingId || null,
   }));
 
@@ -250,8 +258,9 @@ export function notificationsFor(eventKey, ctx = {}, people = [], now = new Date
     const alsoBody = typeof ev.alsoBody === "function" ? ev.alsoBody(ctx) : ev.alsoBody;
     base.push({
       userId: ctx.byId, why: "You moved it on.",
-      title, body: alsoBody || body, urgency: "fyi", area: ev.area,
-      event: eventKey, at: now.toISOString(), read: false,
+      title, body: alsoBody || body, message: alsoBody || body,
+      urgency: "fyi", area: ev.area, event: eventKey, type: eventKey,
+      at: now.toISOString(), createdAt: now.toISOString(), read: false,
       dealId: ctx.dealId || null, leadId: ctx.leadId || null, listingId: ctx.listingId || null,
     });
   }
