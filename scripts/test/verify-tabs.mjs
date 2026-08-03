@@ -69,6 +69,15 @@ const CHECKS = [
     ["does not claim to publish",  t => !/publish them to the portals/i.test(t)],
     ["states there is no feed",    t => /no portal integration|record that you posted/i.test(t)],
   ]},
+  { tab: "People", claims: [
+    ["covers every department",   t => /not only sales/i.test(t)],
+    /* The sick-pay bands live in the Leave section and the rules panel, not on
+       the directory this sweep lands on. The arithmetic is asserted properly in
+       model.test.mjs; here we only check the way in is offered. */
+    ["the rules are one click away", t => /What are the rules\?/.test(t)],
+    ["compliance register there", t => /Expiring/.test(t)],
+    ["no invented leave figure",  t => !/0 of 30 days earned/.test(t)],
+  ]},
   /* Not touched by me — checked for regressions only. */
   { tab: "Map",            claims: [["renders", t => t.length > 200]] },
   { tab: "Yields",         claims: [["renders", t => t.length > 400]] },

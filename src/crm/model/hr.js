@@ -95,6 +95,18 @@ export const LEAVE_TYPES = {
  */
 export function annualLeaveBalance({ joinedAt, takenDays = 0, carriedOver = 0,
                                      asOf = Date.now() }) {
+  /* Without a joining date this cannot be answered. It previously fell through
+     to the under-one-year branch and reported "not yet at one year of service,
+     0 of 30 days earned" — which states as fact something nobody knows, about a
+     person who may have been there a decade. Not knowing is its own answer. */
+  if (!joinedAt) {
+    return {
+      known: false, vested: false, serviceYears: null, accrued: null,
+      carriedOver, entitlement: null, taken: Number(takenDays) || 0, remaining: null,
+      note: "No joining date is on record, so leave cannot be worked out. " +
+            "Every entitlement depends on length of service.",
+    };
+  }
   const yrs = serviceYears(joinedAt, asOf);
   const vested = yrs >= 1;
   const accrued = vested
@@ -103,7 +115,7 @@ export function annualLeaveBalance({ joinedAt, takenDays = 0, carriedOver = 0,
   const entitlement = accrued + (Number(carriedOver) || 0);
   const remaining = money(entitlement - (Number(takenDays) || 0));
   return {
-    vested, serviceYears: yrs, accrued, carriedOver, entitlement,
+    known: true, vested, serviceYears: yrs, accrued, carriedOver, entitlement,
     taken: Number(takenDays) || 0, remaining,
     note: vested
       ? `${LAW.annualLeaveDays} days a year, ${carriedOver ? `plus ${carriedOver} carried over, ` : ""}${takenDays} taken.`

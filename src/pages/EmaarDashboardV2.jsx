@@ -52,6 +52,7 @@ import PortfolioTab from '../tabs/PortfolioTab';
 import InvestmentScoreTab from '../tabs/InvestmentScoreTab';
 import ComplianceTab from '../tabs/ComplianceTab';
 import TeamTab from '../tabs/TeamTab';
+import PeopleTab from '../tabs/PeopleTab';
 import CRMApp from '../crm/CRMApp';
 import WelcomeScreen from '../components/WelcomeScreen';
 import HandoverTab from '../tabs/HandoverTab';
@@ -5661,6 +5662,14 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
               Overdue follow-ups · Team KPIs
           —” */}
           {/* —” TEAM TAB (extracted) —” */}
+          {tab === "People" && (
+            <PeopleTab
+              teamMembers={teamMembers}
+              firebaseUser={firebaseUser} orgRole={orgRole} userRole={userRole}
+              orgId={orgId} orgName={orgProfile?.name} userName={userName}
+            />
+          )}
+
           {tab === "Team" && (
             <TeamTab
               teamMembers={teamMembers} teamMembersLoading={teamMembersLoading}

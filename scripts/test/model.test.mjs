@@ -163,6 +163,13 @@ ok("  in bands of 15 / 30 / 45",
 const newJoiner = annualLeaveBalance({ joinedAt: ago(120), takenDays: 0, asOf: NOW });
 ok("a 4-month joiner has not vested 30 days", newJoiner.vested === false);
 ok("  they have accrued about 9", near(newJoiner.accrued, 9, 2), newJoiner.accrued);
+/* Not knowing is its own answer — this used to report "0 of 30 days earned,
+   not yet at one year" for somebody who may have been there a decade. */
+const noDate = annualLeaveBalance({ takenDays: 0 });
+ok("with no joining date, leave is not guessed at", noDate.known === false && noDate.remaining === null,
+   { known: noDate.known, remaining: noDate.remaining });
+ok("  and it says why", /No joining date is on record/.test(noDate.note), noDate.note);
+
 const settled = annualLeaveBalance({ joinedAt: ago(800), takenDays: 12, carriedOver: 5, asOf: NOW });
 ok("a settled employee has 30 + 5 − 12 = 23 left", settled.remaining === 23, settled.remaining);
 

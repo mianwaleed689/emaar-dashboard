@@ -114,6 +114,10 @@ export const TAB_GROUPS = [
     label: "Run the agency",
     iconName: "Users2",
     tabs: [
+      /* People is the HR half of the product, and it is deliberately NOT
+         called "HR Sales" or filed under the sales group — it covers every
+         department, including the ones that never touch a lead. */
+      { key: "People",       iconName: "Users2" },
       { key: "Team",         iconName: "Users2" },
       { key: "Agency",       iconName: "Building2" },
       { key: "Compliance",   iconName: "Shield" },
