@@ -13,6 +13,7 @@ import { T } from "../data";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 import Papa from "papaparse";
 import PhoneInput from "../components/PhoneInput";
+import { responseTime, responseReport } from "../crm/model/intake";
 import NationalitySelect from "../components/NationalitySelect";
 
 //  PIPELINE 
@@ -342,6 +343,7 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
   const kPipeline = allLeads.reduce((s,l)=>s+parseFloat(l.budget||0),0);
   const kUnassigned = allLeads.filter(l=>!l.assignedTo).length;
   const kConvRate = kTotal>0?Math.round((kClosed/kTotal)*100):0;
+  const kResponse = useMemo(()=>responseReport(allLeads),[allLeads]);
 
   //  Agent performance (manager/owner/director) 
   const agentPerf = useMemo(()=>{
@@ -790,6 +792,11 @@ try{
                       </div>
                       <div style={{display:"flex",gap:6,marginTop:1,alignItems:"center",minWidth:0}}>
                         <WhyNow lead={lead}/>
+                        {(()=>{ const r=responseTime(lead);
+                          if(!r.answered) return null;
+                          return <span title={`How long this lead waited for a first call, message or email. ${r.note}`}
+                            style={{fontSize:9,color:r.colour,whiteSpace:"nowrap"}}>{r.minutes<60?`${r.minutes}m`:`${Math.floor(r.minutes/60)}h`}</span>;
+                        })()}
                         {isGV&&<span title={`Budget is at or above AED ${(GV_MIN/1e6).toFixed(0)}M, the property route to a 10-year Golden Visa. Eligibility is confirmed by ICP, not by us.`}
                           style={{fontSize:9,color:T.gold,whiteSpace:"nowrap"}}>Golden Visa</span>}
                       </div>
@@ -888,6 +895,19 @@ try{
                 {l:"Gone quiet",   v:kStale,  c:"#F59E0B", n:"Still open, nothing logged for more than 7 days."},
                 {l:"% that closed",v:kConvRate+"%", c:T.white,
                  n:`${kClosed} closed out of ${kTotal}. Your own history — not an outside benchmark.`},
+                /* SPEED TO FIRST CONTACT. It predicts conversion better than
+                   anything else an agency can measure, and almost nobody in
+                   Dubai measures it. Median rather than mean, so one lead
+                   answered three weeks late does not bury a typical four
+                   minutes. */
+                {l:"Typical reply time",
+                 v:kResponse.medianMinutes==null ? "—"
+                   : kResponse.medianMinutes<60 ? `${kResponse.medianMinutes} min`
+                   : `${Math.floor(kResponse.medianMinutes/60)}h ${kResponse.medianMinutes%60}m`,
+                 c:kResponse.medianMinutes==null ? T.textMuted
+                   : kResponse.medianMinutes<=30 ? "#10B981"
+                   : kResponse.medianMinutes<=120 ? "#F59E0B" : "#EF4444",
+                 n:`${kResponse.headline}${kResponse.stillWaiting ? ` ${kResponse.stillWaiting} still waiting for a first reply.` : ""}`},
                 {l:"Budget of open leads",
                  v:kPipeline>=1e9?"AED "+(kPipeline/1e9).toFixed(1)+"B":kPipeline>=1e6?"AED "+(kPipeline/1e6).toFixed(1)+"M":"AED "+kPipeline.toLocaleString(),
                  c:T.gold, n:"What clients say they will spend. Not money earned, and not bank-approved."},
