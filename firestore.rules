@@ -103,10 +103,21 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
+      /* `resource.data`, not `get()` on the very document being read.
+         The get() form worked for fetching one person and failed for LISTING
+         them, which is what the Team roster does — so an agency owner opening
+         Team saw "0 agents" and a console warning, while the agents existed and
+         could log in perfectly well. Verified in a browser: the roster came
+         back "Missing or insufficient permissions".
+
+         Document-access calls inside rules are also capped per request, so a
+         get() per row puts a ceiling on how many people an agency could ever
+         list. resource.data is the document being evaluated — no fetch, no cap,
+         and it is the same condition. */
       allow read: if isAuthed() && (
         uid() == userId ||
         isSuperAdmin() ||
-        (isManager() && get(/databases/$(database)/documents/users/$(userId)).data.orgId == userOrgId())
+        (isManager() && resource.data.orgId == userOrgId())
       );
 
       // Sign-up: own document only. Self-serve signup legitimately sets role and

@@ -22,7 +22,8 @@
 
 import React, { createContext, useContext, useEffect, useState, useMemo } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebase";
 import {
   PROPERTY_TYPES_DEFAULT,
   STATUS_OPTIONS_DEFAULT,
@@ -43,7 +44,18 @@ export function FilterSchemaProvider({ children }) {
     isLiveData: false,
   });
 
+  /* platformSettings is readable by any signed-in user — but this subscribed on
+     mount, before anyone had signed in, so Firestore refused it and onSnapshot
+     does not retry a refused subscription. The warning below made it look
+     harmless. It was not: the schema stayed on hardcoded defaults for the whole
+     session, which meant the property types, status options, price presets and
+     Golden Visa threshold an admin configures reached nobody at all. */
+  const [authed, setAuthed] = useState(() => Boolean(auth.currentUser));
+  useEffect(() => onAuthStateChanged(auth, u => setAuthed(Boolean(u))), []);
+
   useEffect(() => {
+    if (!authed) return;
+
     let unsub = null;
     try {
       unsub = onSnapshot(doc(db, "platformSettings", "main"), (snap) => {
@@ -65,7 +77,7 @@ export function FilterSchemaProvider({ children }) {
       console.warn("FilterSchema: subscription setup failed, using defaults:", err?.message);
     }
     return () => { try { unsub && unsub(); } catch (e) { console.error("swallowed@FilterSchemaContext.jsx:67", e); } };
-  }, []);
+  }, [authed]);
 
   // Derived, memoized helpers useful across tabs
   const derived = useMemo(() => {

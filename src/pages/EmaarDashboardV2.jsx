@@ -4159,9 +4159,23 @@ const teamOrgId = orgId || "";
   useEffect(() => {
     /* This listener feeds the Agency tab its organisation record. Keyed on the
        literal "manager", it never ran for an owner or a director, so the person
-       who owns the agency saw an empty agency profile. */
-    const managesOrg = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
-    if (!isLoggedIn || !firebaseUser || !managesOrg || !orgId) return;
+       who owns the agency saw an empty agency profile.
+
+       It is no longer restricted to people who MANAGE the agency, because
+       belonging to one is not the same as running it. An agent's welcome screen
+       reads `orgProfile?.name` and, with this listener never running for them,
+       every agent in the product was greeted with "You have joined your
+       agency" — the fallback string, in place of the name of the company they
+       had just joined. Membership is the right condition, and the security rule
+       already says so: an organisation is readable by anyone whose orgId is it.
+
+       NOTE: the organisation document also carries commSplits, the commission
+       split for every agent. Loading it here does not display it — the Agency
+       tab remains manager-only — and the rule already allowed any member to
+       read the document, so this changes no security boundary. But splits
+       living on the org record is the wrong shape and wants moving to a
+       subcollection that rules can actually restrict. */
+    if (!isLoggedIn || !firebaseUser || !orgId) return;
     const unsub = onSnapshot(doc(db, "organisations", orgId), snap => {
       if (snap.exists()) {
         const d = snap.data();

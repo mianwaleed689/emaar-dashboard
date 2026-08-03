@@ -15,9 +15,10 @@
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebase";
 
 /**
  * @param {Object} opts
@@ -32,10 +33,25 @@ export function useFirestoreCollection({ name, filter, sort, cacheKey = "default
   const queryClient = useQueryClient();
   const queryKey = ["firestore", name, cacheKey];
 
+  /* EVERY COLLECTION HERE REQUIRES A SIGNED-IN READER.
+     This hook subscribed the moment it mounted. React runs a component's hooks
+     before anything decides whether to render a dashboard or a login form, so
+     on the logged-out /dashboard route these subscriptions fired with no user
+     and Firestore refused them — and the error handler below rethrows through
+     TanStack Query, which is where the unexplained "Missing or insufficient
+     permissions" on the public page was coming from. It took a while to find
+     precisely because it is in a hook rather than in any tab's own effects.
+
+     Waiting for a user costs one render and removes the whole class. */
+  const [authed, setAuthed] = useState(() => Boolean(auth.currentUser));
+  useEffect(() => onAuthStateChanged(auth, u => setAuthed(Boolean(u))), []);
+
   // useEffect owns the subscription lifecycle. queryFn below returns a
   // Promise that resolves on first snapshot; after that, onSnapshot keeps
   // the cache fresh directly via queryClient.setQueryData.
   useEffect(() => {
+    if (!authed) return;
+
     const unsub = onSnapshot(
       collection(db, name),
       (snap) => {
@@ -55,7 +71,7 @@ export function useFirestoreCollection({ name, filter, sort, cacheKey = "default
     return () => { try { unsub(); } catch (e) { console.error("swallowed@useFirestoreCollection.js:55", e); } };
     // queryKey members are stable; intentional
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [name, cacheKey]);
+  }, [name, cacheKey, authed]);
 
   return useQuery({
     queryKey,
