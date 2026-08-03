@@ -39,6 +39,12 @@ const probe = () => p.evaluate(() => {
     total: btns.length,
     overflow: document.documentElement.scrollWidth > window.innerWidth,
     locked: /not available|Contact your (agency )?manager/i.test(t),
+    /* A tab that has crashed renders the error boundary, which is short, tidy
+       and looks nothing like a failure to a length check. MyLeadsTab crashed on
+       an undefined variable and still passed every claim in this sweep, because
+       490 characters of "Tab Error" reads the same as 490 characters of content.
+       Caught explicitly now. */
+    crashed: /Tab Error|is not defined|Try Again/.test(t),
   };
 });
 
@@ -56,7 +62,11 @@ const CHECKS = [
     ["no 'AI' claim anywhere",     t => !/\bAI\b/i.test(t)],
     ["no invented score",          t => !/score/i.test(t)],
     ["guide button present",       t => /What do these mean\?|Hide the guide/.test(t)],
-    ["honest empty desk",          t => /No leads on this desk yet|Need a call/.test(t)],
+    /* Honest in BOTH states: an empty desk says so, and a desk with leads on
+       it shows why each one sits where it does. The earlier version only
+       checked the empty case and started failing the moment a lead existed. */
+    ["honest whether empty or not", t => /No leads on this desk yet/.test(t)
+       || /Came in today|Never contacted|No contact for|Last spoke|Spoke today|Follow-up/.test(t)],
   ]},
   { tab: "Pipeline", claims: [
     ["owner not locked out",       t => !/not available/i.test(t)],
@@ -93,6 +103,8 @@ for (const { tab, claims } of CHECKS) {
   if (!r) { console.log(`\n${tab.padEnd(16)} ✗ no <main>`); fail++; continue; }
 
   const flags = [];
+  if (r.crashed) { console.log(`
+${tab}  —  ✗ CRASHED: ${(r.text.match(/[A-Za-z ]+ is not defined|Tab Error/) || [""])[0]}`); fail++; continue; }
   if (r.blank) flags.push(`${r.blank} blank buttons`);
   if (r.overflow) flags.push("horizontal overflow");
   if (r.locked && tab !== "Map") flags.push("shows a locked door");

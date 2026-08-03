@@ -2146,6 +2146,7 @@ export default function EmaarDashboardV2() {
 
   // Notifications
   const [notifications, setNotifications] = useState([]);
+  const [viewings, setViewings] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -3936,11 +3937,24 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
 
     let leadsQuery;
 
-    if (isSuperAdmin) {
-      // SuperAdmin CANNOT see agency leads —” privacy rule
+    /* A platform admin who ALSO belongs to an agency was locked out of that
+       agency's leads by this branch. The intent — a platform admin should not
+       browse a customer's leads — is reasonable, but it was implemented as
+       "sees nothing", which caught the person running their own agency from an
+       admin account: they could create a lead through this very tab and then
+       never see it again.
+
+       Narrowed rather than removed: an admin with an orgId sees THEIR OWN
+       agency's leads, exactly as an owner does. An admin with no agency still
+       sees none, which is the case the privacy rule was actually about.
+
+       If platform admins should be blocked from customer leads outright, that
+       belongs in firestore.rules where every code path meets it, not in one UI
+       branch that the Add button here already bypasses. */
+    if (isSuperAdmin && !orgId) {
       setMyLeadsLoading(false);
       return;
-    } else if (isOwner && orgId) {
+    } else if ((isOwner || isSuperAdmin) && orgId) {
       // Owner sees ALL leads in their org
       leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId), orderBy("createdAt", "desc"), limit(1000));
     } else if (isDirector && orgId) {
@@ -4045,6 +4059,34 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     return () => unsub();
     /* userRole belongs here now that superAdmin and admin can subscribe — without
        it the listener would not restart when the role resolves after first paint. */
+  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
+
+  /* VIEWINGS LISTENER.
+     An agent's week. Same shape as the deals listener, and deliberately without
+     an orderBy — `where + orderBy` needs a composite index this project does not
+     have, and a missing index fails the whole subscription rather than degrading.
+     Sorting happens where it costs nothing. */
+  useEffect(() => {
+    if (!isLoggedIn || !firebaseUser) return;
+    const isAgentRole = orgRole === "agent";
+    const managesOrg  = orgRole === "owner" || orgRole === "director" ||
+                        orgRole === "manager" || userRole === "superAdmin" || userRole === "admin";
+    if (!isAgentRole && !managesOrg) return;
+
+    let q;
+    if (isAgentRole) {
+      q = query(collection(db, "viewings"), where("agentId", "==", firebaseUser.uid));
+    } else if (orgId) {
+      q = query(collection(db, "viewings"), where("orgId", "==", orgId));
+    } else { setViewings([]); return; }
+
+    const unsub = onSnapshot(q, snap => {
+      const list = [];
+      snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(a.at || 0) - new Date(b.at || 0));
+      setViewings(list);
+    }, err => console.error("[Viewings] subscription failed:", err.code || "", err.message));
+    return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
 
   /* —” TEAM MEMBERS LISTENER (Session 7) —” */
@@ -5535,6 +5577,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {/* MY LEADS TAB (extracted) */}
           {tab === "My Leads" && (
             <MyLeadsTab
+              viewings={viewings}
               myLeads={myLeads}
               orgRole={orgRole} userRole={userRole} orgId={orgId} orgName={orgProfile?.name} listings={listings}
               leadSearch={leadSearch} setLeadSearch={setLeadSearch}

@@ -7,7 +7,7 @@
 */
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { collection, doc, addDoc, updateDoc, serverTimestamp, query, where, getDocs, arrayUnion } from "firebase/firestore";
+import { collection, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, query, where, getDocs, arrayUnion } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { T } from "../data";
 import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
@@ -15,6 +15,7 @@ import Papa from "papaparse";
 import PhoneInput from "../components/PhoneInput";
 import { responseTime, responseReport } from "../crm/model/intake";
 import { viewerFrom, scopeFor, intentFor, visibleRecords, canSeeClientContact } from "../crm/model/org";
+import { diary, statusOf, newViewing, OUTCOMES, VERDICTS, FEEDBACK_PROMPT } from "../crm/model/viewing";
 import NationalitySelect from "../components/NationalitySelect";
 
 //  PIPELINE 
@@ -206,7 +207,7 @@ const Section = ({icon,title,sub,color,open,onToggle,children}) => (
 // MAIN COMPONENT
 // 
 export default function MyLeadsTab({ liveNeighbourhoods=[],
-  myLeads=[], orgRole, userRole, orgId, orgName,
+  myLeads=[], viewings=[], orgRole, userRole, orgId, orgName,
   listings=[], teamMembers=[], firebaseUser,
   leadSortBy, setLeadSortBy,
   selectedLead, setSelectedLead,
@@ -374,6 +375,14 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
   const kConvRate = kTotal>0?Math.round((kClosed/kTotal)*100):0;
   const kResponse = useMemo(()=>responseReport(allLeads),[allLeads]);
 
+  /* THIS WEEK. An agent's week is viewings, and the product had no idea they
+     existed — a viewing was a line of free text in the notes. */
+  const myWeek = useMemo(()=>diary(viewings||[], currentUid),[viewings,currentUid]);
+  const [showBook, setShowBook] = useState(null);   // the lead being booked for
+  const [bookAt,   setBookAt]   = useState("");
+  const [bookWhat, setBookWhat] = useState("");
+  const [writeUp,  setWriteUp]  = useState(null);   // the viewing being closed off
+
   //  Agent performance (manager/owner/director) 
   const agentPerf = useMemo(()=>{
     if(!canManage) return [];
@@ -506,6 +515,85 @@ try{
     setSavingNote(false);
   },[noteText2,noteType2,currentEmail,selectedLead,setSelectedLead,notify]);
 
+  /* BOOKING ONE, AND CLOSING IT OFF.
+     Both are small writes, and both matter more than their size: without the
+     first there is no diary, and without the second the seller's question has
+     no answer. */
+  const bookViewing = useCallback(async()=>{
+    if(!showBook||!bookAt){ notify("Pick a date and time","error"); return; }
+    try{
+      await addDoc(collection(db,"viewings"), newViewing({
+        lead: showBook,
+        listing: { id:"", title: bookWhat.trim() },
+        agentId: currentUid, agentName: firebaseUser?.displayName||currentEmail, at: bookAt, orgId,
+      }));
+      /* It also goes on the lead, so the lead's own history reads as one story
+         rather than the viewing living somewhere the agent has to remember. */
+      await updateDoc(doc(db,"leads",showBook.id),{
+        notes_log: arrayUnion({
+          text:`Viewing booked${bookWhat.trim()?` — ${bookWhat.trim()}`:""} for ${new Date(bookAt).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}`,
+          type:"Viewing", by:currentEmail, at:new Date().toISOString(),
+        }),
+        updatedAt:new Date().toISOString(),
+      });
+      setShowBook(null); setBookAt(""); setBookWhat("");
+      notify("Viewing booked");
+    }catch(e){ console.error("[leads] booking failed:",e); notify("Could not book that","error"); }
+  },[showBook,bookAt,bookWhat,currentUid,firebaseUser,currentEmail,orgId,notify]);
+
+  const removeViewing = useCallback(async(v)=>{
+    try{
+      await deleteDoc(doc(db,"viewings",v.id));
+      setWriteUp(null);
+      notify("Viewing removed");
+    }catch(e){ console.error("[leads] could not remove viewing:",e); notify("Could not remove it","error"); }
+  },[notify]);
+
+  const closeOffViewing = useCallback(async(outcome,feedback,verdict)=>{
+    if(!writeUp) return;
+    if(outcome==="done" && !(feedback||"").trim()){
+      notify("Say what they told you — the seller will ask","error"); return;
+    }
+    try{
+      await updateDoc(doc(db,"viewings",writeUp.id),{
+        outcome, feedback:(feedback||"").trim(), verdict:verdict||"",
+        closedAt:new Date().toISOString(), updatedAt:new Date().toISOString(),
+      });
+      setWriteUp(null);
+      notify(outcome==="done"?"Written up.":"Recorded.");
+    }catch(e){ console.error("[leads] write-up failed:",e); notify("Could not save that","error"); }
+  },[writeUp,notify]);
+
+  /* DELETING A LEAD.
+     The rules have always allowed a manager to delete one; the UI never offered
+     it, so a lead could be created and never removed. In a CRM holding people's
+     names and phone numbers that is not a missing convenience — a client asking
+     to be taken off your books had no way to be, short of somebody opening the
+     Firebase console.
+
+     Managers and above only. An agent should not be able to erase a record of a
+     client the agency has spoken to. */
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const deleteLead = useCallback(async(lead)=>{
+    try{
+      /* THEIR VIEWINGS GO WITH THEM.
+         A viewing carries the client's name. Deleting the lead and leaving the
+         viewings behind means the person is still in the system, in the diary,
+         after being removed — which defeats the point of the deletion and is
+         the wrong answer if they asked to be taken off your books. */
+      const mine = (viewings||[]).filter(v=>v.leadId===lead.id);
+      await Promise.all(mine.map(v=>deleteDoc(doc(db,"viewings",v.id))));
+      await deleteDoc(doc(db,"leads",lead.id));
+      setSelectedLead(null); setConfirmDelete(null);
+      notify(mine.length
+        ? `Lead deleted, along with ${mine.length} viewing${mine.length===1?"":"s"}.`
+        : "Lead deleted");
+    }catch(e){
+      console.error("[leads] delete failed:",e);
+      notify("Could not delete that lead","error");
+    }
+  },[notify,setSelectedLead,viewings]);
+
   //  Export CSV 
   const exportCSV = useCallback(()=>{
     const h=["ID","Name","Phone","Email","Budget","Service","Request","Status","Source","Channel","AD Name","AD Account","Nationality","Community","Timeline","Agent","Why it needs attention","Created","Updated"];
@@ -633,6 +721,60 @@ try{
           </div>
         )}
       </div>
+
+      {/* THIS WEEK — the diary an agent did not have.
+          Shown whenever there is something in it, above the lead list, because
+          a viewing at eleven matters more this morning than a lead list does. */}
+      {myWeek.total > 0 && (
+        <div style={{margin:"12px 4px",padding:"13px 15px",borderRadius:12,
+                     background:"rgba(255,255,255,0.02)",
+                     border:`1px solid ${myWeek.unclosed?"rgba(239,68,68,0.3)":T.border}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:10,flexWrap:"wrap",marginBottom:9}}>
+            <span style={{fontSize:9.5,fontWeight:700,color:myWeek.unclosed?"#EF4444":T.gold,
+                          letterSpacing:.7,textTransform:"uppercase"}}>This week</span>
+            <span style={{fontSize:11,color:T.textSecondary}}>{myWeek.headline}</span>
+          </div>
+
+          {myWeek.clashes.map((c,i)=>(
+            <div key={i} style={{fontSize:10.5,color:"#EF4444",lineHeight:1.55,marginBottom:6}}>{c.note}</div>
+          ))}
+
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {myWeek.days.slice(0,4).map(day=>(
+              <div key={day.date}>
+                <div style={{fontSize:9.5,color:T.textMuted,marginBottom:3}}>
+                  {new Date(day.date).toLocaleDateString("en-AE",{weekday:"long",day:"2-digit",month:"short"})}
+                </div>
+                {/* Any viewing opens, not only overdue ones — a booked viewing has
+                    to be cancellable and reschedulable, which was not possible at
+                    all until now. */}
+                {day.items.map(v=>(
+                  <div key={v.id} onClick={()=>setWriteUp(v)}
+                    style={{display:"flex",gap:9,alignItems:"baseline",marginBottom:3,cursor:"pointer"}}>
+                    <span style={{fontSize:10.5,color:T.textSecondary,minWidth:44,flexShrink:0,
+                                  fontVariantNumeric:"tabular-nums"}}>
+                      {new Date(v.at).toLocaleTimeString("en-AE",{hour:"2-digit",minute:"2-digit"})}
+                    </span>
+                    <span style={{fontSize:11,color:T.white,minWidth:0}}>
+                      {v.propertyName||"A property"}{v.leadName?` · ${v.leadName}`:""}
+                    </span>
+                    <span style={{fontSize:10,color:v.status.colour,fontWeight:600,whiteSpace:"nowrap",marginLeft:"auto"}}>
+                      {v.status.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {myWeek.unclosed>0 && (
+            <div style={{fontSize:10.5,color:"#EF4444",marginTop:8,paddingTop:8,
+                         borderTop:`1px solid ${T.border}`,lineHeight:1.55}}>
+              Tap a viewing marked “Not written up” to close it off. {FEEDBACK_PROMPT}
+            </div>
+          )}
+        </div>
+      )}
 
       {/*  SMART VIEW TABS  ────────────────────────────────────────────────
           Nine views, eleven stage pills and five dropdowns used to render over
@@ -824,7 +966,13 @@ try{
                   onMouseLeave={e=>!isSel&&(e.currentTarget.style.background="transparent")}
                 >
                   <div style={{display:"flex",alignItems:"center",gap:4,paddingLeft:4}}>
-                    <div style={{width:7,height:7,borderRadius:"50%",background:sc.color,flexShrink:0}}/>
+                    {/* This dot was coloured by the invented AI score. When that
+                        was removed the reference to `sc` survived here, and the
+                        tab crashed the moment there was a lead to render — which
+                        an empty desk hid for a whole session. It now takes its
+                        colour from the same reason shown beside the name. */}
+                    <div title={attention(lead).reason}
+                      style={{width:7,height:7,borderRadius:"50%",background:attention(lead).color,flexShrink:0}}/>
                     <span style={{fontSize:10,color:T.textMuted}}>#{(lead.id||"").slice(-4)||String(i+1).padStart(4,"0")}</span>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -1120,6 +1268,30 @@ try{
               ))}
             </div>
             <div style={{padding:"13px 15px",flex:1}}>
+              {drawerTab==="profile"&&canManage&&(
+                <div style={{marginBottom:12}}>
+                  {confirmDelete?.id===selectedLead.id ? (
+                    <div style={{display:"flex",gap:7,alignItems:"center",flexWrap:"wrap"}}>
+                      <span style={{fontSize:10.5,color:T.textSecondary}}>Delete {selectedLead.name||"this lead"} for good?</span>
+                      <button type="button" onClick={()=>deleteLead(selectedLead)}
+                        style={{padding:"4px 11px",borderRadius:6,border:"1px solid rgba(239,68,68,0.4)",
+                                background:"rgba(239,68,68,0.1)",color:"#FCA5A5",fontSize:10.5,cursor:"pointer",
+                                fontFamily:"'Outfit',sans-serif"}}>Delete</button>
+                      <button type="button" onClick={()=>setConfirmDelete(null)}
+                        style={{padding:"4px 11px",borderRadius:6,border:"1px solid "+T.border,background:"transparent",
+                                color:T.textMuted,fontSize:10.5,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Keep it</button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={()=>setConfirmDelete(selectedLead)}
+                      title="Remove this lead entirely, along with any viewings booked for them. Use it when a client asks to be taken off your books."
+                      style={{background:"none",border:"none",color:T.textMuted,fontSize:10.5,cursor:"pointer",
+                              padding:0,fontFamily:"'Outfit',sans-serif"}}>
+                      Delete this lead
+                    </button>
+                  )}
+                </div>
+              )}
+
               {drawerTab==="profile"&&(()=>{
                 const att=attention(selectedLead);
                 return (
@@ -1135,6 +1307,13 @@ try{
                           : "Nothing is overdue on this one. It sits below anything uncontacted or overdue."}
                       </div>
                     </div>
+                    <button type="button" onClick={()=>{setShowBook(selectedLead);setBookAt("");setBookWhat("");}}
+                      title="Arrange a viewing. It goes in your week and on this lead's history."
+                      style={{width:"100%",padding:"9px",borderRadius:8,border:"1px solid "+T.gold+"55",
+                              background:"rgba(212,168,67,0.08)",color:T.gold,fontSize:11.5,fontWeight:700,
+                              cursor:"pointer",marginBottom:12,fontFamily:"'Outfit',sans-serif"}}>
+                      Book a viewing
+                    </button>
                     {[
                       {label:"Phone",       value:selectedLead.phone,   link:"tel:"+selectedLead.phone},
                       {label:"WhatsApp",    value:selectedLead.phone?"Open":null, link:selectedLead.phone?"https://wa.me/"+clnPhone(selectedLead.phone):null, ext:true},
@@ -1295,6 +1474,55 @@ try{
         </div>
       )}
 
+      {/* BOOK A VIEWING */}
+      {showBook && (
+        <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2100,display:"flex",
+                     alignItems:"center",justifyContent:"center",padding:20}}
+             onClick={e=>{if(e.target===e.currentTarget)setShowBook(null);}}>
+          <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",maxWidth:430,padding:22}}>
+            <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white,marginBottom:3}}>
+              Book a viewing
+            </div>
+            <div style={{fontSize:11,color:T.textMuted,marginBottom:16}}>With {showBook.name||"this lead"}</div>
+
+            <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:700,textTransform:"uppercase",letterSpacing:.5}}>When</div>
+            <input type="datetime-local" value={bookAt} onChange={e=>setBookAt(e.target.value)}
+              style={{width:"100%",padding:"9px 11px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,
+                      borderRadius:7,color:T.white,fontSize:12,outline:"none",boxSizing:"border-box",
+                      fontFamily:"'Outfit',sans-serif",marginBottom:12}}/>
+
+            <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:700,textTransform:"uppercase",letterSpacing:.5}}>What are you showing them</div>
+            <input value={bookWhat} onChange={e=>setBookWhat(e.target.value)}
+              placeholder="e.g. Marina Gate 2, unit 1104"
+              style={{width:"100%",padding:"9px 11px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,
+                      borderRadius:7,color:T.white,fontSize:12,outline:"none",boxSizing:"border-box",
+                      fontFamily:"'Outfit',sans-serif",marginBottom:8}}/>
+            <div style={{fontSize:10,color:T.textMuted,lineHeight:1.55,marginBottom:16}}>
+              It goes in your week and on this lead&rsquo;s history, and you will be reminded
+              the evening before.
+            </div>
+
+            <div style={{display:"flex",gap:8}}>
+              <button type="button" onClick={bookViewing} disabled={!bookAt}
+                style={{flex:1,padding:"10px",borderRadius:8,border:"none",fontFamily:"'Outfit',sans-serif",
+                        background:bookAt?"linear-gradient(135deg,#D4A843,#B8902E)":"rgba(212,168,67,0.3)",
+                        color:"#0A0E1A",fontSize:12,fontWeight:700,cursor:bookAt?"pointer":"not-allowed"}}>
+                Book it
+              </button>
+              <button type="button" onClick={()=>setShowBook(null)}
+                style={{padding:"10px 16px",borderRadius:8,border:"1px solid "+T.border,background:"transparent",
+                        color:T.textMuted,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WRITE IT UP */}
+      {writeUp && <WriteUp viewing={writeUp} onClose={()=>setWriteUp(null)} onSave={closeOffViewing}
+                           onRemove={()=>removeViewing(writeUp)} canRemove={canManage}/>}
+
       {/*  ASSIGN MODAL  */}
       {showAssign&&(
         <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.88)",zIndex:2100,display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={e=>{if(e.target===e.currentTarget)setShowAssign(null);}}>
@@ -1353,6 +1581,109 @@ try{
       {/*  TOAST  */}
       {toast&&<div style={{position:"fixed",bottom:24,right:24,padding:"11px 18px",background:toast.type==="error"?"rgba(239,68,68,0.15)":"rgba(16,185,129,0.15)",border:"1px solid "+(toast.type==="error"?"#EF4444":"#10B981"),borderRadius:9,color:toast.type==="error"?"#EF4444":"#10B981",fontSize:12,fontWeight:600,zIndex:9999,boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>{toast.msg}</div>}
 
+    </div>
+  );
+}
+
+/**
+ * CLOSING OFF A VIEWING.
+ *
+ * The one screen that decides whether the seller can ever be told what people
+ * said. "Viewed" with no feedback is refused — not to be awkward, but because a
+ * viewing with no record of what was said is worth almost nothing to the person
+ * paying the commission.
+ */
+function WriteUp({ viewing, onClose, onSave, onRemove, canRemove }) {
+  const [outcome,  setOutcome]  = useState("done");
+  const [feedback, setFeedback] = useState("");
+  const [verdict,  setVerdict]  = useState("");
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(4,9,15,0.9)",zIndex:2100,display:"flex",
+                 alignItems:"center",justifyContent:"center",padding:20}}
+         onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div style={{background:"#0D1117",borderRadius:14,border:"1px solid "+T.border,width:"100%",
+                   maxWidth:460,padding:22,maxHeight:"90vh",overflowY:"auto"}}>
+        <div style={{fontFamily:"'Fraunces',serif",fontSize:15,fontWeight:900,color:T.white,marginBottom:3}}>
+          How did it go?
+        </div>
+        <div style={{fontSize:11,color:T.textMuted,marginBottom:16}}>
+          {viewing.propertyName||"The viewing"}{viewing.leadName?` with ${viewing.leadName}`:""}
+          {" \u00b7 "}
+          {new Date(viewing.at).toLocaleString("en-AE",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
+        </div>
+
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+          {["done","noshow","cancelled"].map(k=>(
+            <button key={k} type="button" onClick={()=>setOutcome(k)} title={OUTCOMES[k].what}
+              style={{padding:"6px 13px",borderRadius:14,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+                      border:"1px solid "+(outcome===k?OUTCOMES[k].colour:T.border),fontSize:11,
+                      fontWeight:outcome===k?700:500,
+                      background:outcome===k?OUTCOMES[k].colour+"1A":"transparent",
+                      color:outcome===k?OUTCOMES[k].colour:T.textMuted}}>
+              {OUTCOMES[k].label}
+            </button>
+          ))}
+        </div>
+
+        {outcome==="done" && (<>
+          <div style={{fontSize:10,color:T.textMuted,marginBottom:5,fontWeight:700,textTransform:"uppercase",letterSpacing:.5}}>
+            How did they leave it
+          </div>
+          <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:14}}>
+            {Object.values(VERDICTS).map(v=>(
+              <button key={v.key} type="button" onClick={()=>setVerdict(v.key)}
+                style={{padding:"5px 11px",borderRadius:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+                        border:"1px solid "+(verdict===v.key?T.gold:T.border),fontSize:10.5,
+                        fontWeight:verdict===v.key?700:500,
+                        background:verdict===v.key?"rgba(212,168,67,0.14)":"transparent",
+                        color:verdict===v.key?T.gold:T.textMuted}}>
+                {v.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:700,textTransform:"uppercase",letterSpacing:.5}}>
+            What did they say
+          </div>
+          <textarea value={feedback} onChange={e=>setFeedback(e.target.value)} rows={4}
+            placeholder="Their actual words, as close as you can get them."
+            style={{width:"100%",padding:"9px 11px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,
+                    borderRadius:7,color:T.white,fontSize:11.5,outline:"none",resize:"vertical",
+                    boxSizing:"border-box",fontFamily:"'Outfit',sans-serif",lineHeight:1.5}}/>
+          <div style={{fontSize:10,color:T.textMuted,margin:"6px 0 14px",lineHeight:1.55}}>{FEEDBACK_PROMPT}</div>
+        </>)}
+
+        {outcome==="noshow" && (
+          <div style={{fontSize:11,color:T.textSecondary,lineHeight:1.6,marginBottom:14}}>
+            Recorded as a no-show. Worth knowing &mdash; a lead that fails to turn up twice is
+            telling you something about how serious they are.
+          </div>
+        )}
+
+        <div style={{display:"flex",gap:8}}>
+          <button type="button" onClick={()=>onSave(outcome,feedback,verdict)}
+            style={{flex:1,padding:"10px",borderRadius:8,border:"none",fontFamily:"'Outfit',sans-serif",
+                    background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",
+                    fontSize:12,fontWeight:700,cursor:"pointer"}}>
+            Save
+          </button>
+          <button type="button" onClick={onClose}
+            style={{padding:"10px 16px",borderRadius:8,border:"1px solid "+T.border,background:"transparent",
+                    color:T.textMuted,fontSize:12,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+            Not now
+          </button>
+        </div>
+
+        {canRemove && (
+          <button type="button" onClick={onRemove}
+            title="Remove it from the diary entirely. Cancelling keeps the record; removing does not."
+            style={{background:"none",border:"none",color:T.textMuted,fontSize:10.5,cursor:"pointer",
+                    padding:"12px 0 0",fontFamily:"'Outfit',sans-serif"}}>
+            Remove this viewing
+          </button>
+        )}
+      </div>
     </div>
   );
 }
