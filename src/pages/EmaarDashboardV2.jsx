@@ -1290,6 +1290,9 @@ const PasswordStrength = ({ password }) => {
 };
 
 const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
+  /* Individual unless they say otherwise; the agency option leaves for
+     /agency/signup, which builds the organisation as well as the account. */
+  const [accountKind, setAccountKind] = React.useState("individual");
   const [mode, setMode] = useState(defaultMode);
   const [screen, setScreen] = useState("form"); // "form" | "verify" | "reset_sent"
   const [name, setName] = useState("");
@@ -1505,6 +1508,35 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
             <button type="button" onClick={() => switchMode("login")} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "login" ? T.gold : "transparent", color: mode === "login" ? T.bg : T.textMuted }}>Sign In</button>
             <button type="button" onClick={() => switchMode("signup")} style={{ flex: 1, padding: "10px 0", borderRadius: 8, border: "none", fontFamily: "'Outfit',sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: mode === "signup" ? T.gold : "transparent", color: mode === "signup" ? T.bg : T.textMuted }}>Create Account</button>
           </div>
+
+          {/* WHICH KIND OF ACCOUNT — ASKED, NOT GUESSED.
+              This signup only ever produced an individual: a user document with
+              no orgId. The only pointer to the agency route was an 11px line
+              buried in the pricing block, so a brokerage owner clicked the big
+              obvious button and got a personal account — then found AgencyTab
+              opens with `if (!orgId)`, no way to create an agency afterwards,
+              and no way to reuse the email. The best customer, dead-ended on
+              their first click. The question is now asked before anything is
+              typed. */}
+          {mode === "signup" && (
+            <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+              {[{ k: "individual", label: "Just me",   note: "One agent" },
+                { k: "agency",     label: "An agency", note: "A team, with roles" }].map(o => (
+                <button key={o.k} type="button"
+                  onClick={() => o.k === "agency"
+                    ? (window.location.href = "/agency/signup")
+                    : setAccountKind("individual")}
+                  style={{ flex: 1, padding: "10px 9px", borderRadius: 9, cursor: "pointer",
+                           textAlign: "left", fontFamily: "'Outfit',sans-serif",
+                           background: accountKind === o.k ? "rgba(212,168,67,0.10)" : "transparent",
+                           border: `1px solid ${accountKind === o.k ? T.gold : T.border}` }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700,
+                                color: accountKind === o.k ? T.gold : T.white }}>{o.label}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{o.note}</div>
+                </button>
+              ))}
+            </div>
+          )}
 
           <h2 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 700, color: T.white, marginBottom: 4 }}>
             {mode === "login" ? "Welcome back" : "Start your free trial"}
@@ -2863,6 +2895,12 @@ export default function EmaarDashboardV2() {
   };
 
   useEffect(() => {
+    /* Same reason as the master listener block below: the component's hooks all
+       run even when it renders nothing but the login screen, so this first-paint
+       read fired for logged-out visitors and threw "Missing or insufficient
+       permissions" on the public signup page. */
+    if (!isLoggedIn) return;
+
     const loadProjects = async () => {
       setProjectsLoading(true);
       try {
@@ -2956,7 +2994,7 @@ export default function EmaarDashboardV2() {
     }
 
     return () => clearInterval(stockInterval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]); /* guarded above; must re-run once the user is real */ // eslint-disable-line react-hooks/exhaustive-deps
 
   // Use merged Firestore+static data if available, otherwise pure static fallback
   // activeProjects: curated 48 from data.js + any genuinely NEW projects added via radar
@@ -3291,6 +3329,18 @@ export default function EmaarDashboardV2() {
 
   // — MASTER LIVE LISTENERS — all Firestore real-time subscriptions —”
   useEffect(() => {
+    /* NOTHING IS SUBSCRIBED BEFORE THERE IS SOMEBODY TO SUBSCRIBE FOR.
+       This effect opens twenty-six Firestore listeners and already depended on
+       `isLoggedIn` — but it never checked it, so every one of them also fired
+       on mount while logged out. A visitor who opened the signup screen set
+       twenty-six subscriptions running against rules that require
+       authentication, each failing, one surfacing as an unhandled
+       "Missing or insufficient permissions" on a public page. Wasted requests,
+       and an error in the console of the screen where a customer decides
+       whether to trust the product. The dependency stays, so they all start
+       the moment the user is real. */
+    if (!isLoggedIn) return;
+
     const unsubs = [];
 
     // projectData overrides (prices, PPSF, images edited in Admin)
