@@ -8,6 +8,7 @@
 import React, { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, updateDoc, collection, query, where, getDocs, arrayUnion } from "firebase/firestore";
+import { DEPARTMENTS, SENIORITY } from "../crm/model/org";
 import { auth, db } from "../firebase";
 import PhoneInput from "../components/PhoneInput";
 import NationalitySelect from "../components/NationalitySelect";
@@ -46,7 +47,15 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
   const [toast,       setToast]       = useState(null);
   const [creating,    setCreating]    = useState(false);
   const [deacting,    setDeacting]    = useState(false);
-  const [form, setForm] = useState({name:"",email:"",phone:"",password:"",nationality:""});
+  /* Everyone was created as orgRole "agent" with no department at all, which is
+   why the whole company read as Sales and a sales admin or an accounts clerk
+   could not be entered. These are the fields the access model, the workflow and
+   the compliance register all need to have anything real to work with. */
+  const [form, setForm] = useState({
+    name:"", email:"", phone:"", password:"", nationality:"",
+    department:"sales", seniority:"staff", managerId:"",
+    joinedAt:"", brn:"", brnExpiry:"", visaExpiry:"", emiratesIdExpiry:"",
+  });
   const [inviteMode, setInviteMode] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteLink, setInviteLink] = useState("");
@@ -144,9 +153,26 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
         phone:        form.phone.trim(),
         nationality:  form.nationality||"",
         role:         "user",
-        orgRole:      "agent",
+        /* orgRole is kept for everything that still reads it, and derived from
+           seniority so the two cannot disagree. department + seniority are what
+           the access model actually uses. */
+        orgRole:      form.seniority === "owner" ? "owner"
+                    : form.seniority === "director" ? "director"
+                    : form.seniority === "manager" ? "manager" : "agent",
+        department:   form.department || "sales",
+        seniority:    form.seniority || "staff",
         orgId:        orgId||"",
-        managerId:    managerUid,
+        managerId:    form.managerId || managerUid,
+        joinedAt:     form.joinedAt || "",
+        /* Only sales carries a broker card. Storing an empty one on an accounts
+           clerk would make the compliance register warn about a document they
+           are never required to hold. */
+        brn:          form.department === "sales" ? (form.brn || "") : "",
+        expiries: {
+          ...(form.department === "sales" && form.brnExpiry ? { brn: form.brnExpiry } : {}),
+          ...(form.visaExpiry ? { visa: form.visaExpiry } : {}),
+          ...(form.emiratesIdExpiry ? { emiratesId: form.emiratesIdExpiry } : {}),
+        },
         paid:         true,
         status:       "active",
         onboardingComplete: false,
@@ -572,12 +598,99 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
                 <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Nationality</div>
                 <NationalitySelect value={form.nationality||""} onChange={v=>F("nationality",v)} placeholder="Select nationality" />
               </div>
+
+              {/* WHERE THEY SIT IN THE COMPANY.
+                  Everyone used to be created as an "agent" with no department,
+                  which is why the whole company read as Sales and there was
+                  nowhere to put a sales admin or an accounts clerk. These two
+                  fields decide what this person sees, what lands on their desk,
+                  and which notifications reach them. */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Department *</div>
+                  <select value={form.department} onChange={e=>F("department",e.target.value)} style={{...inp}}>
+                    {Object.values(DEPARTMENTS).map(d=>(
+                      <option key={d.key} value={d.key}>{d.label}</option>
+                    ))}
+                  </select>
+                  <div style={{fontSize:10,color:T.textMuted,marginTop:4,lineHeight:1.5}}>
+                    {DEPARTMENTS[form.department]?.what}
+                  </div>
+                </div>
+                <div>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Level *</div>
+                  <select value={form.seniority} onChange={e=>F("seniority",e.target.value)} style={{...inp}}>
+                    {Object.values(SENIORITY).map(x=>(
+                      <option key={x.key} value={x.key}>{x.label}</option>
+                    ))}
+                  </select>
+                  <div style={{fontSize:10,color:T.textMuted,marginTop:4,lineHeight:1.5}}>
+                    Staff see their own work. A team leader or manager sees their team.
+                    A director or owner sees the whole agency.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Reports to</div>
+                  <select value={form.managerId} onChange={e=>F("managerId",e.target.value)} style={{...inp}}>
+                    <option value="">Nobody in particular</option>
+                    {(teamMembers||[]).map(m=>(
+                      <option key={m.uid||m.id} value={m.uid||m.id}>{m.name||m.email}</option>
+                    ))}
+                  </select>
+                  <div style={{fontSize:10,color:T.textMuted,marginTop:4,lineHeight:1.5}}>
+                    This is what makes a manager's team view mean something.
+                  </div>
+                </div>
+                <div>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Joining date</div>
+                  <input type="date" value={form.joinedAt} onChange={e=>F("joinedAt",e.target.value)} style={{...inp}} />
+                  <div style={{fontSize:10,color:T.textMuted,marginTop:4,lineHeight:1.5}}>
+                    Leave, probation and gratuity are all worked out from this. Without
+                    it none of them can be calculated at all.
+                  </div>
+                </div>
+              </div>
+
+              {/* THE BROKER CARD — SALES ONLY.
+                  Storing an empty BRN on an accounts clerk would make the
+                  compliance register warn about a document they are never
+                  required to hold. */}
+              {form.department === "sales" && (
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <div>
+                    <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Broker card (BRN)</div>
+                    <input value={form.brn} onChange={e=>F("brn",e.target.value)} placeholder="Their RERA broker number" style={{...inp}} />
+                  </div>
+                  <div>
+                    <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Broker card expires</div>
+                    <input type="date" value={form.brnExpiry} onChange={e=>F("brnExpiry",e.target.value)} style={{...inp}} />
+                    <div style={{fontSize:10,color:"#F59E0B",marginTop:4,lineHeight:1.5}}>
+                      Without this nobody can be warned before it lapses — and the day it
+                      does, every listing they hold stops being compliant.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Visa expires</div>
+                  <input type="date" value={form.visaExpiry} onChange={e=>F("visaExpiry",e.target.value)} style={{...inp}} />
+                </div>
+                <div>
+                  <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>Emirates ID expires</div>
+                  <input type="date" value={form.emiratesIdExpiry} onChange={e=>F("emiratesIdExpiry",e.target.value)} style={{...inp}} />
+                </div>
+              </div>
               <div style={{padding:"10px 12px",background:"rgba(212,168,67,0.06)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:8,fontSize:11,color:T.textMuted,lineHeight:1.6}}>
                 The agent will log in with these credentials. They can change their password anytime from settings.
               </div>
               <button type="button" onClick={createAgent} disabled={creating||!form.name||!form.email||!form.password}
                 style={{width:"100%",padding:"11px",borderRadius:8,border:"none",background:(!form.name||!form.email||!form.password||creating)?"rgba(212,168,67,0.3)":"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:13,fontWeight:700,cursor:(!form.name||!form.email||!form.password)?"not-allowed":"pointer",fontFamily:"'Outfit',sans-serif"}}>
-                {creating?"Creating account...":"Create Agent Account"}
+                {creating?"Creating account…":"Create this person's account"}
               </button>
             </div>
           </div>

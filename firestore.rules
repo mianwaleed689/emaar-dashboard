@@ -53,6 +53,18 @@ service cloud.firestore {
     function isAgent() {
       return isAuthed() && getUserData().orgRole == 'agent';
     }
+    /* WHO MAY SET ANOTHER PERSON'S DEPARTMENT AND SENIORITY.
+       Narrower than isManager() on purpose. Department and seniority DECIDE
+       what somebody can see — moving a person into Management or Accounts hands
+       them the whole agency's money — so a sales manager must not be able to do
+       it. Owner, director and platform admin only. */
+    function isOrgAdmin() {
+      return isAuthed() && (
+        getUserData().orgRole == 'owner' ||
+        getUserData().orgRole == 'director' ||
+        isAdmin()
+      );
+    }
     function userOrgId() { return getUserData().orgId; }
     function isSameOrg(orgId) { return isAuthed() && userOrgId() == orgId; }
     function isAssignedAgent(assignedTo) { return isAuthed() && uid() == assignedTo; }
@@ -79,6 +91,12 @@ service cloud.firestore {
     function privilegedUserFields() {
       return [
         'role', 'orgRole', 'orgId', 'tier', 'crmPlan',
+        /* department and seniority decide what a person can SEE, so they are
+           privilege in everything but name. A user changing their own
+           department to 'management' would hand themselves the agency's
+           revenue, so they are frozen for the owner of the record exactly as
+           orgRole is. */
+        'department', 'seniority', 'managerId',
         'trialStart', 'trialEnd', 'subscriptionStatus',
         'verified', 'verifiedLevel', 'verifiedAt', 'kycLevel', 'suspended'
       ];
@@ -108,6 +126,17 @@ service cloud.firestore {
         // clause error out (an errored condition denies the whole write).
         (isAdmin() && (!('role' in request.resource.data)
                        || request.resource.data.role != 'superAdmin')) ||
+        /* An agency owner or director manages their own people — setting a
+           department, a reporting line, a broker card, a joining date. Before
+           this, only a platform admin could, so an agency could not record its
+           own staff and everybody stayed an "agent". They may not mint an admin
+           and may not move somebody into another agency. */
+        (isOrgAdmin()
+          && resource.data.orgId == userOrgId()
+          && (!('role' in request.resource.data)
+              || request.resource.data.role in ['user', 'agent', 'manager', 'developer'])
+          && (!('orgId' in request.resource.data)
+              || request.resource.data.orgId == resource.data.orgId)) ||
         (uid() == userId &&
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(privilegedUserFields()))
       );
