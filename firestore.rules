@@ -97,6 +97,11 @@ service cloud.firestore {
            revenue, so they are frozen for the owner of the record exactly as
            orgRole is. */
         'department', 'seniority', 'managerId',
+        /* Pay. Without these here a user could set their own basic salary and
+           allowances, because the self-update clause below permits anything
+           not named in this list — and payroll computes from exactly these
+           fields. Only an org admin or a platform admin may write them. */
+        'basic', 'allowances', 'salary', 'deductions',
         'trialStart', 'trialEnd', 'subscriptionStatus',
         'verified', 'verifiedLevel', 'verifiedAt', 'kycLevel', 'suspended'
       ];

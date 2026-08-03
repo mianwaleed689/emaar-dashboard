@@ -41,6 +41,9 @@
  * other things in one pass. The leave, document and offboarding halves are the
  * ones that fail quietly and expensively today, so they come first.
  */
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import { payrollRun, wpsReadiness, buildSIF, sifToText, SIF_CAVEAT } from "../crm/model/payroll";
 import React, { useState, useMemo } from "react";
 import { T } from "../data";
 import {
@@ -60,7 +63,8 @@ const aed   = n => `AED ${Math.round(Number(n) || 0).toLocaleString("en-AE")}`;
 const LEVEL_COLOUR = { expired: "#EF4444", urgent: "#EF4444", soon: "#F59E0B", watch: "#3B82F6" };
 
 export default function PeopleTab({
-  teamMembers = [], firebaseUser, orgRole, userRole, orgName, orgId, userName,
+  teamMembers = [], deals = [], orgProfile = null,
+  firebaseUser, orgRole, userRole, orgName, orgId, userName,
 }) {
   const me = useMemo(() => ({
     id: firebaseUser?.uid || "",
@@ -132,6 +136,10 @@ export default function PeopleTab({
     { k: "compliance", l: "Expiring",   what: "Visas, Emirates IDs, labour cards, broker cards — what lapses soon." },
     { k: "leave",      l: "Leave",      what: "Annual and sick leave, with the UAE bands applied." },
     { k: "leaving",    l: "Offboarding",what: "Notice, handover, gratuity and final settlement." },
+    /* Payroll is offered only to people who may see pay at all — HR, finance
+       and management. An office manager runs the rota, not the salaries. */
+    ...(canSeePay(me) ? [{ k: "payroll", l: "Payroll",
+        what: "What each person is owed this month, and the file the bank needs." }] : []),
   ];
 
   return (
@@ -191,6 +199,10 @@ export default function PeopleTab({
       </div>
 
       <div style={{ padding: "12px 4px" }}>
+        {section === "payroll" && canSeePay(me) && (
+          <Payroll people={visible} deals={deals} me={me} orgProfile={orgProfile}/>
+        )}
+
         {section === "directory" && (
           <Directory people={shown} all={visible} dept={dept} setDept={setDept}
                      byDept={byDept} onOpen={setSelected} me={me} />
@@ -679,3 +691,231 @@ const Empty = ({ what }) => (
     Team tab — every department, not only sales.
   </div>
 );
+
+/**
+ * PAYROLL — the month's pay, and the file the bank needs.
+ *
+ * The model in src/crm/model/payroll.js was tested to 58 assertions and could
+ * be reached by nobody: there was no screen anywhere that ran a payroll, and no
+ * field anywhere that recorded what a person is paid. A tested model nobody can
+ * open is not a feature.
+ *
+ * Salary is written to the person's user document and is a privileged field in
+ * firestore.rules, so an agent cannot set their own basic pay. Reading it is
+ * gated on canSeePay() — HR, finance and management — the same gate the rest of
+ * this tab uses.
+ */
+function Payroll({ people, deals, me, orgProfile }) {
+  const now = new Date();
+  const [year, setYear]   = React.useState(now.getFullYear());
+  const [month, setMonth] = React.useState(now.getMonth() + 1);
+  const [edits, setEdits] = React.useState({});
+  const [saving, setSaving] = React.useState({});
+  const [showSif, setShowSif] = React.useState(false);
+
+  /* Commission lines belong to whoever owns the deal. payFor() takes only the
+     lines for that person and counts the collected ones. */
+  const linesByPerson = React.useMemo(() => {
+    const out = {};
+    for (const d of deals || []) {
+      const lines = Array.isArray(d.commissionLines) ? d.commissionLines : [];
+      for (const l of lines) {
+        const who = l.agentId || d.agentId;
+        if (!who) continue;
+        (out[who] = out[who] || []).push(l);
+      }
+    }
+    return out;
+  }, [deals]);
+
+  const staff = React.useMemo(() => people.map(p => ({
+    id: p.id || p.uid,
+    name: p.name || p.email || "Unnamed",
+    department: p.department || "sales",
+    joinedAt: p.joinedAt || "",
+    lastDay: p.lastDay || "",
+    basic: Number(p.basic) || 0,
+    allowances: p.allowances || {},
+    unpaidLeaveDays: Number(p.unpaidLeaveDays) || 0,
+    sickHalfPayDays: Number(p.sickHalfPayDays) || 0,
+    deductions: Array.isArray(p.deductions) ? p.deductions : [],
+    labourCardNo: p.labourCardNo || "", iban: p.iban || "", agentId: p.agentId || "",
+  })), [people]);
+
+  const run = React.useMemo(
+    () => payrollRun(staff, linesByPerson, { year, month }),
+    [staff, linesByPerson, year, month]);
+
+  const readiness = React.useMemo(() => wpsReadiness(staff), [staff]);
+  const notReady  = readiness.filter(r => !r.ready);
+
+  const sif = React.useMemo(() => buildSIF(run,
+    { establishmentId: orgProfile?.mohreId || "", agentId: orgProfile?.bankAgentId || "" },
+    { peopleById: Object.fromEntries(staff.map(s => [s.id, s])) }), [run, staff, orgProfile]);
+
+  const savePay = async (id, field, value) => {
+    setSaving(s => ({ ...s, [id]: true }));
+    try {
+      await setDoc(doc(db, "users", id), { [field]: value, updatedAt: new Date().toISOString() }, { merge: true });
+    } catch (e) { console.error("payroll save", e); }
+    setSaving(s => ({ ...s, [id]: false }));
+  };
+
+  const MONTHS = ["January","February","March","April","May","June",
+                  "July","August","September","October","November","December"];
+  const inp = { width: 96, padding: "5px 8px", background: "rgba(255,255,255,0.04)",
+                border: `1px solid ${T.border}`, borderRadius: 6, color: T.white,
+                fontSize: 11.5, fontFamily: "'Outfit',sans-serif", outline: "none",
+                textAlign: "right" };
+
+  if (!people.length) return (
+    <div style={{ padding: "40px 20px", textAlign: "center", fontSize: 12.5, color: T.textSecondary, lineHeight: 1.7 }}>
+      Nobody on record yet. Add your people in the Team tab and their pay is worked out here.
+    </div>
+  );
+
+  return (
+    <div>
+      {/* THE MONTH */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+        <select value={month} onChange={e => setMonth(Number(e.target.value))}
+          style={{ padding: "7px 10px", background: "rgba(255,255,255,0.04)", color: T.white,
+                   border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12,
+                   fontFamily: "'Outfit',sans-serif" }}>
+          {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+        </select>
+        <select value={year} onChange={e => setYear(Number(e.target.value))}
+          style={{ padding: "7px 10px", background: "rgba(255,255,255,0.04)", color: T.white,
+                   border: `1px solid ${T.border}`, borderRadius: 8, fontSize: 12,
+                   fontFamily: "'Outfit',sans-serif" }}>
+          {[year - 1, year, year + 1].map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
+        <div style={{ fontSize: 11.5, color: T.textMuted }}>
+          {run.headcount} on the payroll · net {aed(run.totalNet)}
+          {run.totalCommission > 0 ? ` · of which ${aed(run.totalCommission)} is commission` : ""}
+        </div>
+      </div>
+
+      {/* THE RUN */}
+      <div style={{ ...card, overflow: "hidden" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 108px 108px 110px 110px 110px",
+                      gap: 8, padding: "9px 12px", borderBottom: `1px solid ${T.border}`,
+                      background: "rgba(255,255,255,0.02)" }}>
+          {["Person", "Basic", "Allowances", "Commission", "Deductions", "Net"].map((h, i) => (
+            <div key={h} style={{ ...muted, textAlign: i === 0 ? "left" : "right" }}>{h}</div>
+          ))}
+        </div>
+
+        {run.slips.map(s => {
+          const person = staff.find(x => x.id === s.personId) || {};
+          const draft = edits[s.personId] || {};
+          return (
+            <div key={s.personId} style={{ borderBottom: `1px solid ${T.border}40` }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1.6fr 108px 108px 110px 110px 110px",
+                            gap: 8, padding: "10px 12px", alignItems: "center" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 12, color: T.white, fontWeight: 600, overflow: "hidden",
+                                textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+                  <div style={{ fontSize: 9.5, color: T.textMuted, textTransform: "capitalize" }}>
+                    {person.department}
+                    {s.employedDays.partial ? ` · ${s.employedDays.worked} of ${s.employedDays.inMonth} days` : ""}
+                  </div>
+                </div>
+
+                {/* Basic and allowances are entered here because nothing else in
+                    the product ever recorded them. */}
+                <input style={inp} value={draft.basic ?? person.basic ?? 0}
+                  onChange={e => setEdits(x => ({ ...x, [s.personId]: { ...draft, basic: e.target.value } }))}
+                  onBlur={e => savePay(s.personId, "basic", Number(e.target.value) || 0)} />
+                <input style={inp} value={draft.allow ?? Object.values(person.allowances || {}).reduce((a, b) => a + (Number(b) || 0), 0)}
+                  onChange={e => setEdits(x => ({ ...x, [s.personId]: { ...draft, allow: e.target.value } }))}
+                  onBlur={e => savePay(s.personId, "allowances", { total: Number(e.target.value) || 0 })} />
+
+                <div style={{ fontSize: 12, textAlign: "right", color: s.commission ? T.gold : T.textMuted }}>
+                  {aed(s.commission)}
+                </div>
+                <div style={{ fontSize: 12, textAlign: "right", color: s.deductions ? "#FCA5A5" : T.textMuted }}>
+                  {s.deductions ? `−${aed(s.deductions)}` : "—"}
+                </div>
+                <div style={{ fontSize: 12.5, textAlign: "right", color: T.white, fontWeight: 700 }}>
+                  {aed(s.net)}{saving[s.personId] ? " …" : ""}
+                </div>
+              </div>
+
+              {/* The working. An employee querying their pay deserves the
+                  arithmetic, not an assertion. */}
+              <div style={{ padding: "0 12px 10px", display: "flex", gap: 14, flexWrap: "wrap" }}>
+                {[...s.components, ...s.cuts].filter(c => c.why).map((c, i) => (
+                  <div key={i} style={{ fontSize: 9.5, color: T.textMuted }}>
+                    <span style={{ color: T.textSecondary }}>{c.label}</span> — {c.why}
+                  </div>
+                ))}
+                {s.pending.map((q, i) => (
+                  <div key={"p" + i} style={{ fontSize: 9.5, color: "#F59E0B" }}>
+                    {aed(q.amount)} earned, not payable — {q.why}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 108px 108px 110px 110px 110px",
+                      gap: 8, padding: "10px 12px", background: "rgba(255,255,255,0.02)" }}>
+          <div style={{ ...muted }}>Total</div>
+          <div /><div />
+          <div style={{ fontSize: 11.5, textAlign: "right", color: T.gold }}>{aed(run.totalCommission)}</div>
+          <div style={{ fontSize: 11.5, textAlign: "right", color: "#FCA5A5" }}>−{aed(run.totalDeductions)}</div>
+          <div style={{ fontSize: 13, textAlign: "right", color: T.white, fontWeight: 800 }}>{aed(run.totalNet)}</div>
+        </div>
+      </div>
+
+      {/* WPS */}
+      <div style={{ ...card, marginTop: 14, padding: "12px 14px" }}>
+        <div style={{ ...muted, marginBottom: 8 }}>Paying them — WPS</div>
+
+        {notReady.length > 0 && (
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11.5, color: "#FCA5A5", marginBottom: 5 }}>
+              {notReady.length} {notReady.length === 1 ? "person cannot" : "people cannot"} be paid by WPS yet.
+              They are not in the file.
+            </div>
+            {notReady.map(r => (
+              <div key={r.personId} style={{ fontSize: 10.5, color: T.textMuted, lineHeight: 1.6 }}>
+                <b style={{ color: T.white }}>{r.name}</b> — {r.missing.map(m => m.label).join(", ")}.
+                {" "}{r.missing[0]?.fix}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* NEVER PRESENTED AS A BANK-READY FILE. */}
+        <div style={{ padding: "10px 12px", borderRadius: 8, lineHeight: 1.65,
+                      background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.25)",
+                      fontSize: 11, color: T.textSecondary, marginBottom: 10 }}>
+          <b style={{ color: "#F59E0B" }}>Not yet checked against your bank.</b> {SIF_CAVEAT}
+        </div>
+
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <button type="button" onClick={() => setShowSif(v => !v)}
+            style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${T.gold}`,
+                     background: "rgba(212,168,67,0.08)", color: T.gold, fontSize: 11.5,
+                     fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
+            {showSif ? "Hide the file" : `Build the SIF (${sif.records.length} of ${run.headcount})`}
+          </button>
+          <span style={{ fontSize: 10.5, color: T.textMuted }}>
+            Salary month {sif.period} · control total {aed(sif.control.total)}
+          </span>
+        </div>
+
+        {showSif && (
+          <pre style={{ marginTop: 10, padding: "10px 12px", borderRadius: 8, overflowX: "auto",
+                        background: "rgba(0,0,0,0.35)", border: `1px solid ${T.border}`,
+                        fontSize: 10.5, color: T.textSecondary, lineHeight: 1.7 }}>
+{sifToText(sif)}
+          </pre>
+        )}
+      </div>
+    </div>
+  );
+}
