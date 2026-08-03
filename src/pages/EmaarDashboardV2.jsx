@@ -108,57 +108,10 @@ const getHandoverCountdown = (handover) => {
   return { label, color, urgent: diffDays <= 90, months: diffMonths, days: diffDays };
 };
 
-// — INVESTMENT SCORE (out of 10) —”
-const getInvestmentScore = (p) => {
-  let score = 0;
-  const breakdown = [];
-
-  // 1. Yield (0—3 pts)
-  const gross = p.gross || p.yield || 0;
-  if (gross >= 8)      { score += 3; breakdown.push({ label: "Yield", pts: 3, max: 3, note: gross + "% gross" }); }
-  else if (gross >= 6) { score += 2; breakdown.push({ label: "Yield", pts: 2, max: 3, note: gross + "% gross" }); }
-  else if (gross >= 4) { score += 1; breakdown.push({ label: "Yield", pts: 1, max: 3, note: gross + "% gross" }); }
-  else                 { breakdown.push({ label: "Yield", pts: 0, max: 3, note: gross ? gross + "%" : "No data" }); }
-
-  // 2. Value (PPSF) (0—2 pts)
-  const ppsf = p.ppsf || 0;
-  if (ppsf > 0 && ppsf <= 1500)       { score += 2; breakdown.push({ label: "Value", pts: 2, max: 2, note: "AED " + ppsf + "/sqft" }); }
-  else if (ppsf > 0 && ppsf <= 2200)  { score += 1; breakdown.push({ label: "Value", pts: 1, max: 2, note: "AED " + ppsf + "/sqft" }); }
-  else if (ppsf > 0)                  { breakdown.push({ label: "Value", pts: 0, max: 2, note: "AED " + ppsf + "/sqft" }); }
-  else                                { breakdown.push({ label: "Value", pts: 0, max: 2, note: "No PPSF" }); }
-
-  // 3. Handover timing (0—2 pts) — sweet spot is 12—36 months
-  const cd = getHandoverCountdown(p.handover);
-  if (cd) {
-    if (cd.passed)              { score += 1.5; breakdown.push({ label: "Handover", pts: 1.5, max: 2, note: "Ready now" }); }
-    else if (cd.months <= 12)   { score += 1;   breakdown.push({ label: "Handover", pts: 1,   max: 2, note: cd.label }); }
-    else if (cd.months <= 30)   { score += 2;   breakdown.push({ label: "Handover", pts: 2,   max: 2, note: cd.label }); }
-    else if (cd.months <= 48)   { score += 1;   breakdown.push({ label: "Handover", pts: 1,   max: 2, note: cd.label }); }
-    else                        { score += 0.5; breakdown.push({ label: "Handover", pts: 0.5, max: 2, note: cd.label }); }
-  } else {
-    breakdown.push({ label: "Handover", pts: 0, max: 2, note: "No date" });
-  }
-
-  // 4. Payment plan (0—2 pts)
-  const pp = (p.paymentPlan || p.payment || "").toLowerCase();
-  if (pp.includes("80/20") || pp.includes("80:20"))       { score += 2;   breakdown.push({ label: "Payment", pts: 2,   max: 2, note: "80/20 plan" }); }
-  else if (pp.includes("70/30") || pp.includes("60/40"))  { score += 1.5; breakdown.push({ label: "Payment", pts: 1.5, max: 2, note: pp }); }
-  else if (pp.includes("50/50") || pp.includes("40/60"))  { score += 1;   breakdown.push({ label: "Payment", pts: 1,   max: 2, note: pp }); }
-  else if (pp.length > 0)                                 { score += 0.5; breakdown.push({ label: "Payment", pts: 0.5, max: 2, note: pp }); }
-  else                                                    { breakdown.push({ label: "Payment", pts: 0, max: 2, note: "Unknown" }); }
-
-  // 5. Golden Visa eligible (0—1 pt)
-  if (p.price && p.price >= GOLDEN_VISA_THRESHOLD) {
-    score += 1; breakdown.push({ label: "Golden Visa", pts: 1, max: 1, note: "Eligible" });
-  } else {
-    breakdown.push({ label: "Golden Visa", pts: 0, max: 1, note: p.price ? "Below 2M" : "No price" });
-  }
-
-  const final = Math.min(10, Math.round(score * 10) / 10);
-  const color = final >= 8 ? "#10B981" : final >= 6 ? "#D4A843" : final >= 4 ? "#F59E0B" : "#EF4444";
-  const label = final >= 8 ? "Excellent" : final >= 6 ? "Strong" : final >= 4 ? "Good" : "Weak";
-  return { score: final, color, label, breakdown };
-};
+/* The 0-10 investment scorer was DUPLICATED here as well as in
+   utils/helpers.js — two copies of the same invented weighting, neither
+   of them called by anything. Both removed; the reasoning is recorded in
+   utils/helpers.js. */
 
 /* —” ICONS (inline SVG) —” */
 const Icons = {

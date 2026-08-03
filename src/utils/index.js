@@ -14,8 +14,7 @@ export {
 } from './constants';
 
 export {
-  getLinkDomain, getHandoverCountdown, getInvestmentScore,
-  calcQuickScore, scoreColor, scoreLabel,
+  getLinkDomain, getHandoverCountdown,
   cleanPhone, csvEsc,
 } from './helpers';
 

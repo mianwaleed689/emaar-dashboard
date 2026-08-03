@@ -180,7 +180,55 @@ weights that were chosen by hand and never reconciled with each other.
 | `NeighbourhoodsTab` drawer breakdown | Yield /20, Metro /12, PPSF /8, Waterfront /8, Amenities /9, Golden Visa /5 | **removed** — its parts summed to 62 while the badge it "explained" went to 100 |
 | `MyLeadsTab.jsx` `aiScore()` — labelled **"AI LEAD SCORE"** on screen | phone+email 25, budget>5M 20, under a day old 20, "Immediate" 15, three notes 10, **nationality recorded 5** | **removed 2026-08-03** — replaced by a printed call-order rule |
 | `MyLeadsTab.jsx` agent leaderboard `combined` | (closed × 10) + (conversion × 2) + (pipeline in millions × 0.5), capped at 50M | **removed 2026-08-03** — ranked the agency's own people on invented weights |
-| `InvestmentScoreTab.jsx` + `getInvestmentScore()` | Yield 0–3, Value 0–2, Handover 0–2, … | **still shipping** |
+| `helpers.js` `getInvestmentScore()` | Yield 0–3, Value 0–2, Handover 0–2, Payment 0–2, Golden Visa 0–1 | **removed 2026-08-03** — dead code, and two of its rules gave wrong advice |
+| `helpers.js` `calcQuickScore()` | base 50, +15 yield, +10 metro, +8 developer, +5 construction | **removed 2026-08-03** — a sixth formula, dead |
+| `helpers.js` `scoreLabel()` | "Strong Buy" / "Buy" / "Hold" / "Caution" | **removed 2026-08-03** — advice labels, exported and one import from returning |
+| `investmentScore.js` `scoreCommunity()` | Yield 30, Supply 20, Price 15, Metro 15, Amenity 10, Visa 10 | **stays** — see below |
+
+### The one that stays, and why (corrected 2026-08-03)
+
+This document previously said `InvestmentScoreTab` "still ships" an invented
+score, and that was reported to the owner as an outstanding decision. Checking
+it properly changed the answer.
+
+The live tab computes through `utils/investmentScore.js`, which already meets
+the standard applied everywhere else in this codebase. On screen it says:
+
+> *"Derived from measured data — the weighting is our judgement. Every input
+> below is real: DLD yields, prices, supply risk, metro distance. How they are
+> weighted against each other is our editorial call, stated in full at the foot
+> of this page, and nothing here is calibrated against realised investor
+> returns."*
+
+It prints all six weights, refuses to score a community below 50 points of
+available inputs rather than returning a confident-looking number, shows
+"scored on N of 6 factors" against any row with gaps, and names the missing
+inputs in the breakdown. Its empty state says an empty table means missing
+data, "not that no community is worth buying in". A declared judgement whose
+workings are on screen is not the same fault as a hidden invented number, and
+removing it would have removed the one scoring feature that already passes.
+
+### What was actually still wrong
+
+Four scorers sitting in `utils/helpers.js`, exported through the `utils` barrel
+and imported by nothing — one name away from being picked up and shipped by a
+future file. Two carried faults worth recording:
+
+- **`getInvestmentScore` awarded MORE points the cheaper the price per square
+  foot**, telling an investor the cheapest area is the best value regardless of
+  what that area is. And it gave an 80/20 payment plan full marks over a 50/50
+  — but 80/20 means *more* cash out before handover, so for a cash-constrained
+  buyer the ranking is backwards. Its comment also claimed a 12–36 month
+  handover sweet spot while the code gave full marks only below 30.
+- **`scoreLabel` returned "Strong Buy".** Both `NeighbourhoodsTab` and
+  `ProjectsTab` carry comments recording that these labels were removed *from
+  them* — while the function itself was left exported. A property platform
+  telling a customer "Strong Buy" is not a label, it is advice.
+
+A duplicate copy of `getInvestmentScore` also sat inline in
+`EmaarDashboardV2.jsx`. Both are gone. `utils/scoring.js` keeps its own
+`scoreLabel`, which returns "Complete Data" / "Partial Data" — a fact about our
+records rather than a recommendation.
 
 ### The two found in My Leads (2026-08-03)
 
