@@ -5,6 +5,11 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 import React from "react";
+/* Same fault as AgencyTab: `setDoc`, `doc` and `db` were used to save the
+   broker card and none of them was imported, so saving a RERA card threw
+   ReferenceError every time. */
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import SourceList from "../components/SourceList";

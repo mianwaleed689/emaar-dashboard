@@ -5691,6 +5691,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {tab === "Agency" && (
             <AgencyTab
               orgId={orgId} orgRole={orgRole} orgProfile={orgProfile}
+              firebaseUser={firebaseUser}
               orgProfileForm={orgProfileForm} setOrgProfileForm={setOrgProfileForm}
               orgProfileSaving={orgProfileSaving} setOrgProfileSaving={setOrgProfileSaving}
               orgProfileSaved={orgProfileSaved} setOrgProfileSaved={setOrgProfileSaved}

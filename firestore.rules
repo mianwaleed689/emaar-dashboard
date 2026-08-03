@@ -160,6 +160,35 @@ service cloud.firestore {
               || request.resource.data.role in ['user', 'agent', 'manager', 'developer'])
           && (!('orgId' in request.resource.data)
               || request.resource.data.orgId == resource.data.orgId)) ||
+        /* AN INDIVIDUAL FOUNDS THEIR OWN AGENCY.
+           orgId, orgRole, department and seniority are privileged, and rightly
+           so — a user setting their own department to 'management' would hand
+           themselves the agency's revenue. But that freeze also meant a solo
+           agent could NEVER become an agency: they had signed up through the
+           individual door, had no orgId, and nothing in the product could give
+           them one. Their only escape was abandoning the account and signing
+           up again on another email, because Firebase will not reuse the first.
+
+           This clause opens exactly that one path and nothing wider:
+             · they must currently belong to NO agency, so it cannot be used to
+               defect from one agency to another, or to promote yourself inside
+               the one you are already in;
+             · the organisation must already exist and record them as its
+               ownerId, so nobody can attach themselves to somebody else's;
+             · they become an owner of it — not a role of their choosing;
+             · and only those four fields may move. Not role, not tier, not
+               anything that decides what they have paid for. */
+        (uid() == userId
+          && (!('orgId' in resource.data) || resource.data.orgId == null
+              || resource.data.orgId == '')
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['orgId', 'orgRole', 'department', 'seniority', 'updatedAt'])
+          && request.resource.data.orgRole == 'owner'
+          && request.resource.data.department == 'management'
+          && request.resource.data.seniority == 'owner'
+          && exists(/databases/$(database)/documents/organisations/$(request.resource.data.orgId))
+          && get(/databases/$(database)/documents/organisations/$(request.resource.data.orgId))
+               .data.ownerId == uid()) ||
         (uid() == userId &&
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(privilegedUserFields()))
       );

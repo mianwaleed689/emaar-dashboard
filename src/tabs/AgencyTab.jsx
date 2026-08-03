@@ -2,6 +2,13 @@
 /* AGENCY TAB — Agency profile, team, RERA card, commission splits */
 
 import React from "react";
+/* These were used and never imported. Every write in this file threw
+   ReferenceError: saving the agency profile, saving commission splits,
+   changing an agent's role and removing an agent from the organisation. The
+   tab was read-only by accident and nothing said so — the identical fault
+   that made the Pipeline tab unable to save anything. */
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../firebase";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { cleanPhone } from "../utils/helpers";
@@ -9,8 +16,137 @@ import { cleanPhone } from "../utils/helpers";
 import TabIntro from "../components/TabIntro";
 import TabProvenance from "../components/TabProvenance";
 import { tabCopy } from "../data/tabCopy";
+/**
+ * FOUND YOUR AGENCY — the step from a personal account to a brokerage.
+ *
+ * Creates the organisation, then attaches the current user to it as its owner.
+ * That second write touches orgId, orgRole, department and seniority, which are
+ * privileged fields frozen for the record's owner precisely so nobody can
+ * promote themselves. The rule in firestore.rules opens exactly one path
+ * through that freeze: you must currently belong to no agency, the organisation
+ * must already name you as its ownerId, and only those four fields may move.
+ * So this cannot be used to join somebody else's agency or to climb inside your
+ * own — which is why the organisation is written FIRST and the user second.
+ */
+function FoundYourAgency({ firebaseUser }) {
+  const [form, setForm] = React.useState({ name:"", reraNo:"", tradeLicense:"", phone:"" });
+  const [busy, setBusy]   = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [done, setDone]   = React.useState(false);
+
+  const field = { width:"100%", padding:"10px 13px", background:"rgba(255,255,255,0.04)",
+                  border:`1px solid ${T.border}`, borderRadius:9, color:T.textPrimary,
+                  fontSize:13, fontFamily:"'Outfit',sans-serif", outline:"none", boxSizing:"border-box" };
+
+  const create = async () => {
+    /* The same licensing check the agency signup makes. Brokerage in Dubai is
+       licensed: one of an ORN/RERA number or a trade licence, not both, because
+       a new brokerage often holds the licence before the ORN comes through. */
+    if (!form.name.trim())  { setError("Your agency needs a name"); return; }
+    if (!form.reraNo.trim() && !form.tradeLicense.trim()) {
+      setError("Enter your RERA/ORN number or your trade licence — at least one is required"); return;
+    }
+    if (!form.phone.trim()) { setError("A contact phone number is required"); return; }
+    const uid = firebaseUser?.uid;
+    if (!uid) { setError("You appear to be signed out. Reload and try again."); return; }
+
+    setBusy(true); setError("");
+    try {
+      const orgId = "org_" + form.name.toLowerCase().replace(/[^a-z0-9]/g,"_").slice(0,20)
+                  + "_" + Date.now().toString(36);
+      const now = new Date().toISOString();
+
+      await setDoc(doc(db, "organisations", orgId), {
+        orgId,
+        name:         form.name.trim(),
+        reraNo:       form.reraNo.trim()       || null,
+        tradeLicense: form.tradeLicense.trim() || null,
+        phone:        form.phone.trim()        || null,
+        city:         "Dubai",
+        ownerEmail:   firebaseUser?.email || null,
+        /* The security rule reads this field, so it is not optional. */
+        ownerId:      uid,
+        seatsUsed:    1,
+        agentCount:   0,
+        createdAt:    now,
+        createdVia:   "converted_from_individual",
+      });
+
+      await setDoc(doc(db, "users", uid), {
+        orgId, orgRole:"owner", department:"management", seniority:"owner", updatedAt: now,
+      }, { merge: true });
+
+      setDone(true);
+      setTimeout(() => window.location.reload(), 1600);
+    } catch (e) {
+      console.error(e);
+      setError("Could not create the agency: " + (e?.message || "unknown error"));
+    }
+    setBusy(false);
+  };
+
+  if (done) return (
+    <div style={{ padding:"70px 20px", textAlign:"center" }}>
+      <div style={{ fontSize:17, fontWeight:700, color:T.green, marginBottom:8, fontFamily:"'Fraunces',serif" }}>
+        {form.name.trim()} is registered
+      </div>
+      <div style={{ fontSize:12.5, color:T.textMuted }}>
+        You are its owner. Reloading so your agency appears…
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth:520, margin:"36px auto", padding:"0 16px" }}>
+      <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:21, fontWeight:900, color:T.white, margin:0 }}>
+        Register your agency
+      </h1>
+      <p style={{ fontSize:12.5, color:T.textSecondary, lineHeight:1.7, margin:"10px 0 20px" }}>
+        Your account is set up for one person. Registering an agency lets you add
+        your team, give each of them a department and a role, and see everybody's
+        leads, deals and commission in one place. You keep this account and
+        everything already in it — you become the agency's owner.
+      </p>
+
+      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+        {[["name","Agency name","Better Homes Dubai", true],
+          ["reraNo","RERA / ORN number","BRN-XXXXX", false],
+          ["tradeLicense","Trade licence number","DED-XXXXXXX", false],
+          ["phone","Office phone","+971 4 XXX XXXX", true]].map(([k,label,ph,req]) => (
+          <label key={k} style={{ display:"block" }}>
+            <span style={{ fontSize:10.5, fontWeight:700, color:T.textMuted, letterSpacing:0.5,
+                           textTransform:"uppercase", display:"block", marginBottom:5 }}>
+              {label}{req ? " *" : ""}
+            </span>
+            <input value={form[k]} placeholder={ph} style={field}
+              onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))}/>
+          </label>
+        ))}
+        <div style={{ fontSize:10.5, color:T.textMuted, lineHeight:1.6, marginTop:-4 }}>
+          One of the RERA/ORN number or the trade licence is enough — a new
+          brokerage often holds the licence before the ORN comes through.
+        </div>
+
+        {error && (
+          <div style={{ fontSize:11.5, color:"#FCA5A5", padding:"9px 12px", lineHeight:1.6,
+                        background:"rgba(239,68,68,0.07)", border:"1px solid rgba(239,68,68,0.22)",
+                        borderRadius:8 }}>{error}</div>
+        )}
+
+        <button type="button" onClick={create} disabled={busy}
+          style={{ padding:"11px", borderRadius:9, border:"none", marginTop:2,
+                   background: busy ? "rgba(212,168,67,0.3)" : "linear-gradient(135deg,#D4A843,#B8902E)",
+                   color:"#0A0E1A", fontSize:13, fontWeight:700,
+                   cursor: busy ? "wait" : "pointer", fontFamily:"'Outfit',sans-serif" }}>
+          {busy ? "Registering…" : "Register the agency"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AgencyTab({
-  orgId, orgRole, orgProfile,
+  orgId, orgRole, orgProfile, firebaseUser,
   orgProfileForm, setOrgProfileForm,
   orgProfileSaving, setOrgProfileSaving,
   orgProfileSaved, setOrgProfileSaved,
@@ -33,6 +169,19 @@ function AgencyTab({
                written as an owner — which is what they are — the literal check
                locked them out of their own agency. */
             const isManager = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
+
+            /* SOMEBODY WITH NO AGENCY IS NOT SOMEBODY WITHOUT PERMISSION.
+               An individual who signed up through the landing page has no orgId,
+               so they fell into the "Manager access only" message below and
+               stopped there. There was no way in the product to create an
+               agency afterwards, and Firebase will not let them re-register the
+               same email, so their only route was to abandon the account.
+
+               It is also the natural way this business grows: a solo agent takes
+               on two people and becomes an agency. That is the step from AED 300
+               to AED 500, and it used to be a dead end. */
+            if (!orgId) return <FoundYourAgency firebaseUser={firebaseUser} />;
+
             if (!isManager) return (
               <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:16 }}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>

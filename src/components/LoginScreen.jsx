@@ -33,6 +33,8 @@ const googleProvider = new GoogleAuthProvider();
 
 const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
   const [mode, setMode] = useState(defaultMode);
+  /* Individual by default; picking the agency option leaves for /agency/signup. */
+  const [accountKind, setAccountKind] = useState("individual");
   const [screen, setScreen] = useState("form");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -247,6 +249,34 @@ const LoginScreen = ({ onLogin, onBack, defaultMode = "login" }) => {
           <p style={{ color: T.textSecondary, fontSize: 13, marginBottom: 20 }}>
             {mode === "login" ? "Sign in to access your dashboard" : "7 days full Pro access — no credit card required"}
           </p>
+
+          {/* WHICH KIND OF ACCOUNT — ASKED, NOT GUESSED.
+              This signup only ever made an individual: a user document with no
+              orgId. The single pointer to the agency route was an 11px line of
+              text buried in the pricing block, so a brokerage owner arriving at
+              the site clicked the big obvious button and got a personal account
+              — with no way to create an agency afterwards and no way to reuse
+              their email. The most valuable customer hit a dead end on the
+              first click. Now the question is asked before anything is typed. */}
+          {mode === "signup" && (
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+              {[{ k: "individual", label: "Just me", note: "One agent" },
+                { k: "agency",     label: "An agency", note: "A team, with roles" }].map(o => (
+                <button key={o.k} type="button"
+                  onClick={() => o.k === "agency"
+                    ? (window.location.href = "/agency/signup")
+                    : setAccountKind("individual")}
+                  style={{ flex: 1, padding: "10px 8px", borderRadius: 9, cursor: "pointer",
+                           textAlign: "left", fontFamily: "'Outfit',sans-serif",
+                           background: accountKind === o.k ? "rgba(212,168,67,0.10)" : "transparent",
+                           border: `1px solid ${accountKind === o.k ? T.gold : T.border}` }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700,
+                                color: accountKind === o.k ? T.gold : T.white }}>{o.label}</div>
+                  <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>{o.note}</div>
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Google Sign-In */}
           <button type="button" onClick={handleGoogleSignIn} disabled={googleLoading} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 0", borderRadius: 10, border: `1px solid ${T.border}`, background: T.surfaceAlt, color: T.white, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'Outfit',sans-serif", marginBottom: 16, transition: "all 0.2s" }}
