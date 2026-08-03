@@ -117,17 +117,21 @@ service cloud.firestore {
 
     // ── ORGANISATIONS ─────────────────────────────────────────────
     match /organisations/{orgId} {
-      /* TEMPORARILY PERMISSIVE — restored to the pre-existing behaviour.
-         Tightening this to isAdmin()/same-org caused a live permission-denied
-         in PlatformLeadsTab, which subscribes to the whole collection. The
-         cause is probably that the admin account's `role` field is not
-         literally 'admin'/'superAdmin' (one user document carries a boolean
-         `superAdmin` field instead), so isAdmin() evaluates false.
+      /* This was left open — any signed-in user could read EVERY organisation
+         on the platform. In a product sold to thousands of separate agencies
+         that is every competitor's company record, plan and settings.
 
-         Revisit once the Firestore read quota allows checking actual role
-         values. The important fix — users cannot self-promote — is unaffected
-         and stays in place. */
-      allow read: if isAuthed();
+         It was left open for a reason that no longer holds: tightening it once
+         caused a permission-denied in PlatformLeadsTab, and the note here
+         guessed correctly that the cause was the admin account carrying a
+         boolean `superAdmin` field rather than a `role` string. isSuperAdmin()
+         now accepts both shapes, so the original blocker is gone and this can
+         close.
+
+         An agency reads its own record; an admin reads any. Create stays open
+         because self-serve signup creates the organisation before the user has
+         one to be scoped to. */
+      allow read: if isAuthed() && (isAdmin() || userOrgId() == orgId);
       allow create: if isAuthed();
       allow update: if isAuthed() && (isSuperAdmin() || (isManager() && userOrgId() == orgId));
       allow delete: if isSuperAdmin();
@@ -322,41 +326,66 @@ service cloud.firestore {
     match /neighbourhoodScores/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /communityIntel/{doc}   { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /developments/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /adminAlerts/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /cancellations/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+
+    /* ── PLATFORM-INTERNAL COLLECTIONS ────────────────────────────────────
+       Everything below held `allow read: if isAuthed()`, which in a product
+       sold to thousands of separate agencies means ANY signed-in user of ANY
+       agency could read the WHOLE collection.
+
+       For the Dubai market reference data above that is correct and intended —
+       every agency sees the same transactions, the same developers, the same
+       yields. For these it was a leak:
+
+         referrals        held referrerEmail, referrerName and convertedEmail —
+                          real customers' addresses
+         supportTickets   one agency could read another agency's support
+                          conversations, and the audit trail with them
+         payments         every agency's payment records
+         platformLeads    our own sales prospects — i.e. the contact details of
+                          other agencies
+         cancellations    who left and the reason they gave
+         supportWebhooks  endpoint configuration, including the logs
+
+       Reads are now admin-only. Writes already were. Nothing user-facing reads
+       any of these: verified by grep — every one is referenced solely from
+       src/admin/AdminPanel.jsx. */
+    match /adminAlerts/{doc}      { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /cancellations/{doc}    { allow read: if isAdmin(); allow write: if isAdmin(); }
     match /competitors/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /devHealth/{doc}        { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /developerClaims/{doc}  { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /digestLog/{doc}        { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /developerClaims/{doc}  { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /digestLog/{doc}        { allow read: if isAdmin(); allow write: if isAdmin(); }
     match /eiborHistory/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /handover/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /investScores/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /mortgageRates/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /notificationTemplates/{doc} { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /notificationTemplates/{doc} { allow read: if isAdmin(); allow write: if isAdmin(); }
     // NOTE: /organisations is deliberately NOT re-declared here. It has its own
     // org-scoped block above. Firestore ORs all matching rules together, so a
     // blanket "read: if isAuthed()" on this path would silently cancel that
     // scoping and let every signed-in user read every organisation.
-    match /payments/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /platformLeads/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /payments/{doc}         { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /platformLeads/{doc}    { allow read: if isAdmin(); allow write: if isAdmin(); }
     match /projectData/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /projectVersions/{doc}  { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /radarLaunches/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /referrals/{doc}        { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /referrals/{doc}        { allow read: if isAdmin(); allow write: if isAdmin(); }
     match /strData/{doc}          { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportAgentPermissions/{doc}  { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportAutoAssignRules/{doc}   { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportCSAT/{doc}              { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportCustomFields/{doc}      { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportKnowledgeBase/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportQuickResponses/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportTicketAudit/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportTickets/{doc}           { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportTimeEntries/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportWebhookLogs/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportWebhooks/{doc}          { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /supportWorkflowTriggers/{doc}  { allow read: if isAuthed(); allow write: if isAdmin(); }
-    match /verifications/{doc}    { allow read: if isAuthed(); allow write: if isAdmin(); }
+    match /supportAgentPermissions/{doc}  { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportAutoAssignRules/{doc}   { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportCSAT/{doc}              { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportCustomFields/{doc}      { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportKnowledgeBase/{doc}     { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportQuickResponses/{doc}    { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportTicketAudit/{doc}       { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportTickets/{doc}           { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportTimeEntries/{doc}       { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportWebhookLogs/{doc}       { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportWebhooks/{doc}          { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /supportWorkflowTriggers/{doc}  { allow read: if isAdmin(); allow write: if isAdmin(); }
+    /* KYC verification requests carry identity documents. Read is admin-only;
+       it is referenced nowhere outside src/admin/AdminPanel.jsx. */
+    match /verifications/{doc}    { allow read: if isAdmin(); allow write: if isAdmin(); }
     match /riskData/{doc}         { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /strLtrData/{doc}       { allow read: if isAuthed(); allow write: if isAdmin(); }
     match /priceHistory/{doc}     { allow read: if isAuthed(); allow write: if isAdmin(); }
