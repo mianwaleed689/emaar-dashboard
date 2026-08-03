@@ -14,6 +14,7 @@ import { GOLDEN_VISA_THRESHOLD } from "../utils/constants";
 import Papa from "papaparse";
 import PhoneInput from "../components/PhoneInput";
 import { responseTime, responseReport } from "../crm/model/intake";
+import { viewerFrom, scopeFor, intentFor, visibleRecords, canSeeClientContact } from "../crm/model/org";
 import NationalitySelect from "../components/NationalitySelect";
 
 //  PIPELINE 
@@ -212,14 +213,33 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
   handleTabChange,
 }) {
 
-  //  Role resolution 
-  const isSuperAdmin = userRole==="superAdmin"||userRole==="admin";
-  const isOwner      = orgRole==="owner";
-  const isDirector   = orgRole==="director";
-  const isManager    = orgRole==="manager";
-  const isAgent      = orgRole==="agent";
-  const canManage    = isSuperAdmin||isOwner||isDirector||isManager;
-  const canSee       = canManage||isAgent;
+  /* WHO IS LOOKING, AND HOW MUCH OF THE DESK THEY SEE.
+     ─────────────────────────────────────────────────────────────────────────
+     This was five booleans off `orgRole`, and every difference between an agent
+     and an owner was an `if` further down the file. That is why the two of them
+     saw almost the same screen, and why there was nowhere at all to put a sales
+     admin or an accounts clerk.
+
+     Now the tab asks src/crm/model/org.js one question — how much of "leads"
+     may this person see — and renders that. A department added to the model is
+     a table entry there, not another conditional here. */
+  const me     = useMemo(() => viewerFrom({ firebaseUser, orgRole, userRole, teamMembers }),
+                         [firebaseUser, orgRole, userRole, teamMembers]);
+  const scope  = scopeFor(me, "leads");
+  const intent = intentFor(me, "leads");
+  const seeContacts = canSeeClientContact(me);
+
+  const isSuperAdmin = me.platformAdmin;
+  const isAgent      = scope === "own";
+  /* Judging other people is its own permission, not a job title.
+     The LEADERBOARD ranks colleagues and shows pipeline value, so it needs both
+     the whole agency's leads AND the right to see money — which is why a sales
+     admin, who sees every lead, does not get it.
+     AGENT PERFORMANCE is counts without money, so a team lead gets it too. */
+  const seesLeaderboard = scope === "org" && scopeFor(me, "money") === "org";
+  const seesTeamPerformance = scope === "org" || scope === "team";
+  const canManage    = scope === "org" || scope === "team";
+  const canSee       = scope !== "none";
   const currentUid   = firebaseUser?.uid||auth?.currentUser?.uid||"";
   const currentEmail = firebaseUser?.email||auth?.currentUser?.email||"";
 
@@ -281,16 +301,26 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
     setTimeout(()=>setToast(null),3000);
   },[]);
 
+  /* THE FILTER THAT MAKES SCOPE REAL.
+     An agent's desk is their own leads; a manager's is their team's; a
+     director, an owner, sales admin and the platform admin see the agency's.
+     Every counter, chip, board and export below reads `allLeads`, so scoping
+     here scopes the whole tab rather than each figure separately — which is
+     how a "total" quietly ends up counting rows the viewer cannot open. */
+  const allLeads  = useMemo(
+    () => visibleRecords(me, "leads", myLeads || [], { ownerField: "assignedTo", teamIds: me.teamIds }),
+    [me, myLeads]);
+
   //  Counts 
   const stageCounts = useMemo(()=>{
     const c={};
-    PIPELINE.forEach(p=>{c[p.key]=(myLeads||[]).filter(l=>(l.status||"New Lead")===p.key).length;});
+    PIPELINE.forEach(p=>{c[p.key]=allLeads.filter(l=>(l.status||"New Lead")===p.key).length;});
     return c;
-  },[myLeads]);
+  },[allLeads]);
 
   //  Smart view filter 
   const smartFiltered = useMemo(()=>{
-    let a=[...(myLeads||[])];
+    let a=[...allLeads];
     if(smartView==="today")       a=a.filter(l=>daysAgo(l.createdAt)<1);
     if(smartView==="my_leads")    a=a.filter(l=>l.assignedTo===currentUid||l.createdBy===currentUid);
     if(smartView==="hot")         a=a.filter(l=>attention(l).urgent);
@@ -300,7 +330,7 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
     if(smartView==="unassigned")  a=a.filter(l=>!l.assignedTo||l.assignedTo==="");
     if(smartView==="golden_visa") a=a.filter(l=>parseFloat(l.budget||0)>=GV_MIN);
     return a;
-  },[myLeads,smartView,currentUid]);
+  },[allLeads,smartView,currentUid]);
 
   //  Main filter 
   const filtered = useMemo(()=>{
@@ -334,7 +364,6 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
   },[smartFiltered,activeStage,filterAgent,filterManager,filterService,filterSource,filterBudget,aiSearch,leadSortBy]);
 
   //  KPIs 
-  const allLeads  = myLeads||[];
   const kTotal    = allLeads.length;
   const kToday    = allLeads.filter(l=>daysAgo(l.createdAt)<1).length;
   const kHot      = allLeads.filter(l=>attention(l).urgent).length;
@@ -363,7 +392,7 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
 
   //  Leaderboard (owner view)  ranked by combined score 
   const leaderboard = useMemo(()=>{
-    if(!isOwner&&!isSuperAdmin) return [];
+    if(!seesLeaderboard) return [];
     /* This ranked the agency's own staff by (closed × 10) + (conversion × 2) +
        (pipeline in millions × 0.5), capped at fifty million. Those five numbers
        were invented — nothing in the business decided that one closed deal is
@@ -374,7 +403,7 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
     return [...agentPerf].sort((a,b)=>b.closed-a.closed
                                   || parseFloat(b.conv||0)-parseFloat(a.conv||0)
                                   || b.total-a.total);
-  },[agentPerf,isOwner,isSuperAdmin]);
+  },[agentPerf,seesLeaderboard]);
 
   //  Source stats 
   const srcStats = useMemo(()=>{
@@ -500,13 +529,20 @@ try{
   },[orgName,firebaseUser]);
 
   //  Access guard 
+  /* Departments that have no business with leads — Accounts, HR, IT — are told
+     so plainly rather than shown an empty desk that looks like a fault. */
   if(!canSee) return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:400,gap:12,textAlign:"center"}}>
-      <div style={{fontSize:36}}>🔒</div>
-      <div style={{fontSize:16,fontWeight:700,color:T.white}}>CRM Access Required</div>
-      <div style={{fontSize:12,color:T.textMuted,maxWidth:300}}>Your account does not have CRM access. Contact your administrator.</div>
+    <div style={{padding:"70px 20px",textAlign:"center"}}>
+      <div style={{fontSize:15,fontWeight:700,color:T.white,marginBottom:7,fontFamily:"'Fraunces',serif"}}>
+        Leads are not part of your role
+      </div>
+      <div style={{fontSize:12,color:T.textSecondary,maxWidth:430,margin:"0 auto",lineHeight:1.7}}>
+        This desk belongs to the sales floor. If that is wrong, your department is
+        set incorrectly on your record — HR or your manager can change it.
+      </div>
     </div>
   );
+
 
   return (
     <div style={{paddingBottom:80}}>
@@ -519,8 +555,11 @@ try{
           between "Hot Case", "Potential" and "EOI".                          */}
       <div style={{padding:"14px 4px 12px",borderBottom:"1px solid "+T.border}}>
         <div style={{display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap",marginBottom:6}}>
+          {/* The title says whose desk this is. An owner opening a screen headed
+              "My leads" that in fact holds the whole agency's is being told
+              something untrue about what they are looking at. */}
           <h2 style={{margin:0,fontSize:17,fontWeight:800,color:T.white,fontFamily:"'Fraunces',serif"}}>
-            My leads
+            {intent?.title || "Leads"}
           </h2>
           <button type="button" onClick={()=>setShowHelp(v=>!v)}
             style={{background:"none",border:"1px solid "+T.border,borderRadius:14,padding:"3px 11px",
@@ -530,7 +569,11 @@ try{
           </button>
         </div>
         <div style={{fontSize:12,color:T.textSecondary,lineHeight:1.6,maxWidth:760}}>
-          Every enquiry your agency has taken, and who owes each one a call.
+          {intent?.question} {scope==="own"
+            ? "These are the leads assigned to you."
+            : scope==="team"
+            ? "These are your team's leads — everyone who reports to you, and your own."
+            : "Every enquiry the agency has taken."}{" "}
           The list is your own data — nothing here comes from the Land Department
           or any portal, and nothing is estimated or predicted.
         </div>
@@ -681,7 +724,7 @@ try{
       {/*  FILTER ROW  */}
       {allLeads.length>0&&(
       <div style={{display:"flex",gap:8,padding:"8px 4px",borderBottom:"1px solid "+T.border,flexWrap:"wrap",alignItems:"center",background:"rgba(255,255,255,0.01)"}}>
-        {(isOwner||isDirector||isSuperAdmin)&&managers.length>0&&(
+        {scope==="org"&&managers.length>0&&(
           <select value={filterManager} onChange={e=>setFilterManager(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+(filterManager!=="all"?T.gold:T.border),borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
             <option value="all">All Managers</option>
             {managers.map(m=><option key={m.uid||m.id} value={m.uid||m.id}>{m.name}</option>)}
@@ -922,7 +965,7 @@ try{
             </div>
 
             {/*  OWNER LEADERBOARD  */}
-            {(isOwner||isSuperAdmin)&&leaderboard.length>0&&(
+            {seesLeaderboard&&leaderboard.length>0&&(
               <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.gold+"40",borderRadius:12,overflow:"hidden"}}>
                 <div style={{padding:"14px 16px",borderBottom:"1px solid "+T.border,background:"rgba(212,168,67,0.05)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div>
@@ -966,7 +1009,7 @@ try{
             )}
 
             {/*  AGENT PERFORMANCE TABLE (manager/director)  */}
-            {(isManager||isDirector)&&agentPerf.length>0&&(
+            {seesTeamPerformance&&agentPerf.length>0&&(
               <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:12,overflow:"hidden"}}>
                 <div style={{padding:"14px 16px",borderBottom:"1px solid "+T.border,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div style={{fontSize:13,fontWeight:700,color:T.white}}>Agent Performance</div>

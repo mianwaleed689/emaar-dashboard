@@ -55,23 +55,31 @@ import {
   COMMISSION_DEFAULTS, defaultRateFor, SIDES, SIDES_FOR, STATES, fmt,
 } from "../crm/model/commission";
 import { migrateDeals, migrateCommission } from "../crm/model/migrate";
+import { viewerFrom, scopeFor, intentFor, visibleRecords } from "../crm/model/org";
 
 const card  = { background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`, borderRadius: 12 };
 const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7, textTransform: "uppercase" };
 
 export default function PipelineTab({
   deals = [], dealsLoading, orgName, orgRole, userRole, orgId,
-  firebaseUser, userName,
+  firebaseUser, userName, teamMembers = [],
 }) {
   /* ── WHO MAY SEE THIS ───────────────────────────────────────────────────
      Everyone in the agency. An agent sees their own deals; anyone senior sees
      the agency's. Locking the owner out was the worst thing about the old tab. */
-  const isSuperAdmin = userRole === "admin" || userRole === "superAdmin";
-  const isOwner    = orgRole === "owner";
-  const isDirector = orgRole === "director";
-  const isManager  = orgRole === "manager";
-  const isAgent    = orgRole === "agent";
-  const seesAll    = isSuperAdmin || isOwner || isDirector || isManager;
+  /* Scope comes from the model, not from a chain of role booleans. That is what
+     lets CONVEYANCING see every deal in the company from staff level — a
+     transaction coordinator has no "own" deals, their job is the document queue
+     — and what keeps HR out of here entirely. */
+  const me      = useMemo(() => viewerFrom({ firebaseUser, orgRole, userRole, teamMembers }),
+                          [firebaseUser, orgRole, userRole, teamMembers]);
+  const scope   = scopeFor(me, "deals");
+  const intent  = intentFor(me, "deals");
+  const moneyScope = scopeFor(me, "money");
+
+  const isSuperAdmin = me.platformAdmin;
+  const isAgent    = scope === "own";
+  const seesAll    = scope === "org";
   const uid        = firebaseUser?.uid || "";
 
   const [journey, setJourney]   = useState("secondary");
@@ -88,10 +96,10 @@ export default function PipelineTab({
   const say = useCallback((m, bad) => { setToast({ m, bad }); setTimeout(() => setToast(null), 3400); }, []);
 
   /* Old records brought onto the model, without guessing at what did not map. */
-  const all = useMemo(() => {
-    const rows = migrateDeals(deals || []);
-    return seesAll ? rows : rows.filter(d => d.agentId === uid);
-  }, [deals, seesAll, uid]);
+  const all = useMemo(
+    () => visibleRecords(me, "deals", migrateDeals(deals || []),
+                         { ownerField: "agentId", teamIds: me.teamIds }),
+    [me, deals]);
 
   const mine        = useMemo(() => all.filter(d => d.journey === journey), [all, journey]);
   const needsReview = useMemo(() => all.filter(d => d.needsReview), [all]);
@@ -211,6 +219,20 @@ export default function PipelineTab({
 
   /* ── RENDER ─────────────────────────────────────────────────────────────── */
 
+  if (scope === "none") {
+    return (
+      <div style={{ padding: "70px 20px", textAlign: "center" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: T.white, marginBottom: 7, fontFamily: "'Fraunces',serif" }}>
+          Deals are not part of your role
+        </div>
+        <div style={{ fontSize: 12, color: T.textSecondary, maxWidth: 430, margin: "0 auto", lineHeight: 1.7 }}>
+          This is the sales, conveyancing and accounts side of the business. If that is
+          wrong, your department is set incorrectly on your record.
+        </div>
+      </div>
+    );
+  }
+
   if (dealsLoading) {
     return <div style={{ padding: 60, textAlign: "center", color: T.textMuted, fontSize: 13 }}>Loading your deals…</div>;
   }
@@ -228,7 +250,7 @@ export default function PipelineTab({
       <div style={{ padding: "14px 4px 12px", borderBottom: `1px solid ${T.border}` }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
           <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>
-            Deals{orgName ? ` — ${orgName}` : ""}
+            {intent?.title || "Deals"}{orgName ? ` — ${orgName}` : ""}
           </h2>
           <button type="button" onClick={() => setShowHelp(v => !v)}
             style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 14, padding: "3px 11px",
@@ -237,7 +259,11 @@ export default function PipelineTab({
           </button>
         </div>
         <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6, maxWidth: 780 }}>
-          Every deal your agency is working, where it has reached, and what is holding it up.
+          {intent?.question} {scope === "own"
+            ? "These are your deals."
+            : scope === "team"
+            ? "These are your team's deals, and your own."
+            : "Every deal the agency is working."}{" "}
           A deal cannot pass a stage until the paperwork that stage needs is on file — which is how
           you find out an NOC has expired before the trustee appointment, rather than at it.
         </div>
@@ -294,12 +320,16 @@ export default function PipelineTab({
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", padding: "12px 4px" }}>
         <Figure label="Open deals" value={open.length} accent={T.gold}
                 note={`${all.length} on record in total, across all three journeys.`} />
-        <Figure label="Not invoiced yet" value={fmt(money.notYetInvoiced)}
-                note="Earned on deals nobody has billed for. Raise the invoices." />
-        <Figure label="Invoiced, not paid" value={fmt(money.outstanding)} accent="#F59E0B" note={money.note} />
-        <Figure label="Collected" value={fmt(money.collected)} accent="#10B981"
-                note={`Of which ${fmt(money.owedToAgents)} is owed out to agents.`} />
-        {isAgent && <Figure label="Owed to you" value={fmt(myMoney.owedToYou)} accent="#10B981" note={myMoney.note} />}
+        {/* Sales admin and the listings desk work these deals every day and have
+            no business seeing what the agency billed. Money is its own scope. */}
+        {moneyScope === "org" && <>
+          <Figure label="Not invoiced yet" value={fmt(money.notYetInvoiced)}
+                  note="Earned on deals nobody has billed for. Raise the invoices." />
+          <Figure label="Invoiced, not paid" value={fmt(money.outstanding)} accent="#F59E0B" note={money.note} />
+          <Figure label="Collected" value={fmt(money.collected)} accent="#10B981"
+                  note={`Of which ${fmt(money.owedToAgents)} is owed out to agents.`} />
+        </>}
+        {moneyScope === "own" && <Figure label="Owed to you" value={fmt(myMoney.owedToYou)} accent="#10B981" note={myMoney.note} />}
       </div>
 
       {/* WHAT IS HOLDING DEALS UP */}

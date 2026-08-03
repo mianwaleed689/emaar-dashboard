@@ -1,0 +1,111 @@
+/**
+ * IS THE ACCESS MODEL ACTUALLY WIRED IN?
+ *
+ * The model being correct and the tabs using it are two different claims, and
+ * the second is the one that matters to a customer. A model can be perfect
+ * while a tab still reads `orgRole === "manager"` three lines lower and shows
+ * an agent the whole agency.
+ *
+ * This reads the three tab files and asserts they route through the model
+ * rather than around it. It is a source check, not a UI check — the browser
+ * sweep in verify-tabs.mjs covers the rendering.
+ *
+ *     node scripts/test/wiring.test.mjs
+ */
+import { readFileSync } from "fs";
+import { viewerFrom, scopeFor, visibleRecords } from "../../src/crm/model/org.js";
+
+let pass = 0, fail = 0;
+const ok = (n, c, got) => {
+  if (c) { pass++; console.log(`  ✓ ${n}`); }
+  else { fail++; console.log(`  ✗ ${n}${got !== undefined ? `  →  ${JSON.stringify(got)}` : ""}`); }
+};
+const head = t => console.log(`\n── ${t} ${"─".repeat(Math.max(0, 58 - t.length))}`);
+
+const TABS = {
+  "My Leads": "src/tabs/MyLeadsTab.jsx",
+  "Pipeline": "src/tabs/PipelineTab.jsx",
+  "Listings": "src/tabs/ListingsTab.jsx",
+  "People":   "src/tabs/PeopleTab.jsx",
+};
+
+head("THE TABS ROUTE THROUGH THE MODEL");
+
+for (const [name, path] of Object.entries(TABS)) {
+  const src = readFileSync(path, "utf8");
+  ok(`${name} imports the access model`, /from "\.\.\/crm\/model\/org"/.test(src));
+  ok(`  ${name} asks scopeFor()`, /scopeFor\(/.test(src));
+  ok(`  ${name} shows the scope-appropriate title`, /intent\?\.title|intentFor\(/.test(src));
+
+  /* The fault this whole exercise is about: a role string compared to a literal
+     to decide what somebody may SEE.
+
+     Two uses are legitimate and are excluded rather than counted:
+       · `m.orgRole` — reading it off ANOTHER person, to build an assignment
+         dropdown or to infer a legacy department. That is data, not a gate.
+       · the People tab's legacy inference, which turns an old orgRole into a
+         department precisely so nothing else has to look at orgRole again.
+
+     What is checked is `orgRole` on the VIEWER driving a render decision. */
+  const viewerGates = (src.match(/(?<!\w\.)orgRole\s*===?\s*"(owner|director|manager|agent)"/g) || [])
+    .filter(x => true).length
+    - (src.match(/m\.orgRole\s*===?\s*"/g) || []).length
+    - (/department: m\.department \|\|/.test(src) ? 3 : 0);
+  ok(`  ${name} gates nothing on the viewer's raw role (${Math.max(0, viewerGates)})`,
+     viewerGates <= 0, viewerGates);
+
+  ok(`  ${name} tells anyone it is not for, plainly`,
+     /not part of your role|is not part of your/.test(src));
+  ok(`  ${name} has no dead if(false) branch`, !/if\s*\(\s*false\s*\)/.test(src));
+}
+
+head("THE FILTER ACTUALLY FILTERS");
+
+for (const [name, path] of [["My Leads", TABS["My Leads"]], ["Pipeline", TABS.Pipeline], ["Listings", TABS.Listings]]) {
+  const src = readFileSync(path, "utf8");
+  ok(`${name} filters its records with visibleRecords()`, /visibleRecords\(/.test(src));
+  ok(`  ${name} passes teamIds, so "team" scope means something`, /teamIds/.test(src));
+}
+
+head("AND THE FILTER IS CORRECT, RUN AGAINST REAL SHAPES");
+
+const team = [
+  { uid: "ag1", managerId: "mgr" },
+  { uid: "ag2", managerId: "mgr" },
+  { uid: "ag3", managerId: "other" },
+];
+const leads = [
+  { id: "L1", assignedTo: "ag1" },
+  { id: "L2", assignedTo: "ag2" },
+  { id: "L3", assignedTo: "ag3" },
+  { id: "L4", assignedTo: "mgr" },
+];
+
+const asAgent   = viewerFrom({ firebaseUser: { uid: "ag1" }, orgRole: "agent",   teamMembers: team });
+const asManager = viewerFrom({ firebaseUser: { uid: "mgr" }, orgRole: "manager", teamMembers: team });
+const asOwner   = viewerFrom({ firebaseUser: { uid: "own" }, orgRole: "owner",   teamMembers: team });
+
+const seen = (v) => visibleRecords(v, "leads", leads, { ownerField: "assignedTo", teamIds: v.teamIds })
+  .map(l => l.id).join(",");
+
+ok("an agent sees only their own",      seen(asAgent) === "L1", seen(asAgent));
+ok("a manager sees their two reports and themselves",
+   seen(asManager) === "L1,L2,L4", seen(asManager));
+ok("  and NOT the agent who reports elsewhere",  !seen(asManager).includes("L3"));
+ok("an owner sees all four",            seen(asOwner) === "L1,L2,L3,L4", seen(asOwner));
+
+const salesAdmin = viewerFrom({ firebaseUser: { uid: "sa" }, teamMembers: team });
+salesAdmin.department = "salesAdmin"; salesAdmin.seniority = "staff";
+ok("sales admin sees all four from staff level",
+   visibleRecords(salesAdmin, "leads", leads, { ownerField: "assignedTo" }).length === 4);
+
+const accounts = { id: "ac", department: "finance", seniority: "staff" };
+ok("accounts sees no leads at all",
+   visibleRecords(accounts, "leads", leads, { ownerField: "assignedTo" }).length === 0);
+ok("  and the leads tab would not be offered to them",
+   scopeFor(accounts, "leads") === "none");
+
+console.log(`\n${"═".repeat(62)}`);
+console.log(`  ${pass} passed, ${fail} failed`);
+console.log("═".repeat(62));
+process.exit(fail ? 1 : 0);

@@ -5579,6 +5579,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {/* —” PIPELINE TAB (extracted) —” */}
           {tab === "Pipeline" && (
             <PipelineTab
+              teamMembers={teamMembers}
               deals={deals} dealsLoading={dealsLoading}
               dealForm={dealForm} setDealForm={setDealForm}
               dealFormLoading={dealFormLoading} setDealFormLoading={setDealFormLoading}
@@ -5666,6 +5667,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {/* LISTINGS TAB (extracted) */}
           {tab === "Listings" && (
             <ListingsTab
+              teamMembers={teamMembers}
               listings={listings} listingsLoading={listingsLoading}
               listingForm={listingForm} setListingForm={setListingForm}
               listingFormLoading={listingFormLoading} setListingFormLoading={setListingFormLoading}

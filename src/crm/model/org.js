@@ -268,6 +268,29 @@ export const intentFor = (user, area) => {
 };
 
 /**
+ * Build the viewer once, from what a tab already has in its props.
+ *
+ * Every tab needs the same object and would otherwise assemble it slightly
+ * differently — which is how three screens end up disagreeing about who you
+ * are. `department` and `seniority` come from the user's record when it has
+ * them and are inferred from the old orgRole when it does not, so existing
+ * accounts keep working without the whole company being re-entered first.
+ */
+export function viewerFrom({ firebaseUser, orgRole, userRole, department, seniority, teamMembers } = {}) {
+  const me = {
+    id: firebaseUser?.uid || "",
+    orgRole,
+    department, seniority,
+    platformAdmin: userRole === "admin" || userRole === "superAdmin",
+  };
+  /* Who reports to me — needed for "team" scope, and only ever used for that. */
+  me.teamIds = (teamMembers || [])
+    .filter(m => (m.managerId && m.managerId === me.id) || (m.reportsTo && m.reportsTo === me.id))
+    .map(m => m.uid || m.id);
+  return me;
+}
+
+/**
  * Filter any list of records to what this person may see.
  * `teamIds` is the set of user ids reporting to them.
  */

@@ -10,6 +10,7 @@ import TabProvenance from "../components/TabProvenance";
 import { tabCopy } from "../data/tabCopy";
 import { canAdvertise, listingCompliance, complianceProgress,
          PORTALS as COMPLIANT_PORTALS, POSTED_NOTE } from "../crm/model/listing";
+import { viewerFrom, scopeFor, intentFor, visibleRecords } from "../crm/model/org";
 function ListingsTab({ liveNeighbourhoods=[],
   listings, listingsLoading,
   listingForm, setListingForm,
@@ -19,22 +20,42 @@ function ListingsTab({ liveNeighbourhoods=[],
   listingFilter, setListingFilter,
   listingSearch, setListingSearch,
   publishingId, setPublishingId,
-  firebaseUser, orgId, orgRole, userName, userRole,
+  firebaseUser, orgId, orgRole, userName, userRole, teamMembers = [],
 }) {
   const _copy = tabCopy("Listings");
 
 
-            const isAgent   = orgRole === "agent";
-            const isManager = orgRole === "manager";
-            const isOwner = orgRole === "owner" || userRole === "superAdmin" || userRole === "admin";
-const isDirector = orgRole === "director";
-if (!isAgent && !isManager && !isOwner && !isDirector) return (
-              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"80px 20px", textAlign:"center" }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom:16 }}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                <div style={{ fontSize:16, fontWeight:700, color:T.textPrimary, marginBottom:6 }}>Listings not available</div>
-                <div style={{ fontSize:12, color:T.textMuted }}>Contact your manager to access listing management</div>
+            /* Scope from the model. This is what lets the LISTINGS COORDINATOR
+               see every listing in the company from staff level — permits and
+               Form A are their whole job — while an agent sees their own. */
+            const me     = viewerFrom({ firebaseUser, orgRole, userRole, teamMembers });
+            const scope  = scopeFor(me, "listings");
+            const intent = intentFor(me, "listings");
+            const isAgent   = scope === "own";
+            const isManager = scope === "team" || scope === "org";
+            const isOwner   = me.platformAdmin || orgRole === "owner";
+            const isDirector = orgRole === "director";
+
+            if (scope === "none") return (
+              <div style={{ padding:"70px 20px", textAlign:"center" }}>
+                <div style={{ fontSize:15, fontWeight:700, color:T.textPrimary, marginBottom:7, fontFamily:"'Fraunces',serif" }}>
+                  Listings are not part of your role
+                </div>
+                <div style={{ fontSize:12, color:T.textMuted, maxWidth:430, margin:"0 auto", lineHeight:1.7 }}>
+                  This belongs to the sales floor and the listings desk. If that is wrong,
+                  your department is set incorrectly on your record.
+                </div>
               </div>
             );
+
+            /* One scoped source of truth. Every count, filter and compliance
+               banner below reads `listings`, so shadowing it here scopes the
+               whole tab — rather than each figure being scoped separately,
+               which is how a "total" ends up counting rows the viewer cannot
+               open. */
+            const allListings = listings || [];
+            listings = visibleRecords(me, "listings", allListings,
+                                      { ownerField: "agentId", teamIds: me.teamIds });
 
             // Status config
             const STATUS_CFG = {
@@ -218,8 +239,16 @@ if (!isAgent && !isManager && !isOwner && !isDirector) return (
               {/* ── Header ── */}
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
                 <div>
-                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>Listings</h1>
-                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0" }}>Create · Manage · Publish to portals · Track performance</p>
+                  {/* The heading says whose listings these are, and the line
+                      under it asks the question this viewer opened the tab to
+                      answer. "Publish to portals" was also still here, claiming
+                      an integration that does not exist. */}
+                  <h1 style={{ fontFamily:"'Fraunces',serif", fontSize:22, fontWeight:900, color:T.white, margin:0 }}>
+                    {intent?.title || "Listings"}
+                  </h1>
+                  <p style={{ fontSize:12, color:T.textMuted, margin:"4px 0 0", maxWidth:640, lineHeight:1.6 }}>
+                    {intent?.question || "Whether each listing may lawfully be advertised yet."}
+                  </p>
                 </div>
                 <button type="button" onClick={()=>setShowNewListing(true)} title="Record a property you are marketing. You will be asked for the Form A and the Trakheesi permit, because nothing can be advertised without them."
                   style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 20px", borderRadius:9, border:`1px solid ${T.gold}`, background:"rgba(212,168,67,0.1)", color:T.gold, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
