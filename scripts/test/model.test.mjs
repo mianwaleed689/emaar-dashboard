@@ -14,6 +14,8 @@ import { computeCommission, dealTotals, agentStatement, agencyStatement,
          SIDES_FOR, fmt } from "../../src/crm/model/commission.js";
 import { canAdvertise, complianceProgress, listingCompliance, PORTALS,
          POSTED_NOTE, LISTING_REQUIREMENTS } from "../../src/crm/model/listing.js";
+import { DEPARTMENTS, scopeFor, canSeeClientContact, canSeePay, visibleAreas,
+         intentFor, visibleRecords } from "../../src/crm/model/org.js";
 import { LAW, SICK_TOTAL_DAYS, annualLeaveBalance, sickLeaveEntitlement,
          probationStatus, noticePeriod, gratuity, finalSettlement,
          complianceRegister, canBroker } from "../../src/crm/model/hr.js";
@@ -318,6 +320,89 @@ ok("the portal buttons state plainly that nothing is published for you",
 ok("three portals are offered", PORTALS.length === 3, PORTALS.length);
 ok("every requirement explains itself in plain words",
    LISTING_REQUIREMENTS.every(r => r.what.length > 30 && r.fail.length > 30));
+
+/* ════════════════════════ WHO SEES WHAT ════════════════════════ */
+head("ACCESS — the same tab, a different job");
+
+const agent    = { id: "u1", department: "sales",        seniority: "staff" };
+const salesMgr = { id: "u2", department: "sales",        seniority: "manager" };
+const director = { id: "u3", department: "management",   seniority: "director" };
+const owner    = { id: "u4", department: "management",   seniority: "owner" };
+const hrOfficer= { id: "u5", department: "hr",           seniority: "staff" };
+const finance  = { id: "u6", department: "finance",      seniority: "staff" };
+const coord    = { id: "u7", department: "conveyancing", seniority: "staff" };
+const marketer = { id: "u8", department: "listings",     seniority: "staff" };
+const itGuy    = { id: "u9", department: "it",           seniority: "staff" };
+
+ok("an agent sees only their own leads",   scopeFor(agent, "leads") === "own", scopeFor(agent, "leads"));
+ok("a sales manager sees their TEAM's leads, not the whole company",
+   scopeFor(salesMgr, "leads") === "team", scopeFor(salesMgr, "leads"));
+ok("  a director does see the whole company", scopeFor(director, "leads") === "org");
+ok("an owner sees every lead",             scopeFor(owner, "leads") === "org");
+ok("HR sees no leads at all",              scopeFor(hrOfficer, "leads") === "none");
+ok("finance sees no leads",                scopeFor(finance, "leads") === "none");
+ok("IT sees nothing commercial",           visibleAreas(itGuy).length === 0, visibleAreas(itGuy));
+
+ok("a conveyancing coordinator sees every deal in the company",
+   scopeFor(coord, "deals") === "org", scopeFor(coord, "deals"));
+ok("  but no leads and no listings",
+   scopeFor(coord, "leads") === "none" && scopeFor(coord, "listings") === "none");
+ok("an agent sees only their own deals",   scopeFor(agent, "deals") === "own");
+
+ok("HR sees everyone in the company",      scopeFor(hrOfficer, "people") === "org");
+ok("an agent sees only themselves",        scopeFor(agent, "people") === "none",
+   scopeFor(agent, "people"));
+ok("a manager of any department can see their own team's people",
+   scopeFor(salesMgr, "people") === "team", scopeFor(salesMgr, "people"));
+
+ok("finance sees the money org-wide",      scopeFor(finance, "money") === "org");
+ok("an agent sees only their own commission", scopeFor(agent, "money") === "own");
+ok("HR does not see the money",            scopeFor(hrOfficer, "money") === "none");
+
+/* PII is a separate gate from scope, on purpose. */
+ok("marketing may see deal figures",       scopeFor(marketer, "deals") === "org");
+ok("  but NOT a client's phone number",    canSeeClientContact(marketer) === false);
+ok("finance may not see client contacts",  canSeeClientContact(finance) === false);
+ok("an agent may — they are the one calling", canSeeClientContact(agent) === true);
+ok("conveyancing may — they run the transfer", canSeeClientContact(coord) === true);
+
+ok("HR may see pay",                       canSeePay(hrOfficer, "u1") === true);
+ok("finance may see pay",                  canSeePay(finance, "u1") === true);
+ok("a sales manager may NOT see pay",      canSeePay(salesMgr, "u1") === false);
+ok("anybody may always see their own pay", canSeePay(agent, "u1") === true);
+
+/* The same tab, a different question. */
+ok("Leads asks an agent who to call next",
+   /Who do I call next/.test(intentFor(agent, "leads").question), intentFor(agent, "leads"));
+ok("Leads asks a manager who is idle",
+   /idle/.test(intentFor(salesMgr, "leads").question));
+ok("Leads asks an owner which sources are worth the money",
+   /worth the money/.test(intentFor(owner, "leads").question));
+ok("Leads is not offered to HR at all",    intentFor(hrOfficer, "leads") === null);
+ok("People asks HR about the whole company, not only sales",
+   /every department, not only sales/.test(intentFor(hrOfficer, "people").question));
+
+/* Existing accounts carry only orgRole and no department — they must still work. */
+const legacyOwner = { id: "L1", orgRole: "owner" };
+const legacyAgent = { id: "L2", orgRole: "agent" };
+ok("a legacy owner still sees everything", scopeFor(legacyOwner, "deals") === "org");
+ok("a legacy agent still sees their own",  scopeFor(legacyAgent, "deals") === "own");
+ok("a legacy agent gets no people tab",    scopeFor(legacyAgent, "people") === "none");
+
+/* Filtering real records. */
+const recs = [ { id: "d1", agentId: "u1" }, { id: "d2", agentId: "u9" }, { id: "d3", agentId: "u1" } ];
+ok("an agent's list is filtered to their own",
+   visibleRecords(agent, "deals", recs).map(r => r.id).join() === "d1,d3",
+   visibleRecords(agent, "deals", recs).map(r => r.id));
+ok("an owner's list is not filtered",
+   visibleRecords(owner, "deals", recs).length === 3);
+ok("a team lead sees their team's",
+   visibleRecords({ id: "u1", department: "sales", seniority: "lead" }, "deals", recs,
+                  { teamIds: ["u9"] }).length === 3);
+ok("HR gets no deal records at all",       visibleRecords(hrOfficer, "deals", recs).length === 0);
+
+ok("every department describes itself",
+   Object.values(DEPARTMENTS).every(d => d.what && d.what.length > 25));
 
 console.log(`\n${"═".repeat(64)}`);
 console.log(`  ${pass} passed, ${fail} failed`);
