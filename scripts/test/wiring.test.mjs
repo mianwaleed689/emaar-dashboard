@@ -105,7 +105,39 @@ ok("accounts sees no leads at all",
 ok("  and the leads tab would not be offered to them",
    scopeFor(accounts, "leads") === "none");
 
+head("THE PERSON WHO CREATES AN AGENCY OWNS IT");
+
+/* This was `orgRole: "manager"`. scopeFor gives a manager TEAM scope, which is
+   right for a sales manager and catastrophic for a founder: the person paying
+   for the software signed up and could see only their own records, with a team
+   of nobody. Neither the model tests nor the browser sweep could catch it —
+   the model was right and the tab rendered fine. Only the signup was wrong. */
+const signup = readFileSync("src/pages/AgencySignup.jsx", "utf8");
+const created = signup.slice(signup.indexOf('doc(db, "users", uid)'),
+                             signup.indexOf('doc(db, "organisations"'));
+
+ok("the agency creator is written as an owner, not a manager",
+   /orgRole:\s*"owner"/.test(created), created.match(/orgRole:\s*"[a-z]+"/i)?.[0]);
+ok("  and carries an explicit department", /department:\s*"management"/.test(created));
+ok("  and an explicit seniority",          /seniority:\s*"owner"/.test(created));
+
+/* Prove the consequence, not just the string. */
+const founder = viewerFrom({ firebaseUser: { uid: "f1" }, orgRole: "owner",
+                             department: "management", seniority: "owner",
+                             userRole: "user", teamMembers: [] });
+const agencyDeals = [{ agentId: "f1" }, { agentId: "someone-else" }, { agentId: "third" }];
+ok("a founder with no team yet still sees the whole agency's deals",
+   visibleRecords(founder, "deals", agencyDeals, { ownerField: "agentId" }).length === 3,
+   visibleRecords(founder, "deals", agencyDeals, { ownerField: "agentId" }).length);
+ok("  and the agency's money", scopeFor(founder, "money") === "org", scopeFor(founder, "money"));
+ok("  and its people", scopeFor(founder, "people") === "org", scopeFor(founder, "people"));
+
+/* JoinPage notifies orgRole == "owner". Before the fix that matched nobody. */
+const join = readFileSync("src/pages/JoinPage.jsx", "utf8");
+ok("JoinPage's owner notification now has somebody to find",
+   /orgRole","==","owner"/.test(join.replace(/\s/g, "")) && /orgRole:\s*"owner"/.test(created));
+
 console.log(`\n${"═".repeat(62)}`);
 console.log(`  ${pass} passed, ${fail} failed`);
-console.log("═".repeat(62));
+/* ── SIGNUP: THE FIRST THING A CUSTOMER EVER DOES ─────────────────────────── */
 process.exit(fail ? 1 : 0);

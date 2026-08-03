@@ -125,7 +125,24 @@ export default function AgencySignup() {
         name:      managerForm.name.trim(),
         email:     managerForm.email.trim(),
         role:      accountType === "developer" ? "developer" : "user",
-        orgRole:   "manager",
+        /* THE PERSON CREATING THE AGENCY OWNS IT.
+           This said "manager", and the consequences reached further than the
+           word. scopeFor() gives a manager TEAM scope — correct for a sales
+           manager, who runs a team — so the founder of a brand new agency saw
+           only their own deals, their own money and their own people, with a
+           team of nobody. The first thing a paying customer ever did produced
+           an account that could not see its own agency.
+
+           It is also why JoinPage's "notify the owner that an agent joined"
+           found nobody: it queries orgRole == "owner", and nothing in the
+           product ever wrote one.
+
+           Department and seniority are written explicitly rather than left to
+           the legacy inference in org.js, so the record says what it means
+           instead of being reconstructed from a job title on every read. */
+        orgRole:    "owner",
+        department: "management",
+        seniority:  "owner",
         orgId,
         /* Trial length comes from the shared constant. This route previously
            granted 14 days while the individual signup granted 7 (TRIAL_DURATION_MS)
