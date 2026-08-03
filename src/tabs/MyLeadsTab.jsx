@@ -145,6 +145,63 @@ function attention(l) {
   return { rank:5, reason:quiet===0?"Spoke today":quiet==null?"In progress":`Last spoke ${day(quiet)} ago`, urgent:false, color:T.textSecondary };
 }
 
+
+/* THE VIEWS, IN THE ORDER A DESK IS ACTUALLY WORKED.
+   These were nine chips across the top of the tab. As a list they cost one
+   control, and each label says what it means — "Gone quiet" rather than
+   "Stale", which every agency reads differently. */
+const SMART_VIEWS = [
+  { k:"all",         l:"All leads" },
+  { k:"hot",         l:"Needs a call" },
+  { k:"uncontacted", l:"Never contacted" },
+  { k:"overdue",     l:"Follow-up due" },
+  { k:"today",       l:"Came in today" },
+  { k:"stale",       l:"Gone quiet" },
+  { k:"my_leads",    l:"Mine" },
+  { k:"unassigned",  l:"Nobody owns them" },
+  { k:"golden_visa", l:"Golden Visa budget" },
+];
+
+const BUDGET_LABEL = {
+  all:"Any budget", under1m:"Under AED 1M", "1to3m":"AED 1M – 3M",
+  "3to5m":"AED 3M – 5M", "5to10m":"AED 5M – 10M", above10m:"Above AED 10M",
+};
+
+/** A filter that is on, and can be taken off where it sits. */
+const FilterChip = ({ label, onClear }) => (
+  <button type="button" onClick={onClear} title="Remove this filter"
+    style={{fontSize:10.5,padding:"2px 9px",borderRadius:10,cursor:"pointer",
+            background:"rgba(212,168,67,0.14)",border:"1px solid rgba(212,168,67,0.35)",
+            color:T.gold,fontFamily:"'Outfit',sans-serif"}}>
+    {label} ✕
+  </button>
+);
+
+const FilterPill = ({ on, onClick, colour, tip, children }) => (
+  <button type="button" onClick={onClick} title={tip}
+    style={{padding:"5px 11px",borderRadius:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+            border:"1px solid "+(on?(colour||T.gold):T.border),fontSize:11,
+            fontWeight:on?700:500,whiteSpace:"nowrap",
+            background:on?(colour||T.gold)+"1F":"transparent",
+            color:on?(colour||T.gold):T.textMuted}}>
+    {children}
+  </button>
+);
+
+const Picker = ({ label, value, onChange, options }) => (
+  <div style={{flex:"1 1 160px",minWidth:150}}>
+    <div style={{fontSize:9.5,fontWeight:700,color:T.textMuted,letterSpacing:.7,
+                 textTransform:"uppercase",marginBottom:4}}>{label}</div>
+    <select value={value} onChange={e=>onChange(e.target.value)}
+      style={{width:"100%",padding:"6px 9px",background:"rgba(255,255,255,0.04)",
+              border:"1px solid "+(value!=="all"?T.gold:T.border),borderRadius:7,
+              color:value!=="all"?T.gold:T.textSecondary,fontSize:11.5,outline:"none",
+              fontFamily:"'Outfit',sans-serif",cursor:"pointer"}}>
+      {options.map(([v,l])=><option key={v} value={v}>{l}</option>)}
+    </select>
+  </div>
+);
+
 //  ATOMS 
 const PBadge = ({status}) => {
   const p=PIPELINE.find(x=>x.key===status)||PIPELINE[1];
@@ -249,6 +306,8 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
   const [activeStage,  setActiveStage] = useState("all");
   const [view,         setView]        = useState("table");
   const [showHelp,     setShowHelp]    = useState(false);
+  const [showFilters,  setShowFilters] = useState(false);
+  const [showMore,     setShowMore]    = useState(false);
   const [showAdd,      setShowAdd]     = useState(false);
   const [showWA,       setShowWA]      = useState(false);
   const [showAssign,   setShowAssign]  = useState(null);
@@ -374,6 +433,16 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
   const kUnassigned = allLeads.filter(l=>!l.assignedTo).length;
   const kConvRate = kTotal>0?Math.round((kClosed/kTotal)*100):0;
   const kResponse = useMemo(()=>responseReport(allLeads),[allLeads]);
+
+  /* How many filters are narrowing the list. Shown on the Filters button so it
+     is obvious the list is not everything — the commonest confusion in any
+     filtered table is not knowing a filter is on. */
+  const activeFilterCount = [activeStage,filterService,filterSource,filterBudget,
+                             filterAgent,filterManager].filter(v=>v&&v!=="all").length;
+  const clearFilters = useCallback(()=>{
+    setActiveStage("all"); setFilterService("all"); setFilterSource("all");
+    setFilterBudget("all"); setFilterAgent("all"); setFilterManager("all");
+  },[]);
 
   /* THIS WEEK. An agent's week is viewings, and the product had no idea they
      existed — a viewing was a line of free text in the notes. */
@@ -776,142 +845,190 @@ try{
         </div>
       )}
 
-      {/*  SMART VIEW TABS  ────────────────────────────────────────────────
-          Nine views, eleven stage pills and five dropdowns used to render over
-          an empty desk — twenty-seven controls, every counter reading zero,
-          nothing to filter. Filters only appear once there is something to
-          filter.                                                            */}
-      {allLeads.length>0&&(
-      <div style={{display:"flex",gap:0,borderBottom:"1px solid "+T.border,overflowX:"auto",paddingLeft:4}}>
-        {/* "Hot" was whatever the invented score put above 70. It is now the plain
-            thing an agent means by it: somebody is waiting on you. */}
-        {[
-          {k:"all",         l:"All",             t:"Every lead you are allowed to see"},
-          {k:"today",       l:"Came in today",   t:"Leads created in the last 24 hours"},
-          {k:"my_leads",    l:"Mine",            t:"Leads assigned to you, or that you created"},
-          {k:"uncontacted", l:"Never contacted", t:"No call, message or email has ever been logged against these"},
-          {k:"hot",         l:"Needs a call",    t:"Uncontacted, or a follow-up is overdue, or silent for more than a week"},
-          {k:"stale",       l:"Gone quiet",      t:"Still open, but nothing has been logged for over 7 days"},
-          {k:"overdue",     l:"Follow-up due",   t:"You set a follow-up date and it has passed"},
-          ...(canManage?[{k:"unassigned",l:"Unassigned",t:"Nobody owns these yet — they belong to no agent"}]:[]),
-          {k:"golden_visa", l:"Golden Visa",     t:`Budget at or above AED ${(GV_MIN/1e6).toFixed(0)}M, the property route to a 10-year visa. ICP confirms eligibility, not us.`},
-        ].map(v=>{
-          const active=smartView===v.k;
-          return <button key={v.k} type="button" title={v.t} onClick={()=>{setSmartView(v.k);setActiveStage("all");}}
-            style={{padding:"10px 14px",border:"none",borderBottom:active?"2px solid "+T.gold:"2px solid transparent",background:"transparent",color:active?T.white:T.textMuted,fontSize:12,fontWeight:active?600:400,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif",transition:"color 0.15s"}}>
-            {v.l}{v.k==="unassigned"&&kUnassigned>0?<span style={{marginLeft:5,fontSize:10,background:"rgba(239,68,68,0.15)",color:"#EF4444",padding:"1px 5px",borderRadius:8}}>{kUnassigned}</span>:null}
-          </button>;
-        })}
-      </div>
-      )}
+      {/*  ONE ROW OF CONTROLS  ──────────────────────────────────────────────
+          This was FOUR rows and roughly twenty-seven controls before a single
+          lead was visible: nine "smart view" chips, a toolbar, eleven pipeline
+          pills mostly reading zero, and five dropdowns. Two of those rows did
+          overlapping jobs — a chip called "Needs a call" and a pill called
+          "Hot Case" are both filters, sitting in different places, styled
+          differently.
 
-      {/*  TOOLBAR  */}
-      <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 4px",borderBottom:"1px solid "+T.border,flexWrap:"wrap"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:13,fontWeight:700,color:T.white}}>{orgName||"Leads"}</span>
-          <span style={{fontSize:13,color:T.textMuted,fontWeight:700}}>{kTotal.toLocaleString()}</span>
+          An agent opening this had to read the whole control panel before
+          finding out who to ring.
+
+          Rebuilt on progressive disclosure: everything the immediate task needs
+          on one line, everything else one click away.
+
+            search · the view · filters (with a count) · order · how to look
+                                                                             */}
+      {allLeads.length>0&&(
+      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",
+                   padding:"12px 4px",borderBottom:"1px solid "+T.border}}>
+
+        {/* SEARCH — first, because it is what people reach for first. */}
+        <div style={{flex:"1 1 240px",minWidth:200,display:"flex",alignItems:"center",gap:8,
+                     padding:"7px 12px",background:"rgba(255,255,255,0.03)",
+                     border:"1px solid "+(aiSearch?T.gold:T.border),borderRadius:8,cursor:"text"}}
+             onClick={()=>document.getElementById("crm-search")?.focus()}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="crm-search" value={aiSearch} onChange={e=>setAiSearch(e.target.value)}
+            placeholder="Search a name, a phone number, an area…"
+            style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,
+                    fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
+          {aiSearch&&<button type="button" onClick={()=>setAiSearch("")} aria-label="Clear search"
+            title="Clear the search" style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14}}>✕</button>}
         </div>
-        {/* Searching, switching view, exporting and messaging all need leads to
-            act on. On an empty desk they left "Reports" looking selected while
-            the empty state rendered — a control that lies about what is on
-            screen. Only Add survives, because Add is the only thing to do. */}
-        {allLeads.length>0&&(
-        <div style={{flex:"1 1 240px",display:"flex",alignItems:"center",gap:8,padding:"6px 12px",background:"rgba(255,255,255,0.03)",border:"1px solid "+(aiSearch?T.gold:T.border),borderRadius:8,cursor:"text"}} onClick={()=>document.getElementById("crm-search")?.focus()}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="crm-search" value={aiSearch} onChange={e=>setAiSearch(e.target.value)} placeholder="Search name, phone, agent, area..."
-            style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
-          {aiSearch&&<button type="button" onClick={()=>setAiSearch("")} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14}} aria-label="Clear search" title="Clear search">✕</button>}
-        </div>
-        )}
-        {allLeads.length>0&&(
-        <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",border:"1px solid "+T.border,borderRadius:7,padding:2,marginLeft:"auto"}}>
-          {/* These three carried empty icon strings, so all three rendered as blank
-              22×12px boxes. Two entire views of this tab — the board and the
-              reports — were unreachable unless you happened to click nothing. */}
-          {[{k:"table",  l:"List",   tip:"Every lead in one list, in call order"},
-            {k:"kanban", l:"Board",  tip:"The same leads as cards, in columns by stage"},
-            {k:"analytics", l:"Reports", tip:"Where your leads come from, and how each agent is doing"}].map(v=>(
-            <button key={v.k} type="button" onClick={()=>setView(v.k)} title={v.tip}
-              style={{padding:"5px 12px",borderRadius:5,border:view===v.k?"1px solid "+T.gold:"1px solid transparent",background:view===v.k?"rgba(212,168,67,0.15)":"transparent",color:view===v.k?T.gold:T.textMuted,cursor:"pointer",fontSize:11,fontWeight:view===v.k?700:500,fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap"}}>{v.l}</button>
+
+        {/* THE VIEW — one dropdown replacing nine chips. Same power, one control,
+            and each option says what it means rather than relying on a word like
+            "Stale" that every agency reads differently. */}
+        <select value={smartView} onChange={e=>{setSmartView(e.target.value);setActiveStage("all");}}
+          title="Which slice of the desk you are looking at"
+          style={{padding:"7px 10px",background:smartView!=="all"?"rgba(212,168,67,0.12)":"rgba(255,255,255,0.04)",
+                  border:"1px solid "+(smartView!=="all"?T.gold:T.border),borderRadius:8,
+                  color:smartView!=="all"?T.gold:T.textSecondary,fontSize:12,outline:"none",
+                  fontFamily:"'Outfit',sans-serif",fontWeight:smartView!=="all"?700:500,cursor:"pointer"}}>
+          {SMART_VIEWS.filter(v=>v.k!=="unassigned"||canManage).map(v=>(
+            <option key={v.k} value={v.k}>{v.l}{v.k==="hot"&&kHot?` (${kHot})`:""}{v.k==="unassigned"&&kUnassigned?` (${kUnassigned})`:""}</option>
           ))}
-        </div>
-        )}
-        {allLeads.length>0&&<>
-        <button type="button" onClick={exportCSV} title="Download the leads currently shown as a spreadsheet. Filters apply — you get what is on screen, not everything."
-          style={{padding:"6px 11px",borderRadius:7,border:"1px solid "+T.border,background:"transparent",color:T.textSecondary,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Export</button>
-        <button type="button" onClick={()=>setShowWA(true)} title="Open WhatsApp with a ready-written message for the selected lead"
-          style={{padding:"6px 11px",borderRadius:7,border:"1px solid rgba(37,211,102,0.3)",background:"rgba(37,211,102,0.07)",color:"#25D366",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>WhatsApp</button>
-        </>}
-        <button type="button" onClick={()=>setShowAdd(true)} title="Record a new enquiry" style={{padding:"7px 16px",borderRadius:7,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:12,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",gap:5,marginLeft:allLeads.length===0?"auto":undefined}}>
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add
+        </select>
+
+        {/* FILTERS — the eleven pills and four dropdowns, behind one button that
+            says how many are on. Nothing is lost; it is simply not shouted. */}
+        <button type="button" onClick={()=>setShowFilters(v=>!v)}
+          title="Narrow by stage, type, source, budget or agent"
+          style={{padding:"7px 13px",borderRadius:8,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+                  border:"1px solid "+(activeFilterCount?T.gold:T.border),fontSize:12,
+                  fontWeight:activeFilterCount?700:500,
+                  background:activeFilterCount?"rgba(212,168,67,0.12)":"transparent",
+                  color:activeFilterCount?T.gold:T.textSecondary,whiteSpace:"nowrap"}}>
+          Filters{activeFilterCount?` · ${activeFilterCount}`:""}
         </button>
-      </div>
 
-      {/*  PIPELINE PILLS  */}
-      {allLeads.length>0&&(
-      <div style={{display:"flex",gap:0,borderBottom:"1px solid "+T.border,overflowX:"auto",paddingLeft:4,background:"rgba(255,255,255,0.01)"}}>
-        <button type="button" onClick={()=>setActiveStage("all")} style={{padding:"7px 12px",border:"none",borderBottom:activeStage==="all"?"2px solid "+T.gold:"2px solid transparent",background:"transparent",color:activeStage==="all"?T.white:T.textMuted,fontSize:11,fontWeight:activeStage==="all"?600:400,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif"}}>All</button>
-        {PIPELINE.map(p=>{
-          const count=stageCounts[p.key]||0;
-          const active=activeStage===p.key;
-          return <button key={p.key} type="button" title={STAGE_MEANING[p.key]||p.key} onClick={()=>setActiveStage(active?"all":p.key)}
-            style={{padding:"7px 12px",border:"none",borderBottom:active?"2px solid "+p.color:"2px solid transparent",background:"transparent",color:active?p.color:T.textMuted,fontSize:11,fontWeight:active?600:400,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
-            <span style={{width:6,height:6,borderRadius:"50%",background:p.color,display:"inline-block"}}/>
-            {p.key} <span style={{fontSize:10,color:active?p.color:T.textMuted}}>{count}</span>
-          </button>;
-        })}
-      </div>
-      )}
-
-      {/*  FILTER ROW  */}
-      {allLeads.length>0&&(
-      <div style={{display:"flex",gap:8,padding:"8px 4px",borderBottom:"1px solid "+T.border,flexWrap:"wrap",alignItems:"center",background:"rgba(255,255,255,0.01)"}}>
-        {scope==="org"&&managers.length>0&&(
-          <select value={filterManager} onChange={e=>setFilterManager(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+(filterManager!=="all"?T.gold:T.border),borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
-            <option value="all">All Managers</option>
-            {managers.map(m=><option key={m.uid||m.id} value={m.uid||m.id}>{m.name}</option>)}
-          </select>
-        )}
-        {canManage&&agents.length>0&&(
-          <select value={filterAgent} onChange={e=>setFilterAgent(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+(filterAgent!=="all"?T.gold:T.border),borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
-            <option value="all">All Agents</option>
-            {agents.map(a=><option key={a.uid||a.id} value={a.uid||a.id}>{a.name}</option>)}
-          </select>
-        )}
-        <select value={filterService} onChange={e=>setFilterService(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
-          <option value="all">All Types</option>
-          {SERVICE_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
-        </select>
-        <select value={filterSource} onChange={e=>setFilterSource(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
-          <option value="all">All Sources</option>
-          {LEAD_SOURCES.map(s=><option key={s} value={s}>{s}</option>)}
-        </select>
-        <select value={filterBudget} onChange={e=>setFilterBudget(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
-          <option value="all">All Budgets</option>
-          <option value="under1m">Under AED 1M</option>
-          <option value="1to3m">AED 1M - 3M</option>
-          <option value="3to5m">AED 3M - 5M</option>
-          <option value="5to10m">AED 5M - 10M</option>
-          <option value="above10m">Above AED 10M</option>
-        </select>
-        <select value={leadSortBy||"date"} onChange={e=>setLeadSortBy&&setLeadSortBy(e.target.value)} style={{padding:"5px 8px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:6,color:T.textSecondary,fontSize:11,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
-          <option value="date">Newest first</option>
+        <select value={leadSortBy||"date"} onChange={e=>setLeadSortBy&&setLeadSortBy(e.target.value)}
+          title="The order the list is in"
+          style={{padding:"7px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,
+                  borderRadius:8,color:T.textSecondary,fontSize:12,outline:"none",
+                  fontFamily:"'Outfit',sans-serif",cursor:"pointer"}}>
           <option value="score">Call order</option>
+          <option value="date">Newest first</option>
           <option value="budget">Biggest budget first</option>
           <option value="name">Name A–Z</option>
         </select>
-        {(aiSearch||activeStage!=="all"||filterAgent!=="all"||filterManager!=="all"||filterService!=="all"||filterSource!=="all"||filterBudget!=="all")&&(
-          <div style={{display:"flex",gap:6,alignItems:"center",marginLeft:"auto",flexWrap:"wrap"}}>
-            {/* Each of these chips ended in a "remove" cross that had been stripped
-                out, leaving a clickable chip with no sign it could be clicked. */}
-            {activeStage!=="all"&&<span title="Click to remove this filter" style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(212,168,67,0.15)",color:T.gold,cursor:"pointer"}} onClick={()=>setActiveStage("all")}>{activeStage} ✕</span>}
-            {filterAgent!=="all"&&<span title="Click to remove this filter" style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(139,92,246,0.15)",color:"#8B5CF6",cursor:"pointer"}} onClick={()=>setFilterAgent("all")}>{agents.find(a=>(a.uid||a.id)===filterAgent)?.name||"Agent"} ✕</span>}
-            {filterManager!=="all"&&<span title="Click to remove this filter" style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"rgba(59,130,246,0.15)",color:"#3B82F6",cursor:"pointer"}} onClick={()=>setFilterManager("all")}>{managers.find(m=>(m.uid||m.id)===filterManager)?.name||"Manager"} ✕</span>}
-            <button type="button" onClick={()=>{setAiSearch("");setActiveStage("all");setFilterAgent("all");setFilterManager("all");setFilterService("all");setFilterSource("all");setFilterBudget("all");}} style={{fontSize:10,padding:"2px 10px",borderRadius:10,background:"rgba(252,129,129,0.1)",border:"1px solid rgba(252,129,129,0.3)",color:"#FC8181",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Clear all</button>
-            <span style={{fontSize:10,color:T.textMuted}}>{filtered.length} results</span>
-          </div>
-        )}
+
+        <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",
+                     border:"1px solid "+T.border,borderRadius:8,padding:2,marginLeft:"auto"}}>
+          {[{k:"table",l:"List",tip:"Every lead in one list, in the order you chose"},
+            {k:"kanban",l:"Board",tip:"The same leads as cards, in columns by stage"},
+            {k:"analytics",l:"Reports",tip:"Where your leads come from, and how each agent is doing"}].map(v=>(
+            <button key={v.k} type="button" onClick={()=>setView(v.k)} title={v.tip}
+              style={{padding:"5px 12px",borderRadius:6,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+                      border:view===v.k?"1px solid "+T.gold:"1px solid transparent",fontSize:11,
+                      fontWeight:view===v.k?700:500,
+                      background:view===v.k?"rgba(212,168,67,0.15)":"transparent",
+                      color:view===v.k?T.gold:T.textMuted,whiteSpace:"nowrap"}}>{v.l}</button>
+          ))}
+        </div>
+
+        {/* Export and WhatsApp are things you do occasionally. They were sitting
+            at the same weight as the search box. */}
+        <div style={{position:"relative"}}>
+          <button type="button" onClick={()=>setShowMore(v=>!v)} title="More actions"
+            aria-label="More actions"
+            style={{padding:"7px 11px",borderRadius:8,border:"1px solid "+T.border,background:"transparent",
+                    color:T.textMuted,fontSize:13,cursor:"pointer",lineHeight:1}}>⋯</button>
+          {showMore&&(
+            <div style={{position:"absolute",right:0,top:38,zIndex:60,background:"#0D1117",
+                         border:"1px solid "+T.border,borderRadius:9,padding:5,minWidth:210,
+                         boxShadow:"0 10px 30px rgba(0,0,0,.45)"}}>
+              <button type="button" onClick={()=>{exportCSV();setShowMore(false);}}
+                style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",borderRadius:6,
+                        border:"none",background:"none",color:T.textSecondary,fontSize:11.5,cursor:"pointer",
+                        fontFamily:"'Outfit',sans-serif"}}>
+                Export what is on screen
+              </button>
+              <button type="button" onClick={()=>{setShowWA(true);setShowMore(false);}}
+                style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",borderRadius:6,
+                        border:"none",background:"none",color:"#25D366",fontSize:11.5,cursor:"pointer",
+                        fontFamily:"'Outfit',sans-serif"}}>
+                WhatsApp the selected lead
+              </button>
+            </div>
+          )}
+        </div>
+
+        <button type="button" onClick={()=>setShowAdd(true)} title="Record a new enquiry"
+          style={{padding:"7px 15px",borderRadius:8,border:"none",fontFamily:"'Outfit',sans-serif",
+                  background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",
+                  fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>+ Add</button>
       </div>
+      )}
+
+      {/* WHAT IS CURRENTLY NARROWING THE LIST.
+          Only appears when something is on, and every one of them is removable
+          where it sits — the old chips were clickable with no sign they were. */}
+      {allLeads.length>0&&activeFilterCount>0&&(
+        <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap",padding:"9px 4px",
+                     borderBottom:"1px solid "+T.border}}>
+          <span style={{fontSize:10.5,color:T.textMuted}}>{filtered.length} of {allLeads.length} —</span>
+          {activeStage!=="all"&&<FilterChip label={activeStage} onClear={()=>setActiveStage("all")}/>}
+          {filterService!=="all"&&<FilterChip label={filterService} onClear={()=>setFilterService("all")}/>}
+          {filterSource!=="all"&&<FilterChip label={filterSource} onClear={()=>setFilterSource("all")}/>}
+          {filterBudget!=="all"&&<FilterChip label={BUDGET_LABEL[filterBudget]||filterBudget} onClear={()=>setFilterBudget("all")}/>}
+          {filterAgent!=="all"&&<FilterChip label={agents.find(a=>(a.uid||a.id)===filterAgent)?.name||"Agent"} onClear={()=>setFilterAgent("all")}/>}
+          {filterManager!=="all"&&<FilterChip label={managers.find(m=>(m.uid||m.id)===filterManager)?.name||"Manager"} onClear={()=>setFilterManager("all")}/>}
+          <button type="button" onClick={clearFilters}
+            style={{fontSize:10.5,padding:"2px 9px",borderRadius:10,background:"none",
+                    border:"1px solid "+T.border,color:T.textMuted,cursor:"pointer",
+                    fontFamily:"'Outfit',sans-serif"}}>Clear all</button>
+        </div>
+      )}
+
+      {/* THE FILTER PANEL — opened on demand, and it hides any stage with
+          nothing in it. Eleven pills reading zero taught an agent that the
+          numbers do not mean anything. */}
+      {allLeads.length>0&&showFilters&&(
+        <div style={{padding:"13px 4px",borderBottom:"1px solid "+T.border,
+                     display:"flex",flexDirection:"column",gap:12}}>
+          <div>
+            <div style={{fontSize:9.5,fontWeight:700,color:T.textMuted,letterSpacing:.7,
+                         textTransform:"uppercase",marginBottom:7}}>Stage</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              <FilterPill on={activeStage==="all"} onClick={()=>setActiveStage("all")}
+                tip="Every stage">All {allLeads.length}</FilterPill>
+              {PIPELINE.filter(p=>(stageCounts[p.key]||0)>0).map(p=>(
+                <FilterPill key={p.key} on={activeStage===p.key} colour={p.color}
+                  tip={STAGE_MEANING[p.key]}
+                  onClick={()=>setActiveStage(activeStage===p.key?"all":p.key)}>
+                  {p.key} {stageCounts[p.key]}
+                </FilterPill>
+              ))}
+            </div>
+            {PIPELINE.some(p=>!(stageCounts[p.key]||0)) && (
+              <div style={{fontSize:10,color:T.textMuted,marginTop:6}}>
+                Stages with nobody in them are not shown.
+              </div>
+            )}
+          </div>
+
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {scope==="org"&&managers.length>0&&(
+              <Picker label="Manager" value={filterManager} onChange={setFilterManager}
+                options={[["all","All managers"],...managers.map(m=>[m.uid||m.id,m.name])]}/>
+            )}
+            {canManage&&agents.length>0&&(
+              <Picker label="Agent" value={filterAgent} onChange={setFilterAgent}
+                options={[["all","All agents"],...agents.map(a=>[a.uid||a.id,a.name])]}/>
+            )}
+            <Picker label="Looking to" value={filterService} onChange={setFilterService}
+              options={[["all","Buy, sell, rent or invest"],...SERVICE_TYPES.map(t=>[t,t])]}/>
+            <Picker label="Came from" value={filterSource} onChange={setFilterSource}
+              options={[["all","Any source"],...LEAD_SOURCES.map(x=>[x,x])]}/>
+            <Picker label="Budget" value={filterBudget} onChange={setFilterBudget}
+              options={Object.entries(BUDGET_LABEL)}/>
+          </div>
+        </div>
       )}
 
       {/*  MAIN CONTENT  */}
@@ -926,13 +1043,16 @@ try{
           <div>
             {/* Column headings over nothing are furniture. They appear with the rows. */}
             {allLeads.length>0&&(
-            <div style={{display:"grid",gridTemplateColumns:"72px 2fr 110px 130px 110px 130px 140px 48px",padding:"8px 4px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
-              {[["ID","The reference this lead was given when it was created"],
-                ["NAME","The client, and underneath it the reason this lead sits where it does in the list"],
-                ["STATUS","Where this lead has reached. Open the guide above for what each stage means."],
+            <div style={{display:"grid",gridTemplateColumns:"2.4fr 118px 130px 108px 128px 140px 48px",padding:"8px 4px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
+              {/* The ID column is gone. It showed the last four characters of a
+                  Firestore document id — "#7JpU" — which is not a reference
+                  anybody quotes, looks up or recognises. It was taking the
+                  leftmost, most valuable column on the screen. */}
+              {[["CLIENT","Who they are, and underneath, why this one sits where it does in the list"],
+                ["STAGE","Where this lead has reached. Open the guide above for what each stage means."],
                 ["BUDGET","What the client says they will spend. Not checked against a bank."],
-                ["SERVICE","Whether they are buying, selling, renting or investing"],
-                ["SOURCE","Where the enquiry came from — a portal, an ad, a referral, or a walk-in"],
+                ["LOOKING TO","Whether they are buying, selling, renting or investing"],
+                ["CAME FROM","Where the enquiry came from — a portal, an ad, a referral, or a walk-in"],
                 ["AGENT","Who owns this lead. Blank means nobody does."],[" ",""]].map(([h,tip],i)=>(
                 <div key={i} title={tip} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.7,paddingLeft:i===0?4:0}}>{h}</div>
               ))}
@@ -961,22 +1081,17 @@ try{
               const isGV=parseFloat(lead.budget||0)>=GV_MIN;
               return (
                 <div key={lead.id||i} onClick={()=>setSelectedLead(isSel?null:lead)}
-                  style={{display:"grid",gridTemplateColumns:"72px 2fr 110px 130px 110px 130px 140px 48px",padding:"11px 4px",borderBottom:"1px solid "+T.border+"40",cursor:"pointer",background:isSel?"rgba(212,168,67,0.04)":"transparent",transition:"background 0.1s",borderLeft:isSel?"3px solid "+T.gold:"3px solid transparent"}}
+                  style={{display:"grid",gridTemplateColumns:"2.4fr 118px 130px 108px 128px 140px 48px",padding:"11px 4px",borderBottom:"1px solid "+T.border+"40",cursor:"pointer",background:isSel?"rgba(212,168,67,0.04)":"transparent",transition:"background 0.1s",borderLeft:isSel?"3px solid "+T.gold:"3px solid transparent"}}
                   onMouseEnter={e=>!isSel&&(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
                   onMouseLeave={e=>!isSel&&(e.currentTarget.style.background="transparent")}
                 >
-                  <div style={{display:"flex",alignItems:"center",gap:4,paddingLeft:4}}>
-                    {/* This dot was coloured by the invented AI score. When that
-                        was removed the reference to `sc` survived here, and the
-                        tab crashed the moment there was a lead to render — which
-                        an empty desk hid for a whole session. It now takes its
-                        colour from the same reason shown beside the name. */}
+                  {/* One client column. The urgency dot moved here, beside the
+                      name it describes, instead of sitting in its own column
+                      next to a meaningless id. */}
+                  <div style={{display:"flex",alignItems:"center",gap:8,paddingLeft:4,minWidth:0}}>
                     <div title={attention(lead).reason}
                       style={{width:7,height:7,borderRadius:"50%",background:attention(lead).color,flexShrink:0}}/>
-                    <span style={{fontSize:10,color:T.textMuted}}>#{(lead.id||"").slice(-4)||String(i+1).padStart(4,"0")}</span>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:6}}>
-                    <div style={{width:22,height:22,borderRadius:"50%",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:10,fontWeight:700,color:T.textMuted}}>{(lead.name||"?")[0].toUpperCase()}</div>
+                    <div style={{width:24,height:24,borderRadius:"50%",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:10.5,fontWeight:700,color:T.textMuted}}>{(lead.name||"?")[0].toUpperCase()}</div>
                     <div>
                       <div style={{display:"flex",alignItems:"center",gap:4}}>
                         <span style={{fontSize:12,fontWeight:500,color:T.white}}>{lead.name||"Unnamed"}</span>
