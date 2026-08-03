@@ -486,6 +486,12 @@ service cloud.firestore {
     match /adminSettings/{doc}  { allow read, write: if isAdmin(); }
     match /auditLog/{doc}       { allow read: if isAdmin(); allow create: if isAuthed(); }
     match /cronLogs/{doc}       { allow read: if isAdmin(); allow write: if false; }
+    /* What the nightly sweep has already warned about, so a broker card ninety
+       days from expiry is one message rather than ninety. Written only by the
+       admin SDK, which bypasses these rules — the block is here so the intent is
+       stated rather than left to the deny-by-default, and so the tenant audit
+       sees it. */
+    match /cronState/{doc}      { allow read: if isAdmin(); allow write: if false; }
     match /subscriptions/{uid}  {
       allow read: if isAuthed() && (uid() == uid || isAdmin());
       allow write: if isAdmin();

@@ -27,6 +27,10 @@ const HANDLERS = {
      and that OAuth flow is gone anyway. The replacement uses the Land
      Department's free gateway, which needs no credentials. */
   "dld-daily":    () => require("./_cron/cron-dld-lookups.js"),
+  /* The nightly sweep: broker cards, permits, visas, stale NOCs, stalled
+     deals and unanswered leads. Eleven notification events had nothing to
+     trigger them before this. */
+  "watch":        () => require("./_cron/cron-watch.js"),
   financials:     () => require("./_cron/cron-financials.js"),
   yields:         () => require("./_cron/cron-yields.js"),
   "sync-market":  () => require("./_cron/cron-sync-market.js"),
