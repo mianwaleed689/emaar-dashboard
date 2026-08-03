@@ -105,15 +105,23 @@ const rows = blocks.map(b => {
   const readIsAdminOnly   = /isAdmin\(\)|isSuperAdmin\(\)/.test(readRule) && !readIsAnySignedIn;
 
   let verdict, why;
+  /* AN OPEN READ IS CHECKED FIRST, BEFORE ANY OTHER REASON TO PASS.
+     This ordering matters and getting it wrong hid a real leak. /notifications
+     had `allow read: if isAuthed()` and a write keyed on the user's own uid —
+     and because the user check was evaluated first, the whole block was waved
+     through as "keyed to the signed-in user" while every signed-in user on the
+     platform could read every notification in it. A permissive read is never
+     excused by a restrictive write. */
   if (NOT_TENANT[path])                    { verdict = "ok";     why = NOT_TENANT[path]; }
+  else if (readIsAnySignedIn && !SHARED_MARKET.has(collection)) {
+    verdict = "REVIEW";
+    why = "READ IS OPEN TO EVERY SIGNED-IN USER — a restrictive write does not make up for it";
+  }
   else if (readIsAdminOnly)                { verdict = "ok";     why = "read restricted to platform admin"; }
   else if (hasOrgCheck)                    { verdict = "ok";     why = "scoped to the organisation"; }
   else if (hasUserCheck)                   { verdict = "ok";     why = "keyed to the signed-in user"; }
   else if (SHARED_MARKET.has(collection))  { verdict = "shared"; why = "Dubai market data — every agency sees the same copy"; }
-  else                                     { verdict = "REVIEW";
-    why = readIsAnySignedIn
-      ? "READ IS OPEN TO EVERY SIGNED-IN USER — if this holds tenant data it leaks across agencies"
-      : "holds data but no organisation check found"; }
+  else                                     { verdict = "REVIEW"; why = "holds data but no organisation check found"; }
 
   return { path, collection, verdict, why, line: b.start + 1, depth: b.depth };
 });

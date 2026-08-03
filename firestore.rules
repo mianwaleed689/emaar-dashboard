@@ -303,9 +303,47 @@ service cloud.firestore {
     }
 
     // ── NOTIFICATIONS ────────────────────────────────────────────
+    /* NOTIFICATIONS.
+       Two faults, both serious.
+
+       READ WAS OPEN TO EVERY SIGNED-IN USER. Not every user in the agency —
+       every user of the whole platform. A notification carries the client's
+       name, the deal, the amount and the reason it concerns you, so this was
+       one agency reading another agency's pipeline one message at a time. It is
+       also exactly what the notification model refuses to do in code: it filters
+       recipients through the access model precisely so nobody is told about
+       something they cannot open. The rules were undoing that.
+
+       CREATE WAS IMPOSSIBLE FOR ANYONE ELSE. `resource.data.userId == uid()` on
+       a create reads a document that does not exist yet, so the only person who
+       could be sent a notification was yourself. Every "tell the next
+       department" write would have been denied — the whole point of the
+       workflow.
+
+       Now: you read your own; anyone in the agency may create one FOR a
+       colleague in the same agency; you may only update your own, and only to
+       mark it read. */
     match /notifications/{doc} {
-      allow read: if isAuthed();
-      allow write: if isAuthed() && (isSuperAdmin() || resource.data.userId == uid() || resource.data.userId == "all");
+      allow read: if isAuthed() && (
+        isSuperAdmin() ||
+        resource.data.userId == uid() ||
+        resource.data.userId == "all"
+      );
+
+      allow create: if isAuthed() && (
+        isSuperAdmin() ||
+        /* Same agency, and addressed to somebody — a notification with no
+           recipient is a broadcast, and broadcasts are an admin action. */
+        (isSameOrg(request.resource.data.orgId) && request.resource.data.userId is string)
+      );
+
+      allow update: if isAuthed() && (
+        isSuperAdmin() || resource.data.userId == uid()
+      );
+
+      allow delete: if isAuthed() && (
+        isSuperAdmin() || resource.data.userId == uid()
+      );
     }
 
     // ── PUBLIC READ-ONLY DATA (all authenticated users) ──────────

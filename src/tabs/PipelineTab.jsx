@@ -58,6 +58,7 @@ import { migrateDeals, migrateCommission } from "../crm/model/migrate";
 import { viewerFrom, scopeFor, intentFor, visibleRecords, DEPARTMENTS } from "../crm/model/org";
 import { whoseTurn, myWork, workByDepartment, stepRecord, stepQuality,
          dealTimeline, HANDOVER_NOTE } from "../crm/model/workflow";
+import { onStageChange } from "../crm/model/notify";
 
 const card  = { background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`, borderRadius: 12 };
 const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7, textTransform: "uppercase" };
@@ -156,7 +157,31 @@ export default function PipelineTab({
       }, { merge: true });
       setSelected(s => s?.id === d.id
         ? { ...s, stage: to, needsReview: false, steps: [...(s.steps || []), step] } : s);
-      const turn = whoseTurn({ ...d, stage: to });
+      const moved = { ...d, stage: to, steps: [...(d.steps || []), step] };
+      const turn = whoseTurn(moved);
+
+      /* TELL WHOEVER IT LANDS ON.
+         Recipients come from the workflow rather than a hand-written list, so a
+         stage added later is covered automatically — and everyone is filtered
+         through the same access model the screens use, because a notification
+         about something you cannot open is a leak with a bell on it. */
+      try {
+        const roster = (teamMembers || []).map(m => ({
+          id: m.uid || m.id, name: m.name || m.email,
+          department: m.department || (m.orgRole === "owner" || m.orgRole === "director" ? "management" : "sales"),
+          seniority: m.seniority, managerId: m.managerId,
+        }));
+        const notes = onStageChange(moved,
+          { id: uid, name: userName || firebaseUser?.email || "" }, roster);
+        await Promise.all(notes.map(n =>
+          addDoc(collection(db, "notifications"), { ...n, orgId: orgId || "" })));
+        if (notes.length) console.log(`[pipeline] notified ${notes.length} on ${d.id}`);
+      } catch (e) {
+        /* A failed notification must never lose the stage change that already
+           saved. It is logged loudly instead of swallowed. */
+        console.error("[pipeline] stage saved but notifications failed:", e);
+      }
+
       say(`Moved to ${stagesOf(d).find(s => s.key === to)?.label}.` +
           (turn.done ? "" : ` Now with ${turn.departmentLabel}.`));
       setBusy(false);
@@ -167,7 +192,7 @@ export default function PipelineTab({
       setBusy(false);
       return false;
     }
-  }, [say, uid, userName, firebaseUser, me]);
+  }, [say, uid, userName, firebaseUser, me, teamMembers, orgId]);
 
   const setStage = useCallback(async (d, stage) => {
     setBusy(true);
