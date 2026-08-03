@@ -3938,10 +3938,11 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
             setUserRole(data.role || "user");
             setOrgId(data.orgId || null);
             setOrgRole(data.orgRole || null);
-            // Show welcome screen for first-time agents
-            if (!data.onboardingComplete && data.orgRole === "agent") {
-              setShowWelcome(true);
-            }
+            /* The agent welcome screen used to take over the entire app on
+               first login — a full page of WhatsApp and email tips standing
+               between somebody and the product they were hired to use. An
+               agent added by their manager already knows they have joined the
+               agency; being told so on a page of its own is not onboarding. */
             // Fetch manager name if agent
             if (data.managerId) {
               try {
@@ -4365,15 +4366,11 @@ const unsub = onSnapshot(nQuery, (snap) => {
     try { await setDoc(doc(db, "notifications", id), { read: true }, { merge: true }); } catch (e) { console.error("swallowed@EmaarDashboardV2.jsx:4058", e); }
   };
 
-  // ONBOARDING - show for new users on first login
-  useEffect(() => {
-    if (isLoggedIn && userName !== undefined) {
-      const key = `dxb_onboarded_${user}`;
-      if (!localStorage.getItem(key)) {
-        setTimeout(() => setShowOnboarding(true), 1000);
-      }
-    }
-  }, [isLoggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* The five-step "let us show you around in 30 seconds" tour is no longer
+     opened automatically. It appeared a second after login, over the top of
+     everything, before the user had seen a single thing it was describing.
+     completeOnboarding() below is kept so the tour can still be opened
+     deliberately, and so nothing that calls it breaks. */
 
   const completeOnboarding = () => {
     localStorage.setItem(`dxb_onboarded_${user}`, "1");
@@ -4713,23 +4710,20 @@ const unsub = onSnapshot(nQuery, (snap) => {
               <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>{trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining</div>
             </div>
           )}
-          {userTier === "free" && (
-            <div role="button" tabIndex={0}
-              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setShowUpgrade(true); }}
-              onClick={() => setShowUpgrade(true)}
-              style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(59,130,246,0.07)", border: "1px solid rgba(59,130,246,0.15)", textAlign: "center", cursor: "pointer" }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: "#60A5FA", letterSpacing: 0.5 }}>FREE PLAN</div>
-              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>Upgrade to Pro →</div>
-            </div>
-          )}
+          {/* The sidebar's "FREE PLAN · Upgrade to Pro" chip is gone for the
+              same reason as the banner above. */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10, background: T.surfaceAlt }}>
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: T.bg, flexShrink: 0 }}>
               {user.charAt(0).toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 11.5, fontWeight: 600, color: T.white, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName || user.split("@")[0]}</div>
-              <div style={{ fontSize: 9.5, color: userTier === "pro_trial" ? T.gold : ["admin","pro","enterprise"].includes(userTier) ? T.green : T.textMuted }}>
-                {userTier === "admin" ? "Admin" : userTier === "pro_trial" ? "Pro Trial" : userTier === "pro" ? "Pro" : userTier === "enterprise" ? "Enterprise" : "Free"}
+              {/* This line used to print the billing tier, so an agent working
+                  inside an agency that pays for their seat was labelled "Free"
+                  under their own name. What belongs beside somebody's name is
+                  their job, not what their account costs. */}
+              <div style={{ fontSize: 9.5, color: T.textMuted, textTransform: "capitalize" }}>
+                {userRole === "admin" || userRole === "superAdmin" ? "Admin" : (orgRole || "")}
               </div>
             </div>
             <button type="button" onClick={() => { setShowProfile(true); setProfileEdit({ name: userName || "" }); }}
@@ -4744,19 +4738,11 @@ const unsub = onSnapshot(nQuery, (snap) => {
         </div>
       </aside>
 
-      {/* —” FREE TIER BANNER —” */}
-      {userTier === "free" && (
-        <div className="free-banner" style={{ position: "fixed", top: 60, left: 240, right: 0, zIndex: 60, background: `linear-gradient(90deg, ${T.gold}ee, #B8912Fee)`, padding: "8px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 14 }}>🔒</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#04090F" }}>You're on the Free plan — 12 tabs locked</span>
-            <span style={{ fontSize: 11, color: "rgba(4,9,15,0.7)" }}>Upgrade to Pro to unlock DXB Estimate, Yields, Mortgage, Portfolio & more</span>
-          </div>
-          <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "5px 16px", background: "#04090F", color: T.gold, border: "none", borderRadius: 8, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "'Outfit',sans-serif", whiteSpace: "nowrap" }}>
-            Upgrade Now →
-          </button>
-        </div>
-      )}
+      {/* The gold bar that used to sit across the top of every page —
+          "You're on the Free plan — 12 tabs locked · Upgrade Now" — is gone.
+          It was pinned above the content on every tab, all day, and in an
+          agency it was usually read by somebody with no authority to buy
+          anything. */}
 
       {/* —” TOP BAR —” */}
       <header className="top-bar" style={{
@@ -4801,43 +4787,14 @@ const unsub = onSnapshot(nQuery, (snap) => {
 
 
       {/* —” MAIN CONTENT —” */}
-      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: userTier === "free" ? 130 : 100, minHeight: "100vh", overflowX: "hidden" }}>
-        {/* Trial / Free tier banner */}
-        {userTier === "pro_trial" && trialDaysLeft > 0 && (() => {
-          const isUrgent = trialDaysLeft <= 1;
-          const isWarning = trialDaysLeft <= 3;
-          const bg = isUrgent ? "rgba(239,68,68,0.1)" : isWarning ? "rgba(245,158,11,0.1)" : "rgba(212,168,67,0.08)";
-          const border = isUrgent ? "rgba(239,68,68,0.35)" : isWarning ? "rgba(245,158,11,0.35)" : T.border;
-          const icon = isUrgent ? "🚨" : isWarning ? "⚠️" : "⭐";
-          const label = isUrgent ? "Last day of your trial!" : isWarning ? `Trial ending soon` : "Pro Trial Active";
-          const sub = isUrgent
-            ? "Your trial expires today. Upgrade now to keep full access."
-            : isWarning
-            ? `${trialDaysLeft} days left — don't lose your access to 48+ projects and yield data.`
-            : `${trialDaysLeft} day${trialDaysLeft !== 1 ? "s" : ""} remaining. Full Pro access active.`;
-          return (
-            <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: bg, border: `1px solid ${border}`, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 16 }}>{icon}</span>
-                <span style={{ fontSize: 13, color: isUrgent ? T.red : isWarning ? T.gold : T.white, fontWeight: 700 }}>{label}</span>
-                <span style={{ fontSize: 12, color: T.textSecondary }}>— {sub}</span>
-              </div>
-              <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: isUrgent ? T.red : T.gold, color: isUrgent ? "#fff" : T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>
-                {isUrgent ? "🔥 Upgrade Now" : "Upgrade to Pro"}
-              </button>
-            </div>
-          );
-        })()}
-        {userTier === "free" && (
-          <div style={{ margin: "12px 24px 0", padding: "10px 16px", borderRadius: 10, background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 16 }}>🔒</span>
-              <span style={{ fontSize: 13, color: T.white, fontWeight: 600 }}>Free Plan</span>
-              <span style={{ fontSize: 12, color: T.textSecondary }}>— You're seeing limited data. Upgrade to unlock all projects, yields & more.</span>
-            </div>
-            <button type="button" onClick={() => setShowUpgrade(true)} style={{ padding: "6px 16px", borderRadius: 6, background: T.gold, color: T.bg, border: "none", fontSize: 12, fontWeight: 700, fontFamily: "'Outfit', sans-serif", cursor: "pointer" }}>{`Upgrade to ${PRICING_NAMES.pro} — ${PRICING_LABELS.pro}`}</button>
-          </div>
-        )}
+      <main role="main" id="main-content" className="main-content" style={{ marginLeft: 240, paddingTop: 100, minHeight: "100vh", overflowX: "hidden" }}>
+        {/* NO COUNTDOWN, NO PADLOCK, NO UPSELL BAR.
+            Two banners used to sit above every screen: a gold one counting the
+            trial down with "Upgrade to Pro" beside it, and a blue one telling
+            free accounts they were "seeing limited data". An agent opening the
+            product to do their job read an advertisement first, on every tab,
+            all day — and in an agency the person reading it usually cannot buy
+            anything anyway. People on a free trial get the product. */}
         <div style={{ padding: `0 24px ${compareList.length > 0 && tab === "Projects" ? "120px" : "60px"}` }}>
           <TabErrorBoundary key={tab}>
 
