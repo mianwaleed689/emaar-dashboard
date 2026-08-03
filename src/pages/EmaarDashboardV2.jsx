@@ -2000,7 +2000,7 @@ const INTELLIGENCE_TABS = {
     adminHint: "Add developer financials from Admin → Data Manager → Developers"
   },
   "Projects": {
-    icon: "🏗Â",
+    icon: "🏗️",
     description: "Browse all projects across all property types — Off-Plan, Residential, Commercial, Secondary Market, Hotel Apartments, Villas, Balcony View Units. Filter, compare, and score every property.",
     adminHint: "Import projects from Admin → Data Manager → Projects"
   },
@@ -2015,7 +2015,7 @@ const INTELLIGENCE_TABS = {
     adminHint: "Launch data auto-populates from Bayut API scanner — check Admin → Data Health"
   },
   "Neighbourhoods": {
-    icon: "🏘Â",
+    icon: "🏘️",
     description: "Community intelligence — average PPSF, yields, schools, hospitals, metro access, lifestyle ratings, supply risk, and demand strength for every Dubai community.",
     adminHint: "Add community data from Admin → Data Manager → Communities"
   },
@@ -2050,7 +2050,7 @@ const INTELLIGENCE_TABS = {
     adminHint: "Portfolio reads from live market data — connect DLD and Bayut first"
   },
   "Competitors": {
-    icon: "🏢Â",
+    icon: "🏢️",
     description: "Developer vs developer intelligence — sales volume, delivery record, PPSF comparison, market share, community presence, and branded residence count.",
     adminHint: "Add developer data from Admin → Data Manager → Developers"
   },
@@ -2065,7 +2065,7 @@ const INTELLIGENCE_TABS = {
     adminHint: "EIBOR updates daily — check Admin → EIBOR Rates"
   },
   "Map": {
-    icon: "🗺Â",
+    icon: "🗺️",
     description: "Interactive property map with yield heatmap, PPSF heatmap, transaction volume layer, project pins, and community boundaries. Distance rings from key landmarks.",
     adminHint: "Map renders from project data — import projects first"
   },
@@ -5142,7 +5142,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("Projects"); }} style={{ padding:"9px 18px", background:`linear-gradient(135deg,${T.gold},#B8922A)`, border:"none", borderRadius:8, color:"#000", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>View Full Project →</button>
                   <button type="button" onClick={() => { setHvSelected(null); handleTabChange("My Leads"); }} style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `🏗Â HANDOVER UPDATE — ${hvSelected.project}\n\n🏢 Developer: ${hvSelected.developer}\n📍 Community: ${hvSelected.community}\n\n📊 CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n📅 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n🔐 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
+                    const txt = `🏗️ HANDOVER UPDATE — ${hvSelected.project}\n\n🏢 Developer: ${hvSelected.developer}\n📍 Community: ${hvSelected.community}\n\n📊 CONSTRUCTION STATUS\n   Progress: ${hvSelected.constructionPct}% complete\n   Status: ${hvSelected.status}\n   Current Stage: ${hvSelected.milestonesCurrent}\n   Next Milestone: ${hvSelected.milestonesNext}\n\n📅 HANDOVER DATES\n   Contracted: ${new Date(hvSelected.contractedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Expected: ${new Date(hvSelected.expectedHandover).toLocaleDateString("en-GB",{month:"long",year:"numeric"})}\n   Delay: ${hvSelected.delayMonths>0?"+"+hvSelected.delayMonths+" months":"None"}\n\n🔐 REGULATORY\n   RERA: ${hvSelected.reraNo}\n   Escrow Bank: ${hvSelected.escrowBank}\n   Status: ${hvSelected.reraStatus}\n\nPowered by DXB Analytics Intelligence Platform\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Update
@@ -5267,7 +5267,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
                   <button type="button" onClick={() => { setHdvSelected(null); handleTabChange("My Leads"); }}
                     style={{ padding:"9px 18px", background:T.surfaceAlt, border:`1px solid ${T.border}`, borderRadius:8, color:T.textSecondary, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>Add to Lead</button>
                   <button type="button" onClick={() => {
-                    const txt = `🏗Â DXB ANALYTICS — HANDOVER UPDATE\n\n📌 ${hdvSelected.project}\n🏢 ${hdvSelected.developer} · ${hdvSelected.community}\n\n📊 STATUS: ${hdvSelected.status}\n🔧 Construction: ${hdvSelected.constructionPct}% complete\n📅 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\n⚠️ Delay Risk: ${hdvSelected.delayRisk}\n\n🔐 RERA: ${hdvSelected.reraNo}\n🏦 Escrow: ${hdvSelected.escrowBank}\n📋 Developer Record: ${hdvSelected.onTimeHistory}\n\n\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
+                    const txt = `🏗️ DXB ANALYTICS — HANDOVER UPDATE\n\n📌 ${hdvSelected.project}\n🏢 ${hdvSelected.developer} · ${hdvSelected.community}\n\n📊 STATUS: ${hdvSelected.status}\n🔧 Construction: ${hdvSelected.constructionPct}% complete\n📅 Expected Handover: ${new Date(hdvSelected.expectedDate).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}\n⚠️ Delay Risk: ${hdvSelected.delayRisk}\n\n🔐 RERA: ${hdvSelected.reraNo}\n🏦 Escrow: ${hdvSelected.escrowBank}\n📋 Developer Record: ${hdvSelected.onTimeHistory}\n\n\nPowered by DXB Analytics\nemaar-dashboard.vercel.app`;
                     window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,"_blank");
                   }} style={{ padding:"9px 18px", background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.3)", borderRadius:8, color:"#25D366", fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
                     Share Handover Update
@@ -5834,7 +5834,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
         <div role="dialog" aria-modal="true" aria-label="Project comparison" style={{ position: "fixed", inset: 0, background: "rgba(4,9,15,0.9)", zIndex: 3000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }} onClick={() => setShowCompare(false)}>
           <div style={{ background: T.surface, borderRadius: 16, border: `1px solid ${T.gold}`, width: "95%", maxWidth: 900, maxHeight: "90vh", overflowY: "auto", padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖Â Project Comparison</h2>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 22, color: T.gold, margin: 0 }}>⚖️ Project Comparison</h2>
               <button type="button" onClick={() => setShowCompare(false)} style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 8, color: T.textMuted, width: 32, height: 32, cursor: "pointer", fontSize: 16 }}>✕</button>
             </div>
 
@@ -6445,7 +6445,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
       {showOnboarding && (() => {
         const steps = [
           {
-            icon: "🏙Â",
+            icon: "🏙️",
             title: `Welcome to DXB Analytics, ${userName || "Investor"}!`,
             body: "You now have access to Dubai's most comprehensive real estate intelligence platform. Let us show you around in 30 seconds.",
             cta: "Let's Go →"
