@@ -99,7 +99,15 @@ const BASE = {
      to. But no money: they do not earn commission and have no business seeing
      what anyone else earns. */
   salesAdmin:   { leads:"org",  deals:"org",  listings:"org",  people:"none", money:"none", compliance:"org"  },
-  listings:     { leads:"none", deals:"org",  listings:"org",  people:"none", money:"none", compliance:"org"  },
+  /* Marketing gets leads at ORG scope, and that is not a loosening. Scope
+     decides WHICH RECORDS a person may count; canSeeClientContact decides
+     which FIELDS they may read, and it already returns false for this
+     department. Measuring which channel converts is the whole of a marketing
+     manager's job and it cannot be done from zero leads — with leads:"none"
+     their own screen showed 0 of 418. They still never see a name, a phone or
+     an email, and the My Leads tab is not offered to them: they measure
+     channels, not people. */
+  listings:     { leads:"org",  deals:"org",  listings:"org",  people:"none", money:"none", compliance:"org"  },
   conveyancing: { leads:"none", deals:"org",  listings:"none", people:"none", money:"none", compliance:"org"  },
   /* Accounts needs the roster to run payroll, hence people:"org" — paired with
      canSeePersonalDocuments(), which keeps passports and medical records with

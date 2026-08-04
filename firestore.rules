@@ -226,6 +226,16 @@ service cloud.firestore {
        rules cannot restrict one field of a document. One document per agent
        makes the restriction expressible: the agency's managers see all of
        them, and an agent sees their own and nobody else's. */
+    /* MARKETING SPEND — what each channel cost.
+       Read by anybody in the agency, because cost per deal is a company figure
+       and the screen shows no client records. Written by an org admin only: it
+       decides which channels look worth renewing. */
+    match /organisations/{orgId}/marketingSpend/{source} {
+      allow read:  if isAuthed() && (isAdmin() || userOrgId() == orgId);
+      allow write: if isAuthed() && (isSuperAdmin() ||
+                                     (isOrgAdmin() && userOrgId() == orgId));
+    }
+
     match /organisations/{orgId}/commissionSplits/{agentId} {
       allow read:  if isAuthed() && (isAdmin() || uid() == agentId ||
                                      (isManager() && userOrgId() == orgId));

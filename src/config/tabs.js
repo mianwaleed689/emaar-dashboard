@@ -57,6 +57,12 @@ export const TAB_GROUPS = [
       { key: "My Leads",  iconName: "Users" },
       { key: "Pipeline",  iconName: "LayoutGrid" },
       { key: "Listings",  iconName: "Building" },
+      /* Marketing sits with the daily work rather than under research: it
+         measures this agency's own channels, not the market. It was held
+         back while it was an AI copy generator with 27 unsourced claims;
+         it now reports what each channel cost per closed deal, computed
+         from the agency's own leads. */
+      { key: "Marketing", iconName: "TrendingUp" },
     ],
   },
   {
@@ -149,8 +155,6 @@ export const TAB_GROUPS = [
         held: "Developer IR reporting — revenue, EBITDA, EPS. No agent use case, and at 25% the lowest-scoring tab in the product precisely because nobody maintains a tab for an audience that is not there." },
       { key: "Dev Portal",       iconName: "Layers",
         held: "A portal for developers to submit inventory. Nothing to serve until developers are customers." },
-      { key: "Marketing",        iconName: "TrendingUp",
-        held: "27 unsourced claims, and a content tool rather than market intelligence. Held until it either earns its numbers or moves out of the intelligence product." },
     ],
   },
 ];

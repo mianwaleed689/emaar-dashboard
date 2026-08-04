@@ -72,7 +72,7 @@ import PipelineTab from '../tabs/PipelineTab';
 import DevPortalTab from '../tabs/DevPortalTab';
 import DataQualityTab from '../tabs/DataQualityTab';
 import { groupsFor, resolveTab } from '../config/tabs';
-import { viewerFrom, scopeFor } from '../crm/model/org';
+import { viewerFrom, scopeFor, visibleRecords } from '../crm/model/org';
 
 /* —” ACTIVE PROJECTS — now Firestore-only —” */
 /* Projects load from: Firestore 'projects' collection */
@@ -2267,10 +2267,18 @@ export default function EmaarDashboardV2() {
        summary, the other is a person's own broker card. */
     const NEEDS = {
       "My Leads": "leads", "Pipeline": "deals", "Listings": "listings",
+      /* Marketing reads aggregate lead performance and never a client record,
+         so it follows the listings scope its department already holds rather
+         than the lead scope it deliberately does not. */
+      "Marketing": "listings",
       "People": "people", "Team": "people", "Agency": "people",
     };
     const pruned = groups
       .map(g => ({ ...g, tabs: g.tabs.filter(t => {
+          /* Marketing counts leads but does not work them, so the lead LIST is
+           not theirs even though the lead DATA is. Scope alone cannot say that
+           — it is about records, not about whose job it is. */
+        if (t.key === "My Leads" && myDepartment === "listings") return false;
         const area = NEEDS[t.key];
         return !area || scopeFor(navViewer, area) !== "none";
       })}))
@@ -4026,6 +4034,15 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     const isManager    = oRole === "manager";
     const isAgent      = oRole === "agent";
 
+    /* What this person may see of the agency's leads: "org", "team", "own" or
+       "none". Marketing counts leads at org scope and never reads a client
+       contact — that split lives in org.js, not here. */
+    const leadViewer = viewerFrom({ firebaseUser, orgRole, userRole,
+                                    department: myDepartment, seniority: mySeniority,
+                                    teamMembers });
+    const leadScope  = scopeFor(leadViewer, "leads");
+    if (leadScope === "none" && !isSuperAdmin) { setMyLeadsLoading(false); return; }
+
     let leadsQuery;
 
     /* A platform admin who ALSO belongs to an agency was locked out of that
@@ -4048,12 +4065,26 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     } else if ((isOwner || isSuperAdmin) && orgId) {
       // Owner sees ALL leads in their org
       leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId), orderBy("createdAt", "desc"), limit(1000));
-    } else if (isDirector && orgId) {
-      // Director sees leads assigned to their managers/agents
-      leadsQuery = query(collection(db, "leads"), where("directorId", "==", uid), orderBy("createdAt", "desc"), limit(500));
-    } else if (isManager && orgId) {
-      // Manager sees ONLY their own team leads
-      leadsQuery = query(collection(db, "leads"), where("managerId", "==", uid), orderBy("createdAt", "desc"), limit(500));
+    } else if (leadScope === "org" && orgId) {
+      /* SCOPE COMES FROM THE ACCESS MODEL, NOT FROM A JOB TITLE.
+         This used to branch on orgRole and query `directorId == me` or
+         `managerId == me` — fields denormalised onto every lead. Two things
+         were wrong with it. Those composite indexes do not exist in this
+         project, so both queries failed and every sales manager and the
+         director saw 0 of 418 leads. And a marketing manager, whose orgRole is
+         also "manager", fell into the manager branch and saw nothing at all,
+         while their entire job is measuring which channel converts.
+
+         A director already has org scope in the model, so they need no special
+         query. A manager reads their agency's leads — which the security rules
+         already permit — and the team filter is applied below with
+         visibleRecords, using the reporting line rather than a copy of it
+         stamped on each record. No new index, and nothing to keep in sync. */
+      leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId),
+                         orderBy("createdAt", "desc"), limit(1000));
+    } else if (leadScope === "team" && orgId) {
+      leadsQuery = query(collection(db, "leads"), where("orgId", "==", orgId),
+                         orderBy("createdAt", "desc"), limit(1000));
     } else if (isAgent) {
       // Agent sees only assigned leads
       leadsQuery = query(collection(db, "leads"), where("assignedTo", "==", uid), orderBy("createdAt", "desc"), limit(200));
@@ -4066,11 +4097,24 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
     const unsub = onSnapshot(leadsQuery, (snap) => {
       const list = [];
       snap.forEach(d => list.push({ id: d.id, ...d.data() }));
-      setMyLeads(list);
+      /* The team filter. The query above fetches the agency's leads, which the
+         rules already allow a manager to read; this narrows them to the people
+         who actually report to them. Doing it here rather than in the query
+         means no composite index and no denormalised copy of the reporting
+         line to drift out of date. */
+      setMyLeads(leadScope === "team"
+        ? visibleRecords(leadViewer, "leads", list,
+                         { ownerField: "assignedTo", teamIds: leadViewer.teamIds })
+        : list);
       setMyLeadsLoading(false);
     }, (err) => { console.warn("[Leads]", err); setMyLeadsLoading(false); });
     return () => unsub();
-  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
+  /* teamMembers and the department belong in here: a manager's team filter is
+     built from the reporting line, and without the roster the filter runs
+     against an empty team and returns nothing. That is exactly what happened —
+     the director and marketing saw all 418 while a sales manager saw 0, because
+     theirs was the only branch that needed the roster to have arrived. */
+  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId, teamMembers, myDepartment, mySeniority]);
 
 
   /* THE SECOND LISTINGS LISTENER — REMOVED.
@@ -5611,19 +5655,10 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {/* MARKETING TAB (extracted) */}
           {tab === "Marketing" && (
             <MarketingTab
-              liveNeighbourhoods={liveNeighbourhoods}
-              deals={deals} listings={listings}
-              mktView={mktView} setMktView={setMktView}
-              mktPropType={mktPropType} setMktPropType={setMktPropType}
-              mktBudget={mktBudget} setMktBudget={setMktBudget}
-              mktNationality={mktNationality} setMktNationality={setMktNationality}
-              mktListingType={mktListingType} setMktListingType={setMktListingType}
-              mktListingPrice={mktListingPrice} setMktListingPrice={setMktListingPrice}
-              mktListingBeds={mktListingBeds} setMktListingBeds={setMktListingBeds}
-              mktListingFeatures={mktListingFeatures} setMktListingFeatures={setMktListingFeatures}
-              mktListingComm={mktListingComm} setMktListingComm={setMktListingComm}
-              mktAiLoading={mktAiLoading} setMktAiLoading={setMktAiLoading}
-              mktAiResult={mktAiResult} setMktAiResult={setMktAiResult}
+              myLeads={myLeads}
+              orgId={orgId} orgName={orgProfile?.name}
+              canEditSpend={orgRole === "owner" || orgRole === "director" ||
+                            myDepartment === "listings" || myDepartment === "management"}
             />
           )}
 

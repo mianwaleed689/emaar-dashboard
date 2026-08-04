@@ -79,6 +79,7 @@ const people = [];
 const snap = await getDocs(query(collection(db, "users"), where("orgId", "==", ORG_ID)));
 snap.forEach(d => people.push({ uid: d.id, ...d.data() }));
 const agents = people.filter(p => p.department === "sales" && p.seniority === "staff");
+const directorUid = (people.find(p => p.seniority === "director") || {}).uid || "";
 console.log(`${agents.length} agents on the floor, ${people.length} people in the agency`);
 if (!agents.length) { console.error("no agents — run seed-demo-agency.mjs first"); process.exit(1); }
 
@@ -120,6 +121,14 @@ agents.forEach((a, ai) => {
       status: stage,
       assignedTo: a.uid, assignedToName: a.name,
       agentId: a.uid, orgId: ORG_ID,
+      /* The leads listener queries managerId and directorId ON THE LEAD, so a
+         lead without them is invisible to the agent's manager and to the
+         director above them — every sales manager in the seeded agency saw 0
+         of 418. Denormalised on purpose: a manager has forty agents and
+         Firestore `in` takes thirty values, so "leads belonging to my team"
+         cannot be a query on the agent list. */
+      managerId: a.managerId || "",
+      directorId: directorUid,
       /* A spread of ages so the desk has something to order by: the ones that
          came in today, and the ones nobody has touched for three weeks. */
       createdAt: ago(age),
