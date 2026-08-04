@@ -2320,7 +2320,7 @@ function ProjectsTab({
                           </div>
                           <div style={{textAlign:"center"}}>
                             <div style={{width:56,height:56,borderRadius:"50%",background:"rgba(212,168,67,0.12)",border:"2px solid "+T.gold,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                              <span style={{fontSize:16,fontWeight:800,color:T.gold,fontFamily:"'Fraunces',serif"}}>{cn.investmentScore||""}</span>
+                              <span style={{fontSize:16,fontWeight:800,color:T.gold,fontFamily:"'Fraunces',serif"}}>{cn.investmentScore||"—"}</span>
                             </div>
                             <div style={{fontSize:9,color:T.textMuted,marginTop:4}}>SCORE</div>
                           </div>

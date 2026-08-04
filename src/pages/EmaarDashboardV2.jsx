@@ -3570,7 +3570,7 @@ export default function EmaarDashboardV2() {
       { key: "competitorData",     setter: setLiveCompetitors },
       { key: "mortgageRates",      setter: setLiveMortgageRates },
       // neighbourhoodScores - removed from tabKeys, loaded via direct collection listener below
-// neighbourhoodScores  load from collection (259 docs)
+// neighbourhoodScores — load from collection (259 docs)
       { key: "riskFactors",        setter: setLiveRisk },
     ];
     tabKeys.forEach(({ key, setter }) => {
@@ -3579,7 +3579,7 @@ export default function EmaarDashboardV2() {
       }));
     });
 
-    // neighbourhoodScores  direct collection listener (259 docs)
+    // neighbourhoodScores — direct collection listener (259 docs)
     unsubs.push(onSnapshot(collection(db, "neighbourhoodScores"), (snap) => {
       // netYield is recomputed here from serviceCharge + PPSF rather than trusted
       // as stored. The stored value is a flat deduction that ignores service
@@ -3596,7 +3596,7 @@ export default function EmaarDashboardV2() {
 
     // platformSettings/tabs (which tabs are on/off)
 
-// neighbourhoodScores  direct collection listener (259 docs)
+// neighbourhoodScores — direct collection listener (259 docs)
 
     unsubs.push(onSnapshot(doc(db, "platformSettings", "tabs"), (snap) => {
       if (snap.exists()) setTabSettings(snap.data());
@@ -4467,7 +4467,7 @@ const unsub = onSnapshot(nQuery, (snap) => {
     return <LoginScreen onLogin={() => {}} onBack={() => setShowLogin(false)} defaultMode={showLogin === "signup" ? "signup" : "login"} />;
   }
 
-  // Welcome screen  first login only for agents
+  // Welcome screen — first login only for agents
   if (showWelcome) {
     return (
       <WelcomeScreen
