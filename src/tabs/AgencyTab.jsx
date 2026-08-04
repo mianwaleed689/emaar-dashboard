@@ -217,7 +217,14 @@ function AgencyTab({
               setCommSaving(s => ({...s, [agentUid]: true}));
               try {
                 const updated = { ...commSplits, [agentUid]: parseFloat(pct)||50 };
-                await setDoc(doc(db, "organisations", orgId), { commSplits: updated, updatedAt: new Date().toISOString() }, { merge: true });
+                /* One document per agent rather than a map on the organisation.
+                   As a map, anybody who could read the organisation record could
+                   read what every colleague earns, because Firestore rules
+                   cannot restrict a single field. Per-document, a manager reads
+                   the agency's and an agent reads only their own. */
+                await setDoc(doc(db, "organisations", orgId, "commissionSplits", agentUid),
+                  { pct: parseFloat(pct) || 50, agentUid,
+                    updatedAt: new Date().toISOString() }, { merge: true });
                 setCommSplits(updated);
               } catch(e) { console.error(e); }
               setCommSaving(s => ({...s, [agentUid]: false}));

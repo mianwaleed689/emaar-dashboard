@@ -47,7 +47,10 @@ export default function JoinPage() {
         name: name.trim(), email: invite.email,
         role: "user", orgRole: "agent", orgId: invite.orgId,
         managerId: invite.managerId, status: "active",
-        paid: true, tier: "free",
+        /* `tier: "free"` was written here for somebody joining a PAYING
+           agency, which was simply untrue. Entitlement now comes from the
+           organisation, so this records no tier rather than a wrong one. */
+        paid: true,
         onboardingComplete: false,
         createdAt: new Date().toISOString(),
         createdBy: invite.managerId,

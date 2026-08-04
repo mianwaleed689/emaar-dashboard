@@ -4156,6 +4156,48 @@ const teamOrgId = orgId || "";
     return () => unsub();
   }, [isLoggedIn, firebaseUser, orgRole, orgId]);
 
+  /* A SEAT INHERITS THE AGENCY'S PLAN.
+     Nothing connected a seat to the agency paying for it. The tier was read
+     only from the member's own user document, and neither route that creates
+     one writes a real value: TeamTab writes no tier at all and JoinPage used
+     to write "free". So every agent an agency added was a free account inside
+     a paid agency. The banners that announced it are gone, but the entitlement
+     underneath was still wrong — and it is what decides who can open what.
+
+     Derived rather than copied at creation, so an agency changing plan takes
+     its people with it instead of leaving them on whatever was true the day
+     they joined. A platform admin keeps their own tier; that is not an agency
+     entitlement.
+
+     LIMIT, stated because it matters at launch: this reads the organisation's
+     `plan`, which records what the agency signed up for, not what it has paid.
+     Nothing writes a subscription status yet because billing is not wired, so
+     a lapsed agency would still look entitled here. That check belongs with
+     the Stripe work, not before it. */
+  useEffect(() => {
+    if (!orgId || !orgProfile) return;
+    const plan = orgProfile.plan;
+    if (!plan || plan === "free") return;
+    setUserTier(prev => (prev === "admin" ? prev : plan));
+  }, [orgId, orgProfile]);
+
+  /* COMMISSION SPLITS — one document per agent, so rules can restrict them.
+     A manager reads the agency's; an agent reads only their own. That is not
+     expressible when the splits are a map on the organisation record. */
+  useEffect(() => {
+    if (!isLoggedIn || !firebaseUser || !orgId) return;
+    const unsub = onSnapshot(
+      collection(db, "organisations", orgId, "commissionSplits"),
+      snap => {
+        if (snap.empty) return;                       // keep the legacy map
+        const next = {};
+        snap.forEach(d => { next[d.id] = d.data()?.pct; });
+        setCommSplits(prev => ({ ...prev, ...next }));
+      },
+      err => console.warn("[commissionSplits]", err?.code || err));
+    return () => unsub();
+  }, [isLoggedIn, firebaseUser, orgId]);
+
   /* —” ORG PROFILE LISTENER (Session 8) —” */
   useEffect(() => {
     /* This listener feeds the Agency tab its organisation record. Keyed on the
@@ -4190,8 +4232,12 @@ const teamOrgId = orgId || "";
           website:      d.website      || "",
           notes:        d.notes        || "",
         });
-        // Load commission splits per agent
-        if (d.commSplits) setCommSplits(d.commSplits);
+        /* Legacy fallback only. Splits used to live on this document as a map,
+           which meant every member who could read the organisation could read
+           what every colleague is paid — Firestore rules cannot restrict a
+           single field. They now live in a subcollection that rules CAN
+           restrict, and the listener below overwrites anything read here. */
+        if (d.commSplits) setCommSplits(prev => ({ ...d.commSplits, ...prev }));
       }
     });
     return () => unsub();
