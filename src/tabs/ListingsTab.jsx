@@ -35,8 +35,12 @@ function ListingsTab({
             const intent = intentFor(me, "listings");
             const isAgent   = scope === "own";
             const isManager = scope === "team" || scope === "org";
-            const isOwner   = me.platformAdmin || orgRole === "owner";
-            const isDirector = orgRole === "director";
+            /* isOwner and isDirector used to be declared here from the raw
+               orgRole and were never read by anything. They were the only two
+               places this file asked for a job title instead of asking the
+               access model, and they decided nothing. Removed rather than
+               rewritten: scope above already answers every question this tab
+               asks. */
 
             if (scope === "none") return (
               <div style={{ padding:"70px 20px", textAlign:"center" }}>

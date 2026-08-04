@@ -47,7 +47,7 @@ for (const [name, path] of Object.entries(TABS)) {
          department precisely so nothing else has to look at orgRole again.
 
      What is checked is `orgRole` on the VIEWER driving a render decision. */
-  const viewerGates = (src.match(/(?<!\w\.)orgRole\s*===?\s*"(owner|director|manager|agent)"/g) || [])
+  const viewerGates = (src.match(/(?<!\w\.)orgRole\s*===?\s*"(owner|director|manager|agent)"/g) || [])
     .filter(x => true).length
     - (src.match(/m\.orgRole\s*===?\s*"/g) || []).length
     - (/department: m\.department \|\|/.test(src) ? 3 : 0);
