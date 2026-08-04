@@ -14984,7 +14984,13 @@ export default function AdminPanel() {
           {TABS.map(t => (
             <button type="button" key={t.id} className={`sidebar-btn ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
               <span style={{ color: tab === t.id ? T.gold : T.textMuted, transition: "color 0.15s" }}>{t.icon}</span>
-              {i18t("adminTabs", t.id) || t.label}
+              {/* i18t returns the KEY when a translation is missing, so `|| t.label`
+                  never fired and ten sections rendered their raw internal id in the
+                  sidebar: auditlog, orgs, dxbsales, data_health, referral, billing,
+                  pricing_plans, market_intelligence, platform_settings, filter_schema.
+                  Checking against the key restores the fallback for every language,
+                  including any tab added later. */}
+              {(() => { const tr = i18t("adminTabs", t.id); return tr && tr !== t.id ? tr : t.label; })()}
             </button>
           ))}
 
