@@ -5,11 +5,11 @@
   Manager creates agents directly from dashboard
 */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, updateDoc, collection, query, where, getDocs, arrayUnion } from "firebase/firestore";
-import { DEPARTMENTS, SENIORITY } from "../crm/model/org";
+import { DEPARTMENTS, SENIORITY, viewerFrom, visibleRecords } from "../crm/model/org";
 import { auth, db, firebaseConfig } from "../firebase";
 import PhoneInput from "../components/PhoneInput";
 import NationalitySelect from "../components/NationalitySelect";
@@ -62,6 +62,10 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
   const [inviteLink, setInviteLink] = useState("");
   const [sendingInvite, setSendingInvite] = useState(false);
   const F = (k,v) => setForm(p=>({...p,[k]:v}));
+
+  /* This person's own record, for the department and seniority the access
+     model reads. Without it a manager falls back to the legacy inference. */
+  const myRecord = (teamMembers || []).find(m => (m.uid || m.id) === firebaseUser?.uid) || null;
 
   const notify = (msg, type="success") => {
     setToast({msg,type});
@@ -346,7 +350,29 @@ export default function TeamTab({ teamMembers=[], teamMembersLoading, myLeads=[]
   };
 
   // — Derived metrics —
-  const agents   = teamMembers.filter(u=>u.orgRole==="agent"||u.role==="agent");
+  /* A SALES MANAGER RUNS A TEAM, NOT THE COMPANY.
+     This listed every agent in the agency to anybody who could open the tab, so
+     a manager with forty people saw all one hundred and twenty-five — including
+     both other managers' teams, their leads, their conversion and their
+     pipeline. Verified on a seeded agency: People correctly showed that manager
+     41 of 133, and Team showed them 125.
+
+     The access model already answers this; the tab simply was not asking it.
+     scopeFor(me,"people") gives a manager "team" and a director or owner "org",
+     and visibleRecords does the filtering — the same call every other tab makes.
+     managerId is the reporting line written when the person was created. */
+  const me = useMemo(() => viewerFrom({
+    firebaseUser, orgRole, userRole,
+    department: myRecord?.department, seniority: myRecord?.seniority,
+    teamMembers,
+  }), [firebaseUser, orgRole, userRole, myRecord, teamMembers]);
+
+  const visibleTeam = useMemo(
+    () => visibleRecords(me, "people", teamMembers,
+                         { ownerField: "uid", teamIds: me.teamIds }),
+    [me, teamMembers]);
+
+  const agents   = visibleTeam.filter(u=>u.orgRole==="agent"||u.role==="agent");
   const weekAgo  = new Date(Date.now()-7*24*60*60*1000);
 
   const agentStats = agents.map(agent => {
