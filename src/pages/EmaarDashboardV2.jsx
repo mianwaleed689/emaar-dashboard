@@ -4704,14 +4704,12 @@ const unsub = onSnapshot(nQuery, (snap) => {
 
         {/* Bottom user row */}
         <div style={{ padding: "10px 8px", borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
-          {userTier === "pro_trial" && trialDaysLeft > 0 && (
-            <div style={{ marginBottom: 8, padding: "7px 12px", borderRadius: 8, background: "rgba(212,168,67,0.08)", border: `1px solid ${T.border}`, textAlign: "center" }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: T.gold, letterSpacing: 0.5 }}>PRO TRIAL</div>
-              <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 1 }}>{trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining</div>
-            </div>
-          )}
-          {/* The sidebar's "FREE PLAN · Upgrade to Pro" chip is gone for the
-              same reason as the banner above. */}
+          {/* The last piece of plan furniture: a "PRO TRIAL · 7 days remaining"
+              chip pinned to the bottom of the sidebar, in view on every screen.
+              It survived the sweep that removed the banners because it is a
+              different element, and it counted down at somebody all day. Gone
+              for the same reason as the rest, along with the "FREE PLAN ·
+              Upgrade to Pro" chip that sat in the same place. */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", borderRadius: 10, background: T.surfaceAlt }}>
             <div style={{ width: 30, height: 30, borderRadius: "50%", background: `linear-gradient(135deg, ${T.gold}, #B8912F)`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, color: T.bg, flexShrink: 0 }}>
               {user.charAt(0).toUpperCase()}

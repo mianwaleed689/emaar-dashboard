@@ -20,8 +20,13 @@
    think "I need an investment tool"; they think "my client asked whether
    the service charge kills the yield".
 
-   The first two groups hold the tabs an agent opens daily. Everything
-   else is a group they open when a specific question arrives.
+   THE CRM IS CONTIGUOUS. The seven tabs that read or write the agency's
+   own records — leads, deals, listings, team, people, agency, compliance —
+   are the first two groups, one after the other. They used to be split:
+   "Today" at the top, "Run the agency" at the bottom, and five groups of
+   market tabs wedged in between, so running a deal and running the company
+   meant crossing the whole product. Everything from "Find a property" down
+   is market intelligence, opened when a specific client question arrives.
 
    ── ICONS ───────────────────────────────────────────────────────────
 
@@ -52,6 +57,20 @@ export const TAB_GROUPS = [
       { key: "My Leads",  iconName: "Users" },
       { key: "Pipeline",  iconName: "LayoutGrid" },
       { key: "Listings",  iconName: "Building" },
+    ],
+  },
+  {
+    id: "agency",
+    label: "Run the agency",
+    iconName: "Users2",
+    tabs: [
+      /* People is the HR half of the product, and it is deliberately NOT
+         called "HR Sales" or filed under the sales group — it covers every
+         department, including the ones that never touch a lead. */
+      { key: "People",       iconName: "Users2" },
+      { key: "Team",         iconName: "Users2" },
+      { key: "Agency",       iconName: "Building2" },
+      { key: "Compliance",   iconName: "Shield" },
     ],
   },
   {
@@ -107,22 +126,11 @@ export const TAB_GROUPS = [
       { key: "Market",        iconName: "Globe" },
       { key: "DLD Volumes",   iconName: "Database" },
       { key: "Price History", iconName: "TrendingUp" },
-    ],
-  },
-  {
-    id: "agency",
-    label: "Run the agency",
-    iconName: "Users2",
-    tabs: [
-      /* People is the HR half of the product, and it is deliberately NOT
-         called "HR Sales" or filed under the sales group — it covers every
-         department, including the ones that never touch a lead. */
-      { key: "People",       iconName: "Users2" },
-      { key: "Team",         iconName: "Users2" },
-      { key: "Agency",       iconName: "Building2" },
-      { key: "Compliance",   iconName: "Shield" },
-      { key: "Data Quality", iconName: "Activity" },
-      { key: "Intelligence", iconName: "Database" },
+      /* Moved out of "Run the agency": neither reads the agency's own
+         records. Intelligence is the market read and Data Quality is the
+         platform's own coverage, so both belong with research. */
+      { key: "Intelligence",  iconName: "Database" },
+      { key: "Data Quality",  iconName: "Activity" },
     ],
   },
   {
