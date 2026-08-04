@@ -77,6 +77,10 @@ export const TAB_GROUPS = [
       { key: "Team",         iconName: "Users2" },
       { key: "Agency",       iconName: "Building2" },
       { key: "Compliance",   iconName: "Shield" },
+      /* The IT administrator's console. IT holds no business scope at all,
+         which is correct — and had been implemented as no product at all.
+         Administering accounts is a different axis from reading data. */
+      { key: "Access",       iconName: "Shield" },
     ],
   },
   {

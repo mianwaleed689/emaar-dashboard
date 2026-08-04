@@ -130,7 +130,13 @@ service cloud.firestore {
       allow read: if isAuthed() && (
         uid() == userId ||
         isSuperAdmin() ||
-        (isManager() && resource.data.orgId == userOrgId())
+        (isManager() && resource.data.orgId == userOrgId()) ||
+        /* IT administers accounts and holds no business scope, so this rule
+           excluded them from the roster their console is built on. Safe now
+           that pay has moved out of this document: what remains is who exists,
+           what department they are in and whether they can sign in. */
+        ('department' in getUserData() && getUserData().department == 'it'
+         && resource.data.orgId == userOrgId())
       );
 
       // Sign-up: own document only. Self-serve signup legitimately sets role and
@@ -226,6 +232,27 @@ service cloud.firestore {
        rules cannot restrict one field of a document. One document per agent
        makes the restriction expressible: the agency's managers see all of
        them, and an agent sees their own and nobody else's. */
+    /* PAY — SALARY AND ALLOWANCES, OUT OF THE USER RECORD.
+       These lived on /users, which any manager in the agency may read: the
+       Payroll screen hid salaries from a sales manager while the raw document
+       handed them over to anybody who opened developer tools. Rules cannot
+       restrict one field of a document, so the field had to move — the same
+       lesson commission splits taught.
+
+       Read by the departments canSeePay() names — HR, finance and management —
+       and by the person themselves, because your own salary is yours. Written
+       by an org admin only. */
+    match /organisations/{orgId}/pay/{personId} {
+      allow read: if isAuthed() && (
+        isAdmin() || uid() == personId ||
+        (userOrgId() == orgId &&
+         'department' in getUserData() &&
+         getUserData().department in ['hr', 'finance', 'management'])
+      );
+      allow write: if isAuthed() && (isSuperAdmin() ||
+                                     (isOrgAdmin() && userOrgId() == orgId));
+    }
+
     /* MARKETING SPEND — what each channel cost.
        Read by anybody in the agency, because cost per deal is a company figure
        and the screen shows no client records. Written by an org admin only: it

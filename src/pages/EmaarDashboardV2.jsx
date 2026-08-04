@@ -66,6 +66,7 @@ import AgencyTab from '../tabs/AgencyTab';
 import ProjectsTab from '../tabs/ProjectsTab';
 import MyLeadsTab from '../tabs/MyLeadsTab';
 import MarketingTab from '../tabs/MarketingTab';
+import AccessTab from '../tabs/AccessTab';
 import FinancialsTab from '../tabs/FinancialsTab';
 import BankingTab from '../tabs/BankingTab';
 import PipelineTab from '../tabs/PipelineTab';
@@ -73,6 +74,7 @@ import DevPortalTab from '../tabs/DevPortalTab';
 import DataQualityTab from '../tabs/DataQualityTab';
 import { groupsFor, resolveTab } from '../config/tabs';
 import { viewerFrom, scopeFor, visibleRecords } from '../crm/model/org';
+import { canAdministerAccounts } from '../crm/model/access';
 
 /* —” ACTIVE PROJECTS — now Firestore-only —” */
 /* Projects load from: Firestore 'projects' collection */
@@ -2272,6 +2274,9 @@ export default function EmaarDashboardV2() {
          than the lead scope it deliberately does not. */
       "Marketing": "listings",
       "People": "people", "Team": "people", "Agency": "people",
+      /* Access is the one CRM tab that is NOT gated on a business scope: IT
+         holds none of them and it is their console. canAdministerAccounts
+         decides it instead, below. */
     };
     const pruned = groups
       .map(g => ({ ...g, tabs: g.tabs.filter(t => {
@@ -2279,6 +2284,7 @@ export default function EmaarDashboardV2() {
            not theirs even though the lead DATA is. Scope alone cannot say that
            — it is about records, not about whose job it is. */
         if (t.key === "My Leads" && myDepartment === "listings") return false;
+        if (t.key === "Access") return canAdministerAccounts(navViewer);
         const area = NEEDS[t.key];
         return !area || scopeFor(navViewer, area) !== "none";
       })}))
@@ -4226,7 +4232,14 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
 
   /* —” TEAM MEMBERS LISTENER (Session 7) —” */
   useEffect(() => {
-    const canSeeTeam = orgRole === "owner" || orgRole === "director" || orgRole === "manager" || userRole === "superAdmin" || userRole === "admin";
+    /* IT administers accounts and holds no business scope at all, so this gate
+       excluded them from the very roster their console is built on — the Access
+       tab rendered its empty state for the one person it exists for. Seeing WHO
+       has an account is not seeing what they do. */
+    const canSeeTeam = orgRole === "owner" || orgRole === "director" || orgRole === "manager"
+      || userRole === "superAdmin" || userRole === "admin"
+      || canAdministerAccounts(viewerFrom({ firebaseUser, orgRole, userRole,
+                                            department: myDepartment, seniority: mySeniority }));
     if (!isLoggedIn || !firebaseUser || !canSeeTeam) return;
 const teamOrgId = orgId || "";
     setTeamMembersLoading(true);
@@ -4238,7 +4251,7 @@ const teamOrgId = orgId || "";
       setTeamMembersLoading(false);
     }, err => { console.warn("[Team]", err); setTeamMembersLoading(false); });
     return () => unsub();
-  }, [isLoggedIn, firebaseUser, orgRole, orgId]);
+  }, [myDepartment, mySeniority, isLoggedIn, firebaseUser, orgRole, orgId]);
 
   /* A SEAT INHERITS THE AGENCY'S PLAN.
      Nothing connected a seat to the agency paying for it. The tier was read
@@ -4353,6 +4366,15 @@ const teamOrgId = orgId || "";
                        orgRole === "manager" || userRole === "superAdmin" || userRole === "admin";
     if (!isAgent && !managesOrg) return;
 
+    /* IT and HR hold no listings scope, and orgRole alone cannot tell: an IT
+       administrator's orgRole is "agent", so this ran for them and Firestore
+       refused it — a permission-denied on every load for somebody who is not
+       supposed to have listings in the first place. Ask the model. */
+    const listingScope = scopeFor(
+      viewerFrom({ firebaseUser, orgRole, userRole,
+                   department: myDepartment, seniority: mySeniority }), "listings");
+    if (listingScope === "none" && !(userRole === "admin" || userRole === "superAdmin")) return;
+
     setListingsLoading(true);
     let q;
     if (isAgent) {
@@ -4374,7 +4396,7 @@ const teamOrgId = orgId || "";
       setListingsLoading(false);
     });
     return () => unsub();
-  }, [isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
+  }, [myDepartment, mySeniority, isLoggedIn, firebaseUser, orgRole, userRole, orgId]);
 
   /* —” DEV PORTAL LISTENERS (Session 10) —” */
   useEffect(() => {
@@ -5653,6 +5675,14 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
 
           {/* —” MARKETING INTELLIGENCE TAB —” */}
           {/* MARKETING TAB (extracted) */}
+          {tab === "Access" && (
+            <AccessTab
+              teamMembers={teamMembers} myLeads={myLeads}
+              deals={deals} listings={listings}
+              orgName={orgProfile?.name}
+            />
+          )}
+
           {tab === "Marketing" && (
             <MarketingTab
               myLeads={myLeads}

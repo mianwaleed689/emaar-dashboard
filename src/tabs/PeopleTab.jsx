@@ -41,7 +41,7 @@
  * other things in one pass. The leave, document and offboarding halves are the
  * ones that fail quietly and expensively today, so they come first.
  */
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { payrollRun, wpsReadiness, buildSIF, sifToText, SIF_CAVEAT } from "../crm/model/payroll";
 import React, { useState, useMemo } from "react";
@@ -728,14 +728,28 @@ function Payroll({ people, deals, me, orgProfile }) {
     return out;
   }, [deals]);
 
+  /* Pay comes from the subcollection now. A person record no longer carries a
+     salary, so this merges the two: who they are from the roster, what they are
+     paid from a collection only HR, finance and management may read. */
+  const [payById, setPayById] = React.useState({});
+  React.useEffect(() => {
+    if (!orgId) return;
+    const unsub = onSnapshot(collection(db, "organisations", orgId, "pay"), snap => {
+      const next = {};
+      snap.forEach(d => { next[d.id] = d.data() || {}; });
+      setPayById(next);
+    }, err => console.warn("[pay]", err?.code || err));
+    return () => unsub();
+  }, [orgId]);
+
   const staff = React.useMemo(() => people.map(p => ({
     id: p.id || p.uid,
     name: p.name || p.email || "Unnamed",
     department: p.department || "sales",
     joinedAt: p.joinedAt || "",
     lastDay: p.lastDay || "",
-    basic: Number(p.basic) || 0,
-    allowances: p.allowances || {},
+    basic: Number(payById[p.id || p.uid]?.basic ?? p.basic) || 0,
+    allowances: payById[p.id || p.uid]?.allowances || p.allowances || {},
     unpaidLeaveDays: Number(p.unpaidLeaveDays) || 0,
     sickHalfPayDays: Number(p.sickHalfPayDays) || 0,
     deductions: Array.isArray(p.deductions) ? p.deductions : [],
@@ -753,10 +767,16 @@ function Payroll({ people, deals, me, orgProfile }) {
     { establishmentId: orgProfile?.mohreId || "", agentId: orgProfile?.bankAgentId || "" },
     { peopleById: Object.fromEntries(staff.map(s => [s.id, s])) }), [run, staff, orgProfile]);
 
+  /* Pay lives in organisations/{orgId}/pay/{personId}, not on the person's
+     user record. On /users it was readable by every manager in the agency —
+     this screen hid a colleague's salary while the document handed it to
+     anyone who opened developer tools. Rules cannot restrict a single field,
+     so the field moved. */
   const savePay = async (id, field, value) => {
     setSaving(s => ({ ...s, [id]: true }));
     try {
-      await setDoc(doc(db, "users", id), { [field]: value, updatedAt: new Date().toISOString() }, { merge: true });
+      await setDoc(doc(db, "organisations", orgId, "pay", id),
+        { [field]: value, personId: id, updatedAt: new Date().toISOString() }, { merge: true });
     } catch (e) { console.error("payroll save", e); }
     setSaving(s => ({ ...s, [id]: false }));
   };
