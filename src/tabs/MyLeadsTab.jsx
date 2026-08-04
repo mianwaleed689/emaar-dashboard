@@ -263,7 +263,8 @@ const Section = ({icon,title,sub,color,open,onToggle,children}) => (
 // 
 // MAIN COMPONENT
 // 
-export default function MyLeadsTab({ liveNeighbourhoods=[],
+export default function MyLeadsTab({
+  myDepartment, mySeniority, liveNeighbourhoods=[],
   myLeads=[], viewings=[], orgRole, userRole, orgId, orgName,
   listings=[], teamMembers=[], firebaseUser,
   leadSortBy, setLeadSortBy,
@@ -281,8 +282,9 @@ export default function MyLeadsTab({ liveNeighbourhoods=[],
      Now the tab asks src/crm/model/org.js one question — how much of "leads"
      may this person see — and renders that. A department added to the model is
      a table entry there, not another conditional here. */
-  const me     = useMemo(() => viewerFrom({ firebaseUser, orgRole, userRole, teamMembers }),
-                         [firebaseUser, orgRole, userRole, teamMembers]);
+  const me     = useMemo(() => viewerFrom({ firebaseUser, orgRole, userRole, teamMembers,
+                                            department: myDepartment, seniority: mySeniority }),
+                         [firebaseUser, orgRole, userRole, teamMembers, myDepartment, mySeniority]);
   const scope  = scopeFor(me, "leads");
   const intent = intentFor(me, "leads");
   const seeContacts = canSeeClientContact(me);

@@ -72,6 +72,7 @@ import PipelineTab from '../tabs/PipelineTab';
 import DevPortalTab from '../tabs/DevPortalTab';
 import DataQualityTab from '../tabs/DataQualityTab';
 import { groupsFor, resolveTab } from '../config/tabs';
+import { viewerFrom, scopeFor } from '../crm/model/org';
 
 /* —” ACTIVE PROJECTS — now Firestore-only —” */
 /* Projects load from: Firestore 'projects' collection */
@@ -2137,6 +2138,12 @@ export default function EmaarDashboardV2() {
   const [userRole, setUserRole] = useState("user");       // user | agent | manager | admin | superAdmin | developer
   const [orgId, setOrgId] = useState(null);                // org they belong to
   const [orgRole, setOrgRole] = useState(null);            // agent | manager | viewer
+  /* The access model reads department and seniority, and the auth listener was
+     reading the user document and throwing both away — so every scope decision
+     fell back to inferring them from a job title. Kept here, next to orgRole,
+     because they are the same kind of fact about the same person. */
+  const [myDepartment, setMyDepartment] = useState(null);
+  const [mySeniority,  setMySeniority]  = useState(null);
   const [devId, setDevId] = useState(null);                // developer ID (for developer role)
   const [firebaseUser, setFirebaseUser] = useState(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
@@ -2234,11 +2241,42 @@ export default function EmaarDashboardV2() {
   const isAdminViewer = userTier === "admin";
 
   /* Navigation for THIS viewer. An admin sees the held-back tabs so work in
-     progress is checkable on the live site; a customer never sees them. */
-  const TAB_GROUPS = useMemo(
-    () => withIcons(groupsFor({ isAdmin: isAdminViewer })),
-    [isAdminViewer]
-  );
+     progress is checkable on the live site; a customer never sees them.
+
+     A TAB YOU CANNOT USE SHOULD NOT BE IN THE SIDEBAR. Walking the seeded
+     agency as each department showed People offered to an agent, a sales
+     administrator and an accounts officer — all of whom have no people scope,
+     so the tab opened empty. Offering somebody a door and then showing them a
+     blank room is worse than not offering it: they assume the product is
+     broken rather than that it was never theirs.
+
+     The access model already answers this per area. Team and Agency stay on
+     their own gates, which the tabs enforce themselves. */
+  const navViewer = useMemo(() => viewerFrom({
+    firebaseUser, orgRole, userRole,
+    department: myDepartment, seniority: mySeniority,
+  }), [firebaseUser, orgRole, userRole, myDepartment, mySeniority]);
+
+  const TAB_GROUPS = useMemo(() => {
+    const groups = groupsFor({ isAdmin: isAdminViewer });
+    if (isAdminViewer) return withIcons(groups);
+    /* Which CRM tabs need which scope to be worth opening at all. */
+    /* Every CRM tab, against the area it reads. HR has no leads and no deals,
+       so offering them My Leads and Pipeline was offering two more empty rooms.
+       Overview and Compliance stay for everybody: one is the company's own
+       summary, the other is a person's own broker card. */
+    const NEEDS = {
+      "My Leads": "leads", "Pipeline": "deals", "Listings": "listings",
+      "People": "people", "Team": "people", "Agency": "people",
+    };
+    const pruned = groups
+      .map(g => ({ ...g, tabs: g.tabs.filter(t => {
+        const area = NEEDS[t.key];
+        return !area || scopeFor(navViewer, area) !== "none";
+      })}))
+      .filter(g => g.tabs.length > 0);
+    return withIcons(pruned);
+  }, [isAdminViewer, navViewer]);
 
   // Upgrade overlay for locked content
   const UpgradeOverlay = ({ message, compact }) => (
@@ -3938,6 +3976,8 @@ if (snap.exists()) setMyAlerts(snap.data().alerts || []);
             setUserRole(data.role || "user");
             setOrgId(data.orgId || null);
             setOrgRole(data.orgRole || null);
+            setMyDepartment(data.department || null);
+            setMySeniority(data.seniority || null);
             /* The agent welcome screen used to take over the entire app on
                first login — a full page of WhatsApp and email tips standing
                between somebody and the product they were hired to use. An
@@ -5652,6 +5692,11 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {/* MY LEADS TAB (extracted) */}
           {tab === "My Leads" && (
             <MyLeadsTab
+              /* The access model decides on department and seniority. Without
+                 them viewerFrom falls back to inferring a department from a job
+                 title, which makes everybody sales — so an HR manager opening
+                 this tab was treated as a sales manager. */
+              myDepartment={myDepartment} mySeniority={mySeniority}
               viewings={viewings}
               myLeads={myLeads}
               orgRole={orgRole} userRole={userRole} orgId={orgId} orgName={orgProfile?.name} listings={listings}
@@ -5697,6 +5742,11 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {/* —” PIPELINE TAB (extracted) —” */}
           {tab === "Pipeline" && (
             <PipelineTab
+              /* The access model decides on department and seniority. Without
+                 them viewerFrom falls back to inferring a department from a job
+                 title, which makes everybody sales — so an HR manager opening
+                 this tab was treated as a sales manager. */
+              myDepartment={myDepartment} mySeniority={mySeniority}
               teamMembers={teamMembers}
               deals={deals} dealsLoading={dealsLoading}
               dealForm={dealForm} setDealForm={setDealForm}
@@ -5787,6 +5837,11 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {/* LISTINGS TAB (extracted) */}
           {tab === "Listings" && (
             <ListingsTab
+              /* The access model decides on department and seniority. Without
+                 them viewerFrom falls back to inferring a department from a job
+                 title, which makes everybody sales — so an HR manager opening
+                 this tab was treated as a sales manager. */
+              myDepartment={myDepartment} mySeniority={mySeniority}
               teamMembers={teamMembers}
               listings={listings} listingsLoading={listingsLoading}
               listingForm={listingForm} setListingForm={setListingForm}

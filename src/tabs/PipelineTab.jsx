@@ -65,6 +65,7 @@ const card  = { background: "rgba(255,255,255,0.02)", border: `1px solid ${T.bor
 const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7, textTransform: "uppercase" };
 
 export default function PipelineTab({
+  myDepartment, mySeniority,
   deals = [], dealsLoading, orgName, orgRole, userRole, orgId,
   firebaseUser, userName, teamMembers = [],
 }) {
@@ -75,8 +76,9 @@ export default function PipelineTab({
      lets CONVEYANCING see every deal in the company from staff level — a
      transaction coordinator has no "own" deals, their job is the document queue
      — and what keeps HR out of here entirely. */
-  const me      = useMemo(() => viewerFrom({ firebaseUser, orgRole, userRole, teamMembers }),
-                          [firebaseUser, orgRole, userRole, teamMembers]);
+  const me      = useMemo(() => viewerFrom({ firebaseUser, orgRole, userRole, teamMembers,
+                                             department: myDepartment, seniority: mySeniority }),
+                          [firebaseUser, orgRole, userRole, teamMembers, myDepartment, mySeniority]);
   const scope   = scopeFor(me, "deals");
   const intent  = intentFor(me, "deals");
   const moneyScope = scopeFor(me, "money");

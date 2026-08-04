@@ -11,7 +11,8 @@ import { tabCopy } from "../data/tabCopy";
 import { canAdvertise, listingCompliance, complianceProgress,
          PORTALS as COMPLIANT_PORTALS, POSTED_NOTE } from "../crm/model/listing";
 import { viewerFrom, scopeFor, intentFor, visibleRecords } from "../crm/model/org";
-function ListingsTab({ liveNeighbourhoods=[],
+function ListingsTab({
+  myDepartment, mySeniority, liveNeighbourhoods=[],
   listings, listingsLoading,
   listingForm, setListingForm,
   listingFormLoading, setListingFormLoading,
@@ -28,7 +29,8 @@ function ListingsTab({ liveNeighbourhoods=[],
             /* Scope from the model. This is what lets the LISTINGS COORDINATOR
                see every listing in the company from staff level — permits and
                Form A are their whole job — while an agent sees their own. */
-            const me     = viewerFrom({ firebaseUser, orgRole, userRole, teamMembers });
+            const me     = viewerFrom({ firebaseUser, orgRole, userRole, teamMembers,
+                                        department: myDepartment, seniority: mySeniority });
             const scope  = scopeFor(me, "listings");
             const intent = intentFor(me, "listings");
             const isAgent   = scope === "own";
