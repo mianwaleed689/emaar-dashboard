@@ -68,18 +68,26 @@ service cloud.firestore {
     function userOrgId() { return getUserData().orgId; }
     function isSameOrg(orgId) { return isAuthed() && userOrgId() == orgId; }
     function isAssignedAgent(assignedTo) { return isAuthed() && uid() == assignedTo; }
+    /* THE THIRD TIME THIS EXACT OMISSION HAS SURFACED.
+       'owner' and 'director' were missing from this list, so the two most
+       senior people in an agency did not "have CRM" and could not create a
+       lead, a deal or a viewing. The same words were missing from isManager(),
+       which locked an owner out of their own pipeline, and from the tab gates
+       written as `orgRole === "manager"`, which told them "Manager access
+       only". Found this time by seeding a demo agency: the founder could build
+       the company and then could not give it a single lead.
+
+       An agency owner has the CRM by definition. They bought it. */
     function hasCRM() {
       return isAuthed() && (
-        getUserData().crmPlan == 'crm_free' ||
-        getUserData().crmPlan == 'crm_pro' ||
-        getUserData().crmPlan == 'crm_enterprise' ||
-        getUserData().orgRole == 'manager' ||
-        getUserData().orgRole == 'agent' ||
-        getUserData().tier == 'pro' ||
-        getUserData().tier == 'enterprise' ||
-        getUserData().tier == 'pro_trial' ||
-        getUserData().role == 'manager' ||
-        getUserData().role == 'agent' ||
+        ('orgRole' in getUserData() &&
+          getUserData().orgRole in ['owner', 'director', 'manager', 'agent']) ||
+        ('role' in getUserData() &&
+          getUserData().role in ['manager', 'agent']) ||
+        ('crmPlan' in getUserData() &&
+          getUserData().crmPlan in ['crm_free', 'crm_pro', 'crm_enterprise']) ||
+        ('tier' in getUserData() &&
+          getUserData().tier in ['pro', 'enterprise', 'pro_trial']) ||
         isAdmin()
       );
     }
