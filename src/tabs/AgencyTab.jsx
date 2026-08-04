@@ -9,6 +9,7 @@ import React from "react";
    that made the Pipeline tab unable to save anything. */
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
+import { viewerFrom, canSeePay } from "../crm/model/org";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { cleanPhone } from "../utils/helpers";
@@ -169,6 +170,17 @@ function AgencyTab({
                written as an owner — which is what they are — the literal check
                locked them out of their own agency. */
             const isManager = orgRole === "owner" || orgRole === "director" || orgRole === "manager";
+
+            /* canSeePay is the model's answer to who may look at what people
+               earn — HR, finance and management. A sales manager runs a team;
+               they do not set the agency's commission structure. */
+            const _mine = (teamMembers || []).find(m => (m.uid || m.id) === firebaseUser?.uid);
+            const maySeeSplits = canSeePay(viewerFrom({
+              firebaseUser, orgRole,
+              department: _mine?.department, seniority: _mine?.seniority }));
+            const rowCols = maySeeSplits
+              ? "minmax(120px,1fr) 90px 110px 110px 110px 75px 36px"
+              : "minmax(120px,1fr) 90px 110px 110px 75px 36px";
 
             /* SOMEBODY WITH NO AGENCY IS NOT SOMEBODY WITHOUT PERMISSION.
                An individual who signed up through the landing page has no orgId,
@@ -380,8 +392,8 @@ function AgencyTab({
                 </div>
 
                 {/* Column headers */}
-                <div style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660, gap:8, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
-                  <div>Agent</div><div>Role</div><div>RERA Card</div><div>Expiry</div><div>Comm Split</div><div>Leads</div><div></div>
+                <div style={{ display:"grid", gridTemplateColumns:rowCols, minWidth:660, gap:8, padding:"8px 18px", fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8, borderBottom:`1px solid ${T.border}` }}>
+                  <div>Agent</div><div>Role</div><div>RERA Card</div><div>Expiry</div>{maySeeSplits && <div>Comm Split</div>}<div>Leads</div><div></div>
                 </div>
 
                 {agents.length === 0 ? (
@@ -397,7 +409,7 @@ function AgencyTab({
                   const isChanging   = agentRoleChanging[agent.uid] || false;
 
                   return (
-                    <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:"minmax(120px,1fr) 90px 110px 110px 110px 75px 36px", minWidth:660, gap:8, padding:"13px 18px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
+                    <div key={agent.uid} style={{ display:"grid", gridTemplateColumns:rowCols, minWidth:660, gap:8, padding:"13px 18px", alignItems:"center", borderBottom:`1px solid ${T.border}`, background:i%2===0?"transparent":"rgba(255,255,255,0.01)" }}>
 
                       {/* Agent info */}
                       <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:0 }}>
@@ -437,7 +449,13 @@ function AgencyTab({
                         )}
                       </div>
 
-                      {/* Commission split */}
+                      {/* Commission split — pay, and gated as pay.
+                          This tab is open to anybody whose orgRole is "manager",
+                          which in a real agency is the marketing manager and the
+                          HR manager as much as a sales manager. Verified on the
+                          seeded company: the marketing manager could read every
+                          agent's split. */}
+                      {maySeeSplits && (
                       <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                         <input type="number" min="0" max="100"
                           value={commSplits[agent.uid] ?? 50}
@@ -449,6 +467,7 @@ function AgencyTab({
                           {isSaving ? "..." : "Save"}
                         </button>
                       </div>
+                      )}
 
                       {/* Lead count */}
                       <div style={{ fontSize:12, fontWeight:600, color:agentLeads>0?T.textPrimary:T.textMuted, textAlign:"center" }}>
