@@ -334,8 +334,17 @@ service cloud.firestore {
        was, so it should not be editable by a colleague. Managers and above may
        reassign or correct one, because cover is a real thing. */
     match /viewings/{viewingId} {
+      /* An agent's own viewing is theirs, without an organisation lookup.
+         The agent's listener queries `where agentId == me`, but the only read
+         condition was isSameOrg(), which resolves the reader's orgId through a
+         document fetch — so the subscription came back permission-denied at
+         least once per session, and onSnapshot does not retry a refused
+         subscription. Owning the record is the simpler and truer condition, and
+         it matches the query the app actually makes. */
       allow read: if isAuthed() && (
-        isSuperAdmin() || isSameOrg(resource.data.orgId)
+        isSuperAdmin() ||
+        ('agentId' in resource.data && resource.data.agentId == uid()) ||
+        isSameOrg(resource.data.orgId)
       );
       allow create: if isAuthed() && (
         isSuperAdmin() || isSameOrg(request.resource.data.orgId)
