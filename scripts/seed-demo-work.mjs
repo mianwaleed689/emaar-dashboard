@@ -212,7 +212,7 @@ agents.slice(0, 80).forEach((a, i) => {
     const done = past && rnd() > 0.5;
     viewings.push({ _c: "viewings", data: {
       leadName: `${pick(FIRST)} ${pick(LAST)}`,
-      property: `${pick(BUILDINGS)}, unit ${int(1,40)}0${int(1,9)}`,
+      propertyName: `${pick(BUILDINGS)}, unit ${int(1,40)}0${int(1,9)}`,
       community: pick(AREAS),
       at, agentId: a.uid, agentName: a.name, orgId: ORG_ID,
       outcome: done ? pick(["Went ahead","No show","Cancelled"]) : null,

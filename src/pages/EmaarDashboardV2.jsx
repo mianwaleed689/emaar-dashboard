@@ -2285,6 +2285,13 @@ export default function EmaarDashboardV2() {
            — it is about records, not about whose job it is. */
         if (t.key === "My Leads" && myDepartment === "listings") return false;
         if (t.key === "Access") return canAdministerAccounts(navViewer);
+        /* Marketing is a company function, not an agent's. Gating it on the
+           listings scope let every agent in, because a sales agent holds their
+           own listings — so an agent was offered channel ROI for their own
+           three leads. Department is the right question here. */
+        if (t.key === "Marketing")
+          return myDepartment === "listings" || myDepartment === "management"
+              || orgRole === "owner" || orgRole === "director";
         const area = NEEDS[t.key];
         return !area || scopeFor(navViewer, area) !== "none";
       })}))
