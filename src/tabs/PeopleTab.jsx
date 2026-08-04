@@ -64,13 +64,18 @@ const LEVEL_COLOUR = { expired: "#EF4444", urgent: "#EF4444", soon: "#F59E0B", w
 
 export default function PeopleTab({
   teamMembers = [], deals = [], orgProfile = null,
+  myDepartment, mySeniority,
   firebaseUser, orgRole, userRole, orgName, orgId, userName,
 }) {
   const me = useMemo(() => ({
     id: firebaseUser?.uid || "",
     orgRole, platformAdmin: userRole === "admin" || userRole === "superAdmin",
-    department: undefined, seniority: undefined,   // inferred from orgRole for now
-  }), [firebaseUser, orgRole, userRole]);
+    /* Read from the person's record rather than inferred from a job title. The
+       inference makes every manager "sales", so the HR manager failed
+       canSeePay and the Payroll section vanished from the one department it is
+       for. Same gap the other CRM tabs had. */
+    department: myDepartment, seniority: mySeniority,
+  }), [firebaseUser, orgRole, userRole, myDepartment, mySeniority]);
 
   const scope  = scopeFor(me, "people");
   const intent = intentFor(me, "people");
@@ -200,7 +205,7 @@ export default function PeopleTab({
 
       <div style={{ padding: "12px 4px" }}>
         {section === "payroll" && canSeePay(me) && (
-          <Payroll people={visible} deals={deals} me={me} orgProfile={orgProfile}/>
+          <Payroll people={visible} deals={deals} me={me} orgProfile={orgProfile} orgId={orgId}/>
         )}
 
         {section === "directory" && (
@@ -705,7 +710,7 @@ const Empty = ({ what }) => (
  * gated on canSeePay() — HR, finance and management — the same gate the rest of
  * this tab uses.
  */
-function Payroll({ people, deals, me, orgProfile }) {
+function Payroll({ people, deals, me, orgProfile, orgId }) {
   const now = new Date();
   const [year, setYear]   = React.useState(now.getFullYear());
   const [month, setMonth] = React.useState(now.getMonth() + 1);
@@ -754,7 +759,11 @@ function Payroll({ people, deals, me, orgProfile }) {
     sickHalfPayDays: Number(p.sickHalfPayDays) || 0,
     deductions: Array.isArray(p.deductions) ? p.deductions : [],
     labourCardNo: p.labourCardNo || "", iban: p.iban || "", agentId: p.agentId || "",
-  })), [people]);
+  /* payById belongs in here. Without it the memo is computed once, before the
+     pay subscription has delivered anything, and never again — so every salary
+     rendered as zero while the data sat in state beside it. The same stale
+     dependency that made a manager's lead filter run against an empty team. */
+  })), [people, payById]);
 
   const run = React.useMemo(
     () => payrollRun(staff, linesByPerson, { year, month }),

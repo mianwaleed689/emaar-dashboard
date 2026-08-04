@@ -5853,6 +5853,7 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
           {tab === "People" && (
             <PeopleTab
               teamMembers={teamMembers} deals={deals} orgProfile={orgProfile}
+              myDepartment={myDepartment} mySeniority={mySeniority}
               firebaseUser={firebaseUser} orgRole={orgRole} userRole={userRole}
               orgId={orgId} orgName={orgProfile?.name} userName={userName}
             />
