@@ -5,6 +5,18 @@ import puppeteer from "puppeteer-core";
 
 const b = await puppeteer.connect({ browserURL: "http://127.0.0.1:9222", defaultViewport: null });
 const p = (await b.pages()).find(x => x.url().includes("localhost:3000"));
+if (!p) { console.error("no localhost:3000 page open — start the app first"); process.exit(1); }
+
+/* PUT THE PAGE WHERE THE CLAIMS LIVE, RATHER THAN HOPING IT IS THERE.
+   This swept whatever URL happened to be open. Left on /admin by another
+   script, it reported "0 claims held, 11 failed" — eleven flat contradictions
+   of working code, and I committed a message quoting a green run while that
+   red one was on screen. A check that depends on where somebody left the
+   browser is not a check. */
+if (!p.url().includes("/dashboard")) {
+  await p.goto("http://localhost:3000/dashboard", { waitUntil: "domcontentloaded", timeout: 120000 });
+  await new Promise(r => setTimeout(r, 12000));
+}
 await p.bringToFront();
 await p.setViewport({ width: 1290, height: 823 });   // the window it gets judged in
 
