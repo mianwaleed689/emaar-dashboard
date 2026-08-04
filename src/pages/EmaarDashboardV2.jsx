@@ -4186,17 +4186,23 @@ const teamOrgId = orgId || "";
      expressible when the splits are a map on the organisation record. */
   useEffect(() => {
     if (!isLoggedIn || !firebaseUser || !orgId) return;
-    const unsub = onSnapshot(
-      collection(db, "organisations", orgId, "commissionSplits"),
-      snap => {
-        if (snap.empty) return;                       // keep the legacy map
-        const next = {};
-        snap.forEach(d => { next[d.id] = d.data()?.pct; });
-        setCommSplits(prev => ({ ...prev, ...next }));
-      },
-      err => console.warn("[commissionSplits]", err?.code || err));
+    /* A manager may LIST the agency's splits; an agent may read only their
+       own document. Subscribing the whole collection for everybody produced a
+       permission-denied for every agent — caught by the tab sweep, which is
+       what it is for. */
+    const managesOrg = orgRole === "owner" || orgRole === "director" ||
+                       orgRole === "manager" || userRole === "admin" || userRole === "superAdmin";
+    const target = managesOrg
+      ? collection(db, "organisations", orgId, "commissionSplits")
+      : doc(db, "organisations", orgId, "commissionSplits", firebaseUser.uid);
+    const unsub = onSnapshot(target, snap => {
+      const next = {};
+      if (managesOrg) { if (snap.empty) return; snap.forEach(d => { next[d.id] = d.data()?.pct; }); }
+      else { if (!snap.exists()) return; next[snap.id] = snap.data()?.pct; }
+      setCommSplits(prev => ({ ...prev, ...next }));
+    }, err => console.warn("[commissionSplits]", err?.code || err));
     return () => unsub();
-  }, [isLoggedIn, firebaseUser, orgId]);
+  }, [isLoggedIn, firebaseUser, orgId, orgRole, userRole]);
 
   /* —” ORG PROFILE LISTENER (Session 8) —” */
   useEffect(() => {
