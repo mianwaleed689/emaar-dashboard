@@ -17,6 +17,13 @@ import { responseTime, responseReport } from "../crm/model/intake";
 import { viewerFrom, scopeFor, intentFor, visibleRecords, canSeeClientContact } from "../crm/model/org";
 import { diary, statusOf, newViewing, OUTCOMES, VERDICTS, FEEDBACK_PROMPT } from "../crm/model/viewing";
 import NationalitySelect from "../components/NationalitySelect";
+/* THE SCREEN IS BUILT FROM THE SYSTEM NOW, NOT FROM GUESSES.
+   Measured before this: 1,672 text nodes at 10px and 670 at 9px on this one
+   tab, eleven text colours, and 8,195 of 8,615 clickable things under 32px
+   tall — on the screen an agent reads all day. See src/design/system.js. */
+import { colour as C, type as TY, space as S, radius as R, state as ST, surface } from "../design/system";
+import { useSystemCSS, useViewport, PageHead, Card, Figure, FigureRow, Btn, Chip, Dot,
+         Field, Input, Select, Toolbar, DataList, Empty, Toast as DsToast, Sheet } from "../design/ui";
 
 //  PIPELINE 
 const PIPELINE = [
@@ -167,96 +174,131 @@ const BUDGET_LABEL = {
   "3to5m":"AED 3M – 5M", "5to10m":"AED 5M – 10M", above10m:"Above AED 10M",
 };
 
+/* ── WHAT COLOUR IS ALLOWED TO MEAN ────────────────────────────────────────
+   PIPELINE above gives all eleven stages a colour of their own: red, blue,
+   green, amber, purple, grey, WhatsApp green, teal, gold. On a list of forty
+   leads that is a bag of sweets, and none of it tells an agent anything —
+   because a STAGE is a category, not a state. "Potential" is not good news
+   and "No Answer" is not bad news; they are places on a board.
+
+   The state on this screen is URGENCY, which attention() already works out and
+   already says in words. So urgency carries the colour, and stage is a plain
+   chip. The two exceptions are the two terminal facts an owner scans for: a
+   deal won and a deal lost.
+
+   The result is a screen where anything coloured is worth looking at. */
+const STAGE_TONE = { "Closed Deal": "positive", "Closed Outside": "critical" };
+const stageTone = s => STAGE_TONE[s] || "neutral";
+
+/** A viewing's status, on the same four-tone scale. statusOf() decides; this
+    only paints — so a viewing nobody has closed off reads the same red as a
+    lead nobody has called. */
+const viewingTone = st => st?.key === "unclosed" ? "critical"
+                        : st?.needsFeedback      ? "warning"
+                        : st?.key === "done"     ? "positive"
+                        : st?.key === "scheduled"? "info" : "neutral";
+
+/** Urgency, on the four-tone scale. attention() ranks; this only paints. */
+const attentionTone = l => {
+  const r = attention(l).rank;
+  if (r <= 1) return "critical";
+  if (r <= 3) return "warning";
+  if (r === 9) return "neutral";
+  return "positive";
+};
+
 /** A filter that is on, and can be taken off where it sits. */
 const FilterChip = ({ label, onClear }) => (
   <button type="button" onClick={onClear} title="Remove this filter"
-    style={{fontSize:10.5,padding:"2px 9px",borderRadius:10,cursor:"pointer",
-            background:"rgba(212,168,67,0.14)",border:"1px solid rgba(212,168,67,0.35)",
-            color:T.gold,fontFamily:"'Outfit',sans-serif"}}>
-    {label} ✕
+    className="ds-btn ds-focus"
+    style={{display:"inline-flex",alignItems:"center",gap:7,padding:"5px 12px",
+            borderRadius:R.pill,cursor:"pointer",background:C.accentSoft,
+            border:`1px solid ${C.accentLine}`,color:C.accent,
+            fontFamily:TY.small.fontFamily,fontSize:12.5,fontWeight:600,minHeight:30}}>
+    {label} <span aria-hidden style={{opacity:.75}}>✕</span>
   </button>
 );
 
-const FilterPill = ({ on, onClick, colour, tip, children }) => (
+const FilterPill = ({ on, onClick, tip, children }) => (
   <button type="button" onClick={onClick} title={tip}
-    style={{padding:"5px 11px",borderRadius:13,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-            border:"1px solid "+(on?(colour||T.gold):T.border),fontSize:11,
-            fontWeight:on?700:500,whiteSpace:"nowrap",
-            background:on?(colour||T.gold)+"1F":"transparent",
-            color:on?(colour||T.gold):T.textMuted}}>
+    className="ds-btn ds-focus"
+    style={{padding:`0 ${S.md}px`,minHeight:34,borderRadius:R.pill,cursor:"pointer",
+            fontFamily:TY.small.fontFamily,fontSize:13,fontWeight:on?700:500,whiteSpace:"nowrap",
+            border:`1px solid ${on?C.accentLine:C.line}`,
+            background:on?C.accentSoft:"transparent",
+            color:on?C.accent:C.textMuted}}>
     {children}
   </button>
 );
 
 const Picker = ({ label, value, onChange, options }) => (
-  <div style={{flex:"1 1 160px",minWidth:150}}>
-    <div style={{fontSize:9.5,fontWeight:700,color:T.textMuted,letterSpacing:.7,
-                 textTransform:"uppercase",marginBottom:4}}>{label}</div>
-    <select value={value} onChange={e=>onChange(e.target.value)}
-      style={{width:"100%",padding:"6px 9px",background:"rgba(255,255,255,0.04)",
-              border:"1px solid "+(value!=="all"?T.gold:T.border),borderRadius:7,
-              color:value!=="all"?T.gold:T.textSecondary,fontSize:11.5,outline:"none",
-              fontFamily:"'Outfit',sans-serif",cursor:"pointer"}}>
-      {options.map(([v,l])=><option key={v} value={v}>{l}</option>)}
-    </select>
+  <div style={{flex:"1 1 180px",minWidth:170}}>
+    <Field label={label}>
+      <Select value={value} onChange={onChange}>
+        {options.map(([v,l])=><option key={v} value={v}>{l}</option>)}
+      </Select>
+    </Field>
   </div>
 );
 
-//  ATOMS 
-const PBadge = ({status}) => {
-  const p=PIPELINE.find(x=>x.key===status)||PIPELINE[1];
-  return <span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:p.bg,color:p.color,fontWeight:700,whiteSpace:"nowrap"}}>{status||"New Lead"}</span>;
-};
+//  ATOMS
+const PBadge = ({status}) => (
+  <Chip tone={stageTone(status)} title={STAGE_MEANING[status]||""}>{status||"New Lead"}</Chip>
+);
 
 /* A progress bar filled to an invented percentage told an agent nothing they
    could act on or repeat. The reason itself is shorter to read and is the
    instruction. */
 const WhyNow = ({lead}) => {
-  const a=attention(lead);
+  const a=attention(lead), t=ST[attentionTone(lead)];
   return <span title="Why this lead sits where it does in the list"
-    style={{fontSize:10,color:a.color,fontWeight:a.urgent?700:500,whiteSpace:"nowrap",
-            overflow:"hidden",textOverflow:"ellipsis",display:"block"}}>
-    {a.urgent?"● ":""}{a.reason}
+    style={{...TY.small,fontSize:13,color:a.urgent?t.fg:C.textMuted,
+            fontWeight:a.urgent?600:400,display:"flex",alignItems:"center",gap:6,minWidth:0}}>
+    {a.urgent&&<Dot tone={attentionTone(lead)}/>}
+    <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.reason}</span>
   </span>;
 };
 
 const EyePhone = ({phone}) => {
   const [show,setShow]=useState(false);
-  return <span style={{display:"inline-flex",alignItems:"center",gap:4}}>
-    <span style={{fontSize:11,color:T.textSecondary,fontFamily:"monospace"}}>{show?phone:maskPhone(phone)}</span>
-    <button type="button" onClick={e=>{e.stopPropagation();setShow(v=>!v);}} style={{background:"none",border:"none",cursor:"pointer",color:T.textMuted,padding:"1px 3px",display:"inline-flex"}}>
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{show?<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
+  return <span style={{display:"inline-flex",alignItems:"center",gap:6}}>
+    <span style={{...TY.numeric,fontSize:14,color:C.text,letterSpacing:.2}}>{show?phone:maskPhone(phone)}</span>
+    <button type="button" title={show?"Hide the number":"Show the number"}
+      onClick={e=>{e.stopPropagation();setShow(v=>!v);}} className="ds-btn ds-focus"
+      style={{background:"none",border:"none",cursor:"pointer",color:C.textMuted,
+              padding:6,display:"inline-flex",borderRadius:R.control}}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{show?<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}</svg>
     </button>
   </span>;
 };
 
-const Lbl = ({children}) => <div style={{fontSize:10,color:T.textMuted,marginBottom:4,fontWeight:600,textTransform:"uppercase",letterSpacing:0.5}}>{children}</div>;
+const Lbl = ({children}) => (
+  <div style={{...TY.label,color:C.textMuted,marginBottom:6}}>{children}</div>
+);
 const Inp = ({value,onChange,placeholder,type="text",disabled=false}) => (
-  <input type={type} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder} disabled={disabled}
-    style={{width:"100%",padding:"8px 10px",background:disabled?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:T.white,fontSize:12,outline:"none",boxSizing:"border-box",fontFamily:"'Outfit',sans-serif"}}/>
+  <Input value={value} onChange={onChange} placeholder={placeholder} type={type} disabled={disabled}/>
 );
 const Sel = ({value,onChange,children,disabled=false}) => (
-  <select value={value||""} onChange={e=>onChange(e.target.value)} disabled={disabled}
-    style={{width:"100%",padding:"8px 10px",background:disabled?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.04)",border:"1px solid "+T.border,borderRadius:7,color:T.white,fontSize:12,outline:"none",fontFamily:"'Outfit',sans-serif"}}>
-    {children}
-  </select>
+  <Select value={value||""} onChange={onChange} disabled={disabled}>{children}</Select>
 );
 
-const Section = ({icon,title,sub,color,open,onToggle,children}) => (
-  <div style={{background:"rgba(255,255,255,0.02)",border:"1px solid "+T.border,borderRadius:10,marginBottom:10,overflow:"hidden"}}>
-    <div style={{padding:"11px 14px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",borderBottom:open?"1px solid "+T.border:"none"}} onClick={onToggle}>
-      {/* Every caller passes icon="" — this rendered three empty coloured squares.
-          A bar in the section's colour reads as deliberate; a blank box does not. */}
-      <div style={{width:icon?28:3,height:28,borderRadius:icon?6:2,background:color+(icon?"18":"AA"),display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-        {icon?<span style={{fontSize:14}}>{icon}</span>:null}
-      </div>
-      <div style={{flex:1}}>
-        <div style={{fontSize:12,fontWeight:700,color:T.white}}>{title}</div>
-        {sub&&<div style={{fontSize:10,color:T.textMuted,marginTop:1}}>{sub}</div>}
-      </div>
-      <div style={{color:T.textMuted,fontSize:12,transition:"transform 0.2s",transform:open?"rotate(90deg)":"none"}}>▸</div>
-    </div>
-    {open&&<div style={{padding:"14px"}}>{children}</div>}
+/* A disclosure. The old one drew a coloured square that every caller left
+   empty, so three blank boxes sat down the side of the panel. */
+const Section = ({title,sub,open,onToggle,children}) => (
+  <div style={{...surface(),marginBottom:S.md,overflow:"hidden"}}>
+    <button type="button" onClick={onToggle} aria-expanded={open}
+      className="ds-btn ds-focus"
+      style={{width:"100%",display:"flex",alignItems:"center",gap:S.md,textAlign:"left",
+              padding:`${S.md}px ${S.base}px`,minHeight:48,cursor:"pointer",background:"none",
+              border:"none",borderBottom:open?`1px solid ${C.line}`:"none"}}>
+      <span style={{flex:1,minWidth:0}}>
+        <span style={{...TY.section,color:C.text,display:"block"}}>{title}</span>
+        {sub&&<span style={{...TY.small,color:C.textMuted,display:"block",marginTop:2}}>{sub}</span>}
+      </span>
+      <span aria-hidden style={{color:C.textMuted,fontSize:13,transition:"transform .18s",
+                                transform:open?"rotate(90deg)":"none"}}>▸</span>
+    </button>
+    {open&&<div style={{padding:S.base}}>{children}</div>}
   </div>
 );
 
@@ -271,6 +313,11 @@ export default function MyLeadsTab({
   selectedLead, setSelectedLead,
   handleTabChange,
 }) {
+  /* The design system's stylesheet — hover, focus rings and the phone rules,
+     none of which can be expressed as an inline style. Injected once however
+     many screens use it. `phone` decides list versus cards. */
+  useSystemCSS();
+  const { phone } = useViewport();
 
   /* WHO IS LOOKING, AND HOW MUCH OF THE DESK THEY SEE.
      ─────────────────────────────────────────────────────────────────────────
@@ -694,159 +741,142 @@ try{
   /* Departments that have no business with leads — Accounts, HR, IT — are told
      so plainly rather than shown an empty desk that looks like a fault. */
   if(!canSee) return (
-    <div style={{padding:"70px 20px",textAlign:"center"}}>
-      <div style={{fontSize:15,fontWeight:700,color:T.white,marginBottom:7,fontFamily:"'Fraunces',serif"}}>
-        Leads are not part of your role
-      </div>
-      <div style={{fontSize:12,color:T.textSecondary,maxWidth:430,margin:"0 auto",lineHeight:1.7}}>
-        This desk belongs to the sales floor. If that is wrong, your department is
-        set incorrectly on your record — HR or your manager can change it.
-      </div>
+    <div className="ds-root" style={{padding:`${S.page}px ${S.lg}px`}}>
+      <Empty title="Leads are not part of your role"
+        what="This desk belongs to the sales floor. If that is wrong, your department is set incorrectly on your record — HR or your manager can change it."/>
     </div>
   );
 
 
   return (
-    <div style={{paddingBottom:80}}>
+    <div className="ds-root" style={{paddingBottom:S.page,maxWidth:1560}}>
 
       {/*  WHAT THIS TAB IS  ─────────────────────────────────────────────────
-          TAB_CLARITY.md check 1: a reader must learn what the thing IS before
-          meeting a single control. This tab opened straight onto nine filter
-          chips, eleven stage pills and five dropdowns, and explained none of
-          them. An agent joining the agency could not tell you the difference
-          between "Hot Case", "Potential" and "EOI".                          */}
-      <div style={{padding:"14px 4px 12px",borderBottom:"1px solid "+T.border}}>
-        <div style={{display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap",marginBottom:6}}>
-          {/* The title says whose desk this is. An owner opening a screen headed
-              "My leads" that in fact holds the whole agency's is being told
-              something untrue about what they are looking at. */}
-          <h2 style={{margin:0,fontSize:17,fontWeight:800,color:T.white,fontFamily:"'Fraunces',serif"}}>
-            {intent?.title || "Leads"}
-          </h2>
-          <button type="button" onClick={()=>setShowHelp(v=>!v)}
-            style={{background:"none",border:"1px solid "+T.border,borderRadius:14,padding:"3px 11px",
-                    color:showHelp?T.gold:T.textSecondary,fontSize:11,cursor:"pointer",
-                    fontFamily:"'Outfit',sans-serif"}}>
-            {showHelp?"Hide the guide":"What do these mean?"}
-          </button>
-        </div>
-        <div style={{fontSize:12,color:T.textSecondary,lineHeight:1.6,maxWidth:760}}>
-          {intent?.question} {scope==="own"
-            ? "These are the leads assigned to you."
+          One title, not two. The page used to print its heading at 17px and the
+          sentence explaining it at 12px, then hand the reader nine filter chips,
+          eleven stage pills and five dropdowns — all at 9 to 11px.
+
+          The title says whose desk this is: an owner opening a screen headed
+          "My leads" that in fact holds the whole agency's is being told
+          something untrue about what they are looking at.                    */}
+      <PageHead
+        title={intent?.title || "Leads"}
+        count={allLeads.length
+          ? `${allLeads.length.toLocaleString()} ${allLeads.length===1?"lead":"leads"}${kHot?` · ${kHot} need a call`:""}`
+          : null}
+        question={`${scope==="own"
+            ? "The leads assigned to you."
             : scope==="team"
-            ? "These are your team's leads — everyone who reports to you, and your own."
-            : "Every enquiry the agency has taken."}{" "}
-          The list is your own data — nothing here comes from the Land Department
-          or any portal, and nothing is estimated or predicted.
-        </div>
+            ? "Your team's leads — everyone who reports to you, and your own."
+            : "Every enquiry the agency has taken."} Your own data: nothing here comes from the Land Department or any portal, and nothing is estimated or predicted.`}
+        action={<>
+          <Btn onClick={()=>setShowHelp(v=>!v)}>
+            {showHelp?"Hide the guide":"What do these mean?"}
+          </Btn>
+          {allLeads.length>0&&<Btn variant="primary" onClick={()=>setShowAdd(true)}
+            title="Record a new enquiry">+ Add a lead</Btn>}
+        </>}>
 
         {showHelp&&(
-          <div style={{marginTop:12,display:"flex",gap:12,flexWrap:"wrap"}}>
+          <div style={{marginTop:S.lg,display:"grid",gap:S.md,
+                       gridTemplateColumns:"repeat(auto-fit, minmax(320px, 1fr))"}}>
 
-            {/* Check 10: an agent's last question is always "so what do I do?" */}
-            <div style={{flex:"1 1 330px",minWidth:280,background:"rgba(255,255,255,0.02)",
-                         border:"1px solid "+T.border,borderRadius:10,padding:"12px 14px"}}>
-              <div style={{fontSize:9.5,fontWeight:700,color:T.textMuted,letterSpacing:.7,
-                           textTransform:"uppercase",marginBottom:7}}>How the order is decided</div>
-              <div style={{fontSize:11.5,color:T.textSecondary,lineHeight:1.6,marginBottom:8}}>
-                Choose <b style={{color:T.white}}>Call order</b> in the sort box and the list
+            <Card title="How the order is decided">
+              <p style={{...TY.small,color:C.textMuted,margin:`0 0 ${S.md}px`}}>
+                Choose <b style={{color:C.text}}>Call order</b> in the sort box and the list
                 works top to bottom, in this order:
-              </div>
-              <ol style={{margin:0,paddingLeft:17,fontSize:11.5,color:T.textSecondary,lineHeight:1.75}}>
+              </p>
+              <ol style={{margin:0,paddingLeft:20,...TY.small,color:C.text,lineHeight:1.85}}>
                 {CALL_ORDER.map(r=><li key={r}>{r}</li>)}
               </ol>
-              <div style={{fontSize:10.5,color:T.textMuted,lineHeight:1.6,marginTop:9,
-                           borderTop:"1px solid "+T.border,paddingTop:8}}>
+              <p style={{...TY.small,color:C.textFaint,margin:`${S.md}px 0 0`,paddingTop:S.md,
+                         borderTop:`1px solid ${C.line}`}}>
                 That is the whole rule. There is no score, no model and no prediction of
                 who will buy — every lead simply carries the reason it sits where it does,
                 in words, on its own row.
-              </div>
-            </div>
+              </p>
+            </Card>
 
-            {/* Check 9: the meanings are one click away, not in anybody's head. */}
-            <div style={{flex:"1 1 330px",minWidth:280,background:"rgba(255,255,255,0.02)",
-                         border:"1px solid "+T.border,borderRadius:10,padding:"12px 14px"}}>
-              <div style={{fontSize:9.5,fontWeight:700,color:T.textMuted,letterSpacing:.7,
-                           textTransform:"uppercase",marginBottom:7}}>What each stage means</div>
-              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+            {/* The meanings are one click away, not in anybody's head. The dots
+                that used to sit here were eleven different colours; the stage
+                is a category, so it no longer pretends to be a state. */}
+            <Card title="What each stage means">
+              <dl style={{margin:0,display:"grid",gap:S.sm}}>
                 {PIPELINE.map(p=>(
-                  <div key={p.key} style={{display:"flex",gap:8,alignItems:"baseline"}}>
-                    <span style={{width:6,height:6,borderRadius:"50%",background:p.color,
-                                  display:"inline-block",flexShrink:0,transform:"translateY(-1px)"}}/>
-                    <span style={{fontSize:11,color:p.color,fontWeight:600,width:112,flexShrink:0}}>{p.key}</span>
-                    <span style={{fontSize:11,color:T.textSecondary,lineHeight:1.5}}>{STAGE_MEANING[p.key]}</span>
+                  <div key={p.key} style={{display:"flex",gap:S.md,alignItems:"baseline",flexWrap:"wrap"}}>
+                    <dt style={{...TY.smallStrong,color:C.text,width:118,flexShrink:0}}>{p.key}</dt>
+                    <dd style={{...TY.small,color:C.textMuted,margin:0,flex:"1 1 180px"}}>{STAGE_MEANING[p.key]}</dd>
                   </div>
                 ))}
-              </div>
-            </div>
+              </dl>
+            </Card>
 
-            {/* Check 3: say where the edge is before a customer finds it. */}
-            <div style={{flex:"1 1 100%",fontSize:10.5,color:T.textMuted,lineHeight:1.65,
-                         background:"rgba(255,255,255,0.015)",border:"1px solid "+T.border,
-                         borderRadius:10,padding:"11px 14px"}}>
-              <b style={{color:T.textSecondary}}>What this tab does not do.</b>{" "}
-              It does not tell you who is likely to buy — nobody can, and a platform that
-              claims to is guessing. It does not check whether a phone number is real, chase
-              anyone automatically, or read your calls. A lead only moves down the list when
-              somebody logs a call, a message or a viewing against it, so the order is only
-              as honest as the notes your team keeps. Budgets are what the client said, not
-              what they have been approved for by a bank.
+            <div style={{gridColumn:"1 / -1"}}>
+              <Card title="What this tab does not do">
+                <p style={{...TY.small,color:C.textMuted,margin:0}}>
+                  It does not tell you who is likely to buy — nobody can, and a platform that
+                  claims to is guessing. It does not check whether a phone number is real, chase
+                  anyone automatically, or read your calls. A lead only moves down the list when
+                  somebody logs a call, a message or a viewing against it, so the order is only
+                  as honest as the notes your team keeps. Budgets are what the client said, not
+                  what they have been approved for by a bank.
+                </p>
+              </Card>
             </div>
           </div>
         )}
-      </div>
+      </PageHead>
 
       {/* THIS WEEK — the diary an agent did not have.
           Shown whenever there is something in it, above the lead list, because
           a viewing at eleven matters more this morning than a lead list does. */}
       {myWeek.total > 0 && (
-        <div style={{margin:"12px 4px",padding:"13px 15px",borderRadius:12,
-                     background:"rgba(255,255,255,0.02)",
-                     border:`1px solid ${myWeek.unclosed?"rgba(239,68,68,0.3)":T.border}`}}>
-          <div style={{display:"flex",justifyContent:"space-between",gap:10,flexWrap:"wrap",marginBottom:9}}>
-            <span style={{fontSize:9.5,fontWeight:700,color:myWeek.unclosed?"#EF4444":T.gold,
-                          letterSpacing:.7,textTransform:"uppercase"}}>This week</span>
-            <span style={{fontSize:11,color:T.textSecondary}}>{myWeek.headline}</span>
-          </div>
-
+        <div style={{marginBottom:S.lg}}>
+        <Card title="This week" note={myWeek.headline} tone={myWeek.unclosed?"critical":undefined}>
           {myWeek.clashes.map((c,i)=>(
-            <div key={i} style={{fontSize:10.5,color:"#EF4444",lineHeight:1.55,marginBottom:6}}>{c.note}</div>
+            <p key={i} style={{...TY.small,color:ST.critical.fg,margin:`0 0 ${S.sm}px`}}>{c.note}</p>
           ))}
 
-          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{display:"flex",flexDirection:"column",gap:S.base}}>
             {myWeek.days.slice(0,4).map(day=>(
               <div key={day.date}>
-                <div style={{fontSize:9.5,color:T.textMuted,marginBottom:3}}>
+                <div style={{...TY.label,color:C.textMuted,marginBottom:S.sm}}>
                   {new Date(day.date).toLocaleDateString("en-AE",{weekday:"long",day:"2-digit",month:"short"})}
                 </div>
                 {/* Any viewing opens, not only overdue ones — a booked viewing has
                     to be cancellable and reschedulable, which was not possible at
                     all until now. */}
+                <div style={{display:"flex",flexDirection:"column",gap:2}}>
                 {day.items.map(v=>(
-                  <div key={v.id} onClick={()=>setWriteUp(v)}
-                    style={{display:"flex",gap:9,alignItems:"baseline",marginBottom:3,cursor:"pointer"}}>
-                    <span style={{fontSize:10.5,color:T.textSecondary,minWidth:44,flexShrink:0,
-                                  fontVariantNumeric:"tabular-nums"}}>
+                  <button key={v.id} type="button" onClick={()=>setWriteUp(v)}
+                    className="ds-row ds-focus ds-tap"
+                    title="Open this viewing"
+                    style={{display:"flex",gap:S.md,alignItems:"center",flexWrap:"wrap",
+                            width:"100%",textAlign:"left",minHeight:38,padding:`${S.sm}px ${S.sm}px`,
+                            background:"none",border:"none",borderRadius:R.control,cursor:"pointer"}}>
+                    <span style={{...TY.numeric,fontSize:14,color:C.textMuted,minWidth:52,flexShrink:0}}>
                       {new Date(v.at).toLocaleTimeString("en-AE",{hour:"2-digit",minute:"2-digit"})}
                     </span>
-                    <span style={{fontSize:11,color:T.white,minWidth:0}}>
+                    <span style={{...TY.small,color:C.text,minWidth:0,flex:"1 1 auto"}}>
                       {v.propertyName||"A property"}{v.leadName?` · ${v.leadName}`:""}
                     </span>
-                    <span style={{fontSize:10,color:v.status.colour,fontWeight:600,whiteSpace:"nowrap",marginLeft:"auto"}}>
+                    <Chip tone={viewingTone(v.status)} title={v.status.note}>
                       {v.status.label}
-                    </span>
-                  </div>
+                    </Chip>
+                  </button>
                 ))}
+                </div>
               </div>
             ))}
           </div>
 
           {myWeek.unclosed>0 && (
-            <div style={{fontSize:10.5,color:"#EF4444",marginTop:8,paddingTop:8,
-                         borderTop:`1px solid ${T.border}`,lineHeight:1.55}}>
+            <p style={{...TY.small,color:ST.critical.fg,margin:`${S.md}px 0 0`,paddingTop:S.md,
+                       borderTop:`1px solid ${C.line}`}}>
               Tap a viewing marked “Not written up” to close it off. {FEEDBACK_PROMPT}
-            </div>
+            </p>
           )}
+        </Card>
         </div>
       )}
 
@@ -867,126 +897,98 @@ try{
             search · the view · filters (with a count) · order · how to look
                                                                              */}
       {allLeads.length>0&&(
-      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",
-                   padding:"12px 4px",borderBottom:"1px solid "+T.border}}>
-
-        {/* SEARCH — first, because it is what people reach for first. */}
-        <div style={{flex:"1 1 240px",minWidth:200,display:"flex",alignItems:"center",gap:8,
-                     padding:"7px 12px",background:"rgba(255,255,255,0.03)",
-                     border:"1px solid "+(aiSearch?T.gold:T.border),borderRadius:8,cursor:"text"}}
-             onClick={()=>document.getElementById("crm-search")?.focus()}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="crm-search" value={aiSearch} onChange={e=>setAiSearch(e.target.value)}
-            placeholder="Search a name, a phone number, an area…"
-            style={{flex:1,background:"none",border:"none",outline:"none",color:T.white,
-                    fontSize:12,fontFamily:"'Outfit',sans-serif"}}/>
-          {aiSearch&&<button type="button" onClick={()=>setAiSearch("")} aria-label="Clear search"
-            title="Clear the search" style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:14}}>✕</button>}
+      <Toolbar>
+        {/* SEARCH — first, because it is what people reach for first, and wide
+            because a phone gives it the whole row. */}
+        <div style={{flex:"1 1 260px",minWidth:phone?"100%":220}}>
+          <Input value={aiSearch} onChange={setAiSearch}
+            placeholder="Search a name, a phone number, an area…"/>
         </div>
 
         {/* THE VIEW — one dropdown replacing nine chips. Same power, one control,
             and each option says what it means rather than relying on a word like
             "Stale" that every agency reads differently. */}
-        <select value={smartView} onChange={e=>{setSmartView(e.target.value);setActiveStage("all");}}
-          title="Which slice of the desk you are looking at"
-          style={{padding:"7px 10px",background:smartView!=="all"?"rgba(212,168,67,0.12)":"rgba(255,255,255,0.04)",
-                  border:"1px solid "+(smartView!=="all"?T.gold:T.border),borderRadius:8,
-                  color:smartView!=="all"?T.gold:T.textSecondary,fontSize:12,outline:"none",
-                  fontFamily:"'Outfit',sans-serif",fontWeight:smartView!=="all"?700:500,cursor:"pointer"}}>
-          {SMART_VIEWS.filter(v=>v.k!=="unassigned"||canManage).map(v=>(
-            <option key={v.k} value={v.k}>{v.l}{v.k==="hot"&&kHot?` (${kHot})`:""}{v.k==="unassigned"&&kUnassigned?` (${kUnassigned})`:""}</option>
-          ))}
-        </select>
+        <div style={{flex:"0 1 190px",minWidth:170}}>
+          <Select value={smartView} onChange={v=>{setSmartView(v);setActiveStage("all");}}>
+            {SMART_VIEWS.filter(v=>v.k!=="unassigned"||canManage).map(v=>(
+              <option key={v.k} value={v.k}>{v.l}{v.k==="hot"&&kHot?` (${kHot})`:""}{v.k==="unassigned"&&kUnassigned?` (${kUnassigned})`:""}</option>
+            ))}
+          </Select>
+        </div>
 
         {/* FILTERS — the eleven pills and four dropdowns, behind one button that
             says how many are on. Nothing is lost; it is simply not shouted. */}
-        <button type="button" onClick={()=>setShowFilters(v=>!v)}
-          title="Narrow by stage, type, source, budget or agent"
-          style={{padding:"7px 13px",borderRadius:8,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-                  border:"1px solid "+(activeFilterCount?T.gold:T.border),fontSize:12,
-                  fontWeight:activeFilterCount?700:500,
-                  background:activeFilterCount?"rgba(212,168,67,0.12)":"transparent",
-                  color:activeFilterCount?T.gold:T.textSecondary,whiteSpace:"nowrap"}}>
+        <Btn onClick={()=>setShowFilters(v=>!v)}
+          title="Narrow by stage, type, source, budget or agent">
           Filters{activeFilterCount?` · ${activeFilterCount}`:""}
-        </button>
+        </Btn>
 
-        <select value={leadSortBy||"date"} onChange={e=>setLeadSortBy&&setLeadSortBy(e.target.value)}
-          title="The order the list is in"
-          style={{padding:"7px 10px",background:"rgba(255,255,255,0.04)",border:"1px solid "+T.border,
-                  borderRadius:8,color:T.textSecondary,fontSize:12,outline:"none",
-                  fontFamily:"'Outfit',sans-serif",cursor:"pointer"}}>
-          <option value="score">Call order</option>
-          <option value="date">Newest first</option>
-          <option value="budget">Biggest budget first</option>
-          <option value="name">Name A–Z</option>
-        </select>
+        <div style={{flex:"0 1 185px",minWidth:165}}>
+          <Select value={leadSortBy||"date"} onChange={v=>setLeadSortBy&&setLeadSortBy(v)}>
+            <option value="score">Call order</option>
+            <option value="date">Newest first</option>
+            <option value="budget">Biggest budget first</option>
+            <option value="name">Name A–Z</option>
+          </Select>
+        </div>
 
-        <div style={{display:"flex",gap:2,background:"rgba(255,255,255,0.03)",
-                     border:"1px solid "+T.border,borderRadius:8,padding:2,marginLeft:"auto"}}>
+        {/* List / Board / Reports. A board of eleven columns cannot work on a
+            phone and pretending otherwise is how you get sideways scrolling,
+            so the phone gets the list and the reports. */}
+        <div style={{display:"flex",gap:2,background:C.panelSunk,border:`1px solid ${C.line}`,
+                     borderRadius:R.control,padding:3,marginLeft:phone?0:"auto"}}>
           {[{k:"table",l:"List",tip:"Every lead in one list, in the order you chose"},
-            {k:"kanban",l:"Board",tip:"The same leads as cards, in columns by stage"},
-            {k:"analytics",l:"Reports",tip:"Where your leads come from, and how each agent is doing"}].map(v=>(
+            {k:"kanban",l:"Board",tip:"The same leads as cards, in columns by stage",desktopOnly:true},
+            {k:"analytics",l:"Reports",tip:"Where your leads come from, and how each agent is doing"}]
+            .filter(v=>!(v.desktopOnly&&phone)).map(v=>(
             <button key={v.k} type="button" onClick={()=>setView(v.k)} title={v.tip}
-              style={{padding:"5px 12px",borderRadius:6,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
-                      border:view===v.k?"1px solid "+T.gold:"1px solid transparent",fontSize:11,
+              className="ds-btn ds-focus"
+              style={{padding:`0 ${S.md}px`,minHeight:30,borderRadius:6,cursor:"pointer",
+                      fontFamily:TY.small.fontFamily,fontSize:13,
+                      border:view===v.k?`1px solid ${C.accentLine}`:"1px solid transparent",
                       fontWeight:view===v.k?700:500,
-                      background:view===v.k?"rgba(212,168,67,0.15)":"transparent",
-                      color:view===v.k?T.gold:T.textMuted,whiteSpace:"nowrap"}}>{v.l}</button>
+                      background:view===v.k?C.accentSoft:"transparent",
+                      color:view===v.k?C.accent:C.textMuted,whiteSpace:"nowrap"}}>{v.l}</button>
           ))}
         </div>
 
         {/* Export and WhatsApp are things you do occasionally. They were sitting
             at the same weight as the search box. */}
         <div style={{position:"relative"}}>
-          <button type="button" onClick={()=>setShowMore(v=>!v)} title="More actions"
-            aria-label="More actions"
-            style={{padding:"7px 11px",borderRadius:8,border:"1px solid "+T.border,background:"transparent",
-                    color:T.textMuted,fontSize:13,cursor:"pointer",lineHeight:1}}>⋯</button>
+          <Btn onClick={()=>setShowMore(v=>!v)} title="More actions">⋯</Btn>
           {showMore&&(
-            <div style={{position:"absolute",right:0,top:38,zIndex:60,background:"#0D1117",
-                         border:"1px solid "+T.border,borderRadius:9,padding:5,minWidth:210,
-                         boxShadow:"0 10px 30px rgba(0,0,0,.45)"}}>
-              <button type="button" onClick={()=>{exportCSV();setShowMore(false);}}
-                style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",borderRadius:6,
-                        border:"none",background:"none",color:T.textSecondary,fontSize:11.5,cursor:"pointer",
-                        fontFamily:"'Outfit',sans-serif"}}>
-                Export what is on screen
-              </button>
-              <button type="button" onClick={()=>{setShowWA(true);setShowMore(false);}}
-                style={{display:"block",width:"100%",textAlign:"left",padding:"8px 10px",borderRadius:6,
-                        border:"none",background:"none",color:"#25D366",fontSize:11.5,cursor:"pointer",
-                        fontFamily:"'Outfit',sans-serif"}}>
-                WhatsApp the selected lead
-              </button>
+            <div style={{position:"absolute",right:0,top:44,zIndex:60,...surface(true),
+                         padding:S.xs,minWidth:230,boxShadow:"0 12px 34px rgba(0,0,0,.5)"}}>
+              {[["Export what is on screen",()=>{exportCSV();setShowMore(false);}],
+                ["WhatsApp the selected lead",()=>{setShowWA(true);setShowMore(false);}]].map(([l,fn])=>(
+                <button key={l} type="button" onClick={fn} className="ds-btn ds-focus"
+                  style={{display:"block",width:"100%",textAlign:"left",padding:`${S.md}px ${S.md}px`,
+                          borderRadius:6,border:"none",background:"none",color:C.text,
+                          ...TY.small,fontSize:14,cursor:"pointer",minHeight:40}}>{l}</button>
+              ))}
             </div>
           )}
         </div>
 
-        <button type="button" onClick={()=>setShowAdd(true)} title="Record a new enquiry"
-          style={{padding:"7px 15px",borderRadius:8,border:"none",fontFamily:"'Outfit',sans-serif",
-                  background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",
-                  fontSize:12,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>+ Add</button>
-      </div>
+      </Toolbar>
       )}
 
       {/* WHAT IS CURRENTLY NARROWING THE LIST.
           Only appears when something is on, and every one of them is removable
           where it sits — the old chips were clickable with no sign they were. */}
       {allLeads.length>0&&activeFilterCount>0&&(
-        <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap",padding:"9px 4px",
-                     borderBottom:"1px solid "+T.border}}>
-          <span style={{fontSize:10.5,color:T.textMuted}}>{filtered.length} of {allLeads.length} —</span>
+        <div style={{display:"flex",gap:S.sm,alignItems:"center",flexWrap:"wrap",
+                     marginBottom:S.base}}>
+          <span style={{...TY.small,color:C.textMuted}}>
+            Showing {filtered.length} of {allLeads.length}
+          </span>
           {activeStage!=="all"&&<FilterChip label={activeStage} onClear={()=>setActiveStage("all")}/>}
           {filterService!=="all"&&<FilterChip label={filterService} onClear={()=>setFilterService("all")}/>}
           {filterSource!=="all"&&<FilterChip label={filterSource} onClear={()=>setFilterSource("all")}/>}
           {filterBudget!=="all"&&<FilterChip label={BUDGET_LABEL[filterBudget]||filterBudget} onClear={()=>setFilterBudget("all")}/>}
           {filterAgent!=="all"&&<FilterChip label={agents.find(a=>(a.uid||a.id)===filterAgent)?.name||"Agent"} onClear={()=>setFilterAgent("all")}/>}
           {filterManager!=="all"&&<FilterChip label={managers.find(m=>(m.uid||m.id)===filterManager)?.name||"Manager"} onClear={()=>setFilterManager("all")}/>}
-          <button type="button" onClick={clearFilters}
-            style={{fontSize:10.5,padding:"2px 9px",borderRadius:10,background:"none",
-                    border:"1px solid "+T.border,color:T.textMuted,cursor:"pointer",
-                    fontFamily:"'Outfit',sans-serif"}}>Clear all</button>
+          <Btn variant="ghost" onClick={clearFilters}>Clear all</Btn>
         </div>
       )}
 
@@ -994,16 +996,15 @@ try{
           nothing in it. Eleven pills reading zero taught an agent that the
           numbers do not mean anything. */}
       {allLeads.length>0&&showFilters&&(
-        <div style={{padding:"13px 4px",borderBottom:"1px solid "+T.border,
-                     display:"flex",flexDirection:"column",gap:12}}>
-          <div>
-            <div style={{fontSize:9.5,fontWeight:700,color:T.textMuted,letterSpacing:.7,
-                         textTransform:"uppercase",marginBottom:7}}>Stage</div>
-            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        <div style={{marginBottom:S.lg}}>
+        <Card title="Narrow the list">
+          <div style={{marginBottom:S.lg}}>
+            <Lbl>Stage</Lbl>
+            <div style={{display:"flex",gap:S.sm,flexWrap:"wrap"}}>
               <FilterPill on={activeStage==="all"} onClick={()=>setActiveStage("all")}
                 tip="Every stage">All {allLeads.length}</FilterPill>
               {PIPELINE.filter(p=>(stageCounts[p.key]||0)>0).map(p=>(
-                <FilterPill key={p.key} on={activeStage===p.key} colour={p.color}
+                <FilterPill key={p.key} on={activeStage===p.key}
                   tip={STAGE_MEANING[p.key]}
                   onClick={()=>setActiveStage(activeStage===p.key?"all":p.key)}>
                   {p.key} {stageCounts[p.key]}
@@ -1011,13 +1012,13 @@ try{
               ))}
             </div>
             {PIPELINE.some(p=>!(stageCounts[p.key]||0)) && (
-              <div style={{fontSize:10,color:T.textMuted,marginTop:6}}>
+              <div style={{...TY.small,color:C.textFaint,marginTop:S.sm}}>
                 Stages with nobody in them are not shown.
               </div>
             )}
           </div>
 
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <div style={{display:"flex",gap:S.md,flexWrap:"wrap"}}>
             {scope==="org"&&managers.length>0&&(
               <Picker label="Manager" value={filterManager} onChange={setFilterManager}
                 options={[["all","All managers"],...managers.map(m=>[m.uid||m.id,m.name])]}/>
@@ -1033,6 +1034,7 @@ try{
             <Picker label="Budget" value={filterBudget} onChange={setFilterBudget}
               options={Object.entries(BUDGET_LABEL)}/>
           </div>
+        </Card>
         </div>
       )}
 
@@ -1042,8 +1044,13 @@ try{
           rail and the panel takes everything else. The other way round left
           580px of empty rail beside a 400px panel doing all the work. */}
       <div style={{display:"grid",
-                   gridTemplateColumns:selectedLead?"296px minmax(0,1fr)":"1fr",
-                   gap:14,alignItems:"start"}}>
+                   /* minmax(0,1fr), never plain 1fr. A grid track's default
+                      min-width is auto, so a plain 1fr grows to fit the widest
+                      thing inside it — which meant the grid's own horizontal
+                      scroller never engaged and the whole page went 18px
+                      sideways instead. */
+                   gridTemplateColumns:(selectedLead&&!phone)?"320px minmax(0,1fr)":"minmax(0,1fr)",
+                   gap:S.base,alignItems:"start"}}>
 
         {/*  TABLE VIEW  ─────────────────────────────────────────────────────
             With no leads at all, the board drew eleven empty stage columns each
@@ -1052,128 +1059,102 @@ try{
             views land on the same honest empty desk.                         */}
         {(view==="table"||allLeads.length===0)&&(
           <div>
-            {/* Column headings over nothing are furniture. They appear with the rows. */}
-            {/* COLUMN HEADINGS ONLY WHEN THERE ARE COLUMNS.
-                With a lead open the list has about 690px, and the fixed columns
-                alone came to 672px — so every cell collapsed into its neighbour
-                and the headings ran together as "CLIENTSTAGE". A master–detail
-                list becomes a rail when the detail opens; it does not try to
-                stay a table in a third of the width. */}
-            {allLeads.length>0&&!compact&&(
-            <div style={{display:"grid",gridTemplateColumns:"2.4fr 118px 130px 108px 128px 140px 48px",padding:"8px 4px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
-              {/* The ID column is gone. It showed the last four characters of a
-                  Firestore document id — "#7JpU" — which is not a reference
-                  anybody quotes, looks up or recognises. It was taking the
-                  leftmost, most valuable column on the screen. */}
-              {[["CLIENT","Who they are, and underneath, why this one sits where it does in the list"],
-                ["STAGE","Where this lead has reached. Open the guide above for what each stage means."],
-                ["BUDGET","What the client says they will spend. Not checked against a bank."],
-                ["LOOKING TO","Whether they are buying, selling, renting or investing"],
-                ["CAME FROM","Where the enquiry came from — a portal, an ad, a referral, or a walk-in"],
-                ["AGENT","Who owns this lead. Blank means nobody does."],[" ",""]].map(([h,tip],i)=>(
-                <div key={i} title={tip} style={{fontSize:9,fontWeight:700,color:T.textMuted,textTransform:"uppercase",letterSpacing:0.7,paddingLeft:i===0?4:0}}>{h}</div>
-              ))}
-            </div>
-            )}
             {allLeads.length===0&&(
               /* An empty desk is the first thing a new customer sees, so it says
                  what the tab will do for them rather than only that it is empty. */
-              <div style={{padding:"38px 20px 44px",textAlign:"center"}}>
-                <div style={{fontSize:15,fontWeight:700,color:T.white,marginBottom:7,fontFamily:"'Fraunces',serif"}}>
-                  No leads on this desk yet
-                </div>
-                <div style={{fontSize:12,color:T.textSecondary,marginBottom:18,lineHeight:1.7,maxWidth:430,margin:"0 auto 18px"}}>
-                  Add an enquiry and it appears here with the reason it needs attention —
-                  never called, follow-up overdue, or gone quiet — so you always know who
-                  to ring first. Nothing is filled in for you and nothing is guessed.
-                </div>
-                <button type="button" onClick={()=>setShowAdd(true)} title="Record the first enquiry"
-                  style={{padding:"10px 24px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#D4A843,#B8902E)",color:"#0A0E1A",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Add the first lead</button>
-              </div>
+              <Empty title="No leads on this desk yet"
+                what="Add an enquiry and it appears here with the reason it needs attention — never called, follow-up overdue, or gone quiet — so you always know who to ring first. Nothing is filled in for you and nothing is guessed."
+                action={<Btn variant="primary" onClick={()=>setShowAdd(true)}>Add the first lead</Btn>}/>
             )}
-            {filtered.length===0&&allLeads.length>0&&<div style={{padding:"40px 20px",textAlign:"center",color:T.textMuted,fontSize:13}}>No leads match your current filters</div>}
-            {filtered.map((lead,i)=>{
-              const stale=!["Closed Deal","Closed Outside","Non Potential"].includes(lead.status)&&daysAgo(lead.updatedAt||lead.createdAt)>7;
-              const isSel=selectedLead?.id===lead.id;
-              const isGV=parseFloat(lead.budget||0)>=GV_MIN;
-              return (
-                <div key={lead.id||i} onClick={()=>setSelectedLead(isSel?null:lead)}
-                  style={compact
-                    ? {display:"flex",flexDirection:"column",gap:3,padding:"10px 10px",
-                       borderBottom:"1px solid "+T.border+"40",cursor:"pointer",
-                       background:isSel?"rgba(212,168,67,0.06)":"transparent",
-                       borderLeft:isSel?"3px solid "+T.gold:"3px solid transparent"}
-                    : {display:"grid",gridTemplateColumns:"2.4fr 118px 130px 108px 128px 140px 48px",padding:"11px 4px",borderBottom:"1px solid "+T.border+"40",cursor:"pointer",background:isSel?"rgba(212,168,67,0.04)":"transparent",transition:"background 0.1s",borderLeft:isSel?"3px solid "+T.gold:"3px solid transparent"}}
-                  onMouseEnter={e=>!isSel&&(e.currentTarget.style.background="rgba(255,255,255,0.02)")}
-                  onMouseLeave={e=>!isSel&&(e.currentTarget.style.background="transparent")}
-                >
-                  {/* THE RAIL. Two lines: who and why, then the facts that fit.
-                      Everything else is in the panel beside it, which is where
-                      the reader is already looking. */}
-                  {compact ? (<>
-                    <div style={{display:"flex",alignItems:"center",gap:7,minWidth:0}}>
-                      <div title={attention(lead).reason}
-                        style={{width:6,height:6,borderRadius:"50%",background:attention(lead).color,flexShrink:0}}/>
-                      <span style={{fontSize:12,fontWeight:isSel?700:500,color:T.white,
-                                    overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                        {lead.name||"Unnamed"}
-                      </span>
-                      {isGV&&<span title={`Budget is at or above AED ${(GV_MIN/1e6).toFixed(0)}M, the property route to a 10-year Golden Visa.`}
-                        style={{fontSize:8.5,color:T.gold,whiteSpace:"nowrap",flexShrink:0}}>GV</span>}
-                    </div>
-                    <div style={{display:"flex",alignItems:"baseline",gap:8,minWidth:0}}>
-                      <span style={{fontSize:9.5,color:attention(lead).color,
-                                    overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>
-                        {attention(lead).reason}
-                      </span>
-                      {lead.budget?<span style={{fontSize:9.5,color:T.gold,whiteSpace:"nowrap"}}>{fmtB(lead.budget)}</span>:null}
-                    </div>
-                  </>) : (<>
-                  {/* One client column. The urgency dot moved here, beside the
-                      name it describes, instead of sitting in its own column
-                      next to a meaningless id. */}
-                  <div style={{display:"flex",alignItems:"center",gap:8,paddingLeft:4,minWidth:0}}>
-                    <div title={attention(lead).reason}
-                      style={{width:7,height:7,borderRadius:"50%",background:attention(lead).color,flexShrink:0}}/>
-                    <div style={{width:24,height:24,borderRadius:"50%",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:10.5,fontWeight:700,color:T.textMuted}}>{(lead.name||"?")[0].toUpperCase()}</div>
-                    <div>
-                      <div style={{display:"flex",alignItems:"center",gap:4}}>
-                        <span style={{fontSize:12,fontWeight:500,color:T.white}}>{lead.name||"Unnamed"}</span>
-                      </div>
-                      <div style={{display:"flex",gap:6,marginTop:1,alignItems:"center",minWidth:0}}>
-                        <WhyNow lead={lead}/>
-                        {(()=>{ const r=responseTime(lead);
-                          if(!r.answered) return null;
-                          return <span title={`How long this lead waited for a first call, message or email. ${r.note}`}
-                            style={{fontSize:9,color:r.colour,whiteSpace:"nowrap"}}>{r.minutes<60?`${r.minutes}m`:`${Math.floor(r.minutes/60)}h`}</span>;
-                        })()}
-                        {isGV&&<span title={`Budget is at or above AED ${(GV_MIN/1e6).toFixed(0)}M, the property route to a 10-year Golden Visa. Eligibility is confirmed by ICP, not by us.`}
-                          style={{fontSize:9,color:T.gold,whiteSpace:"nowrap"}}>Golden Visa</span>}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{alignSelf:"center"}}><PBadge status={lead.status||"New Lead"}/></div>
-                  <div style={{fontSize:12,fontWeight:700,color:T.gold,alignSelf:"center"}}>{fmtB(lead.budget)}</div>
-                  <div style={{fontSize:11,color:lead.serviceType||lead.type?"#A78BFA":T.textMuted,alignSelf:"center",fontWeight:lead.serviceType||lead.type?600:400}}>{lead.serviceType||lead.type||""}</div>
-                  <div style={{display:"flex",alignItems:"center",gap:4,alignSelf:"center"}}>
-                    <div style={{width:6,height:6,borderRadius:"50%",background:SRC_COLOR[lead.source]||"#94A3B8",flexShrink:0}}/>
-                    <span style={{fontSize:10,color:T.textMuted}}>{lead.source||""}</span>
-                  </div>
-                  <div style={{alignSelf:"center"}}>
-                    {lead.assignedToName
-                      ?<span style={{fontSize:10,color:"#8B5CF6",fontWeight:600,background:"rgba(139,92,246,0.1)",padding:"2px 7px",borderRadius:8}}>{lead.assignedToName}</span>
-                      :canManage
-                        ?<button type="button" onClick={e=>{e.stopPropagation();setShowAssign(lead);}} style={{fontSize:10,color:T.textMuted,background:"rgba(255,255,255,0.05)",border:"1px dashed "+T.border,padding:"2px 7px",borderRadius:8,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>+ Assign</button>
-                        :<span style={{fontSize:10,color:T.textMuted}}>—</span>
-                    }
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"center"}}>
-                    {lead.phone&&<a href={"https://wa.me/"+clnPhone(lead.phone)} target="_blank" rel="noopener noreferrer" onClick={e=>e.stopPropagation()} style={{padding:"3px 6px",borderRadius:5,background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.2)",textDecoration:"none",fontSize:9,color:"#25D366",fontWeight:700}}>WA</a>}
-                  </div>
-                  </>)}
-                </div>
-              );
-            })}
+
+            {filtered.length===0&&allLeads.length>0&&(
+              <Empty title="No leads match what you have chosen"
+                what="Every filter you have on is listed above the list. Take one off, or clear them all, to widen it again."
+                action={activeFilterCount?<Btn onClick={clearFilters}>Clear all filters</Btn>:null}/>
+            )}
+
+            {/* ONE DESCRIPTION OF THE DATA, TWO SHAPES ON SCREEN.
+                This was a hand-built CSS grid whose seven fixed columns came to
+                672px. At 390px it took the whole page 350px sideways, so an
+                agent standing in an apartment could not read their own list;
+                and with the detail panel open the columns collapsed into each
+                other and the headings ran together as "CLIENTSTAGE".
+
+                DataList renders a table where there is room and cards where
+                there is not, off this one definition — so there is nothing to
+                keep in step. `compact` (the panel is open) is treated exactly
+                like a phone, because 320px of rail is a phone.               */}
+            {filtered.length>0&&(
+              <DataList
+                rows={filtered}
+                rowKey={(l,i)=>l.id||i}
+                onRowClick={l=>setSelectedLead(selectedLead?.id===l.id?null:l)}
+                stack={compact} dense={compact}
+                columns={[
+                  /* ONE LINE PER LEAD. The name and the reason used to be
+                     stacked in one cell with a 32px avatar beside them, which
+                     made every row 81px tall — seven leads on a 900px screen
+                     out of 418. The reason is a fact about the lead, so it
+                     gets its own column and can be scanned down like any
+                     other. The avatar was decoration and is gone. */
+                  { key:"client", head:"Client", width:186, phone:"title",
+                    cell:l=>{
+                      const isGV=parseFloat(l.budget||0)>=GV_MIN;
+                      return (
+                        <span style={{display:"flex",alignItems:"center",gap:S.sm,minWidth:0}}>
+                          <Dot tone={attentionTone(l)}/>
+                          <span style={{...TY.smallStrong,color:C.text,overflow:"hidden",
+                                        textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                            {l.name||"Unnamed"}
+                          </span>
+                          {isGV&&<span title={`Budget is at or above AED ${(GV_MIN/1e6).toFixed(0)}M, the property route to a 10-year Golden Visa. Eligibility is confirmed by ICP, not by us.`}
+                            style={{...TY.label,fontSize:12,color:C.accent,flexShrink:0}}>GV</span>}
+                        </span>
+                      );
+                    }},
+                  { key:"why", head:"Why it is next", width:198, phone:"sub",
+                    cell:l=><WhyNow lead={l}/> },
+                  { key:"stage", head:"Stage", width:132, phone:"trail",
+                    cell:l=><PBadge status={l.status||"New Lead"}/> },
+                  { key:"budget", head:"Budget", width:112, align:"right", phone:"meta",
+                    cell:l=><span style={{...TY.numeric,fontSize:13,color:C.text}}>{fmtB(l.budget)||"—"}</span> },
+                  { key:"service", head:"Looking to", width:100, phone:"meta",
+                    cell:l=><span style={{color:l.serviceType||l.type?C.text:C.textFaint}}>
+                      {l.serviceType||l.type||"—"}</span> },
+                  { key:"source", head:"Came from", width:124, phone:"meta",
+                    /* The dot here was one of fifteen brand colours — Bayut
+                       orange, Dubizzle red, Instagram pink. A source is not a
+                       state, so it is now simply its name. */
+                    cell:l=><span style={{color:C.textMuted}}>{l.source||"—"}</span> },
+                  { key:"reply", head:"Answered in", width:96, align:"right",
+                    cell:l=>{ const r=responseTime(l);
+                      if(!r.answered) return <span style={{color:C.textFaint}}>—</span>;
+                      return <span title={`How long this lead waited for a first call, message or email. ${r.note}`}
+                        style={{...TY.numeric,fontSize:13,color:C.textMuted}}>
+                        {r.minutes<60?`${r.minutes}m`:`${Math.floor(r.minutes/60)}h`}</span>; } },
+                  { key:"agent", head:"Agent", width:132, phone:"meta",
+                    cell:l=>l.assignedToName
+                      ? <span style={{color:C.text}}>{l.assignedToName}</span>
+                      : canManage
+                        ? <button type="button" onClick={e=>{e.stopPropagation();setShowAssign(l);}}
+                            className="ds-focus"
+                            style={{...TY.small,fontSize:13,color:C.accent,background:"none",cursor:"pointer",
+                                    border:`1px dashed ${C.accentLine}`,borderRadius:R.control,
+                                    padding:"0 10px",height:30}}>Assign</button>
+                        : <span style={{color:C.textFaint}}>Nobody</span> },
+                  { key:"wa", head:" ", width:52, align:"center",
+                    cell:l=>l.phone
+                      ? <a href={"https://wa.me/"+clnPhone(l.phone)} target="_blank" rel="noopener noreferrer"
+                          onClick={e=>e.stopPropagation()} title={`Message ${l.name||"this lead"} on WhatsApp`}
+                          className="ds-focus"
+                          style={{display:"inline-flex",alignItems:"center",justifyContent:"center",
+                                  minWidth:36,height:30,borderRadius:R.control,textDecoration:"none",
+                                  border:`1px solid ${C.line}`,color:C.textMuted,...TY.label,fontSize:12}}>
+                          WA</a>
+                      : null },
+                ].filter(c=>!compact||["client","why"].includes(c.key))}
+              />
+            )}
           </div>
         )}
 
@@ -1392,53 +1373,70 @@ try{
 
         {/*  LEAD DETAIL DRAWER  */}
         {selectedLead&&(
-          <div style={{background:"rgba(255,255,255,0.02)",borderLeft:"1px solid "+T.border,display:"flex",flexDirection:"column",maxHeight:"calc(100vh - 160px)",position:"sticky",top:0,overflowY:"auto"}}>
-            <div style={{padding:"13px 15px",borderBottom:"1px solid "+T.border,background:"rgba(255,255,255,0.02)"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:7}}>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <div style={{width:30,height:30,borderRadius:"50%",background:"rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:12,fontWeight:700,color:T.textMuted}}>{(selectedLead.name||"?")[0].toUpperCase()}</div>
-                  <div>
-                    <div style={{fontSize:14,fontWeight:700,color:T.white}}>{selectedLead.name||"Unnamed"}</div>
+          <div style={{...surface(),display:"flex",flexDirection:"column",
+                       maxHeight:phone?undefined:"calc(100vh - 150px)",
+                       position:phone?"static":"sticky",top:0,overflowY:"auto"}}>
+            <div style={{padding:`${S.md}px ${S.base}px`,borderBottom:`1px solid ${C.line}`,
+                         background:C.groundAlt,position:"sticky",top:0,zIndex:2}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",
+                           gap:S.md,marginBottom:S.md}}>
+                <div style={{minWidth:0}}>
+                  <div style={{...TY.title,fontSize:19,color:C.text}}>{selectedLead.name||"Unnamed"}</div>
+                  <div style={{display:"flex",gap:S.sm,alignItems:"center",marginTop:6,flexWrap:"wrap"}}>
                     <PBadge status={selectedLead.status||"New Lead"}/>
+                    {parseFloat(selectedLead.budget||0)>=GV_MIN&&(
+                      <Chip tone="info" title={`Budget is at or above AED ${(GV_MIN/1e6).toFixed(0)}M, the property route to a 10-year Golden Visa. Eligibility is confirmed by ICP, not by us.`}>Golden Visa</Chip>
+                    )}
                   </div>
                 </div>
-                <button type="button" onClick={()=>setSelectedLead(null)} style={{background:"none",border:"none",color:T.textMuted,cursor:"pointer",fontSize:18}} aria-label="Close lead details" title="Close lead details">✕</button>
+                <Btn variant="ghost" onClick={()=>setSelectedLead(null)} title="Close lead details">✕</Btn>
               </div>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {selectedLead.phone&&<a href={"https://wa.me/"+clnPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer" style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(37,211,102,0.1)",border:"1px solid rgba(37,211,102,0.25)",color:"#25D366",textDecoration:"none",fontWeight:600}}>WhatsApp</a>}
-                {selectedLead.phone&&<a href={"tel:"+selectedLead.phone} style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(99,179,237,0.1)",border:"1px solid rgba(99,179,237,0.25)",color:"#63B3ED",textDecoration:"none",fontWeight:600}}>Call</a>}
-                {canManage&&<button type="button" onClick={()=>setShowAssign(selectedLead)} style={{fontSize:10,padding:"4px 10px",borderRadius:7,background:"rgba(139,92,246,0.1)",border:"1px solid rgba(139,92,246,0.3)",color:"#8B5CF6",cursor:"pointer",fontFamily:"'Outfit',sans-serif",fontWeight:600}}>Reassign</button>}
-                {parseFloat(selectedLead.budget||0)>=GV_MIN&&<span style={{fontSize:10,padding:"4px 8px",borderRadius:7,background:"rgba(212,168,67,0.15)",color:T.gold,fontWeight:700}}> Golden Visa</span>}
+
+              {/* The three things you do next, at the same weight, because they
+                  are the same kind of thing. They were WhatsApp green, a blue
+                  Call and a purple Reassign — three brand palettes in a 300px
+                  panel, none of which meant anything. */}
+              <div style={{display:"flex",gap:S.sm,flexWrap:"wrap",marginBottom:S.md}}>
+                {selectedLead.phone&&(
+                  <a href={"https://wa.me/"+clnPhone(selectedLead.phone)} target="_blank" rel="noopener noreferrer"
+                     className="ds-btn ds-focus"
+                     style={{display:"inline-flex",alignItems:"center",minHeight:34,padding:`0 ${S.md}px`,
+                             borderRadius:R.control,border:`1px solid ${C.line}`,color:C.text,
+                             textDecoration:"none",...TY.smallStrong}}>WhatsApp</a>
+                )}
+                {selectedLead.phone&&(
+                  <a href={"tel:"+selectedLead.phone} className="ds-btn ds-focus"
+                     style={{display:"inline-flex",alignItems:"center",minHeight:34,padding:`0 ${S.md}px`,
+                             borderRadius:R.control,border:`1px solid ${C.line}`,color:C.text,
+                             textDecoration:"none",...TY.smallStrong}}>Call</a>
+                )}
+                {canManage&&<Btn onClick={()=>setShowAssign(selectedLead)}>Reassign</Btn>}
               </div>
+
               {/* CHANGING THE STAGE.
                   This was eleven chips wrapped across a narrow panel — the same
                   crowding the filter bar had, in a third of the width. One
-                  control, and each option carries its meaning as a tooltip so
-                  nobody has to guess whether a buyer is "Potential" or
-                  "Resale/buy/Rent". */}
-              <div style={{marginTop:10}}>
-                <div style={{fontSize:9,color:T.textMuted,marginBottom:4,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Stage</div>
-                <select value={selectedLead.status||"New Lead"}
-                  onChange={e=>updateStatus(selectedLead.id,e.target.value)}
-                  title={STAGE_MEANING[selectedLead.status||"New Lead"]}
-                  style={{width:"100%",padding:"7px 9px",background:"rgba(255,255,255,0.04)",
-                          border:"1px solid "+((PIPELINE.find(x=>x.key===(selectedLead.status||"New Lead"))||{}).color||T.border),
-                          borderRadius:7,color:(PIPELINE.find(x=>x.key===(selectedLead.status||"New Lead"))||{}).color||T.white,
-                          fontSize:11.5,fontWeight:700,outline:"none",cursor:"pointer",
-                          fontFamily:"'Outfit',sans-serif"}}>
+                  control, and the meaning of whatever is chosen is printed
+                  under it rather than hidden in a tooltip. */}
+              <Field label="Stage" hint={STAGE_MEANING[selectedLead.status||"New Lead"]}>
+                <Select value={selectedLead.status||"New Lead"}
+                  onChange={v=>updateStatus(selectedLead.id,v)}>
                   {PIPELINE.map(p=><option key={p.key} value={p.key}>{p.key}</option>)}
-                </select>
-                <div style={{fontSize:10,color:T.textMuted,marginTop:4,lineHeight:1.5}}>
-                  {STAGE_MEANING[selectedLead.status||"New Lead"]}
-                </div>
-              </div>
+                </Select>
+              </Field>
             </div>
-            <div style={{display:"flex",borderBottom:"1px solid "+T.border}}>
+
+            <div style={{display:"flex",gap:2,padding:S.xs,borderBottom:`1px solid ${C.line}`}}>
               {[{k:"profile",l:"Profile"},{k:"activity",l:"Activity"},{k:"match",l:"Matches"}].map(t=>(
-                <button key={t.k} type="button" onClick={()=>setDrawerTab(t.k)} style={{flex:1,padding:"8px 0",border:"none",borderBottom:drawerTab===t.k?"2px solid "+T.gold:"2px solid transparent",background:"transparent",color:drawerTab===t.k?T.gold:T.textMuted,fontSize:11,fontWeight:drawerTab===t.k?600:400,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>{t.l}</button>
+                <button key={t.k} type="button" onClick={()=>setDrawerTab(t.k)}
+                  className="ds-btn ds-focus"
+                  style={{flex:1,minHeight:36,border:"none",borderRadius:R.control,
+                          background:drawerTab===t.k?C.accentSoft:"transparent",
+                          color:drawerTab===t.k?C.accent:C.textMuted,
+                          ...TY.smallStrong,cursor:"pointer"}}>{t.l}</button>
               ))}
             </div>
-            <div style={{padding:"13px 15px",flex:1}}>
+            <div style={{padding:S.base,flex:1}}>
 
               {drawerTab==="profile"&&(()=>{
                 const att=attention(selectedLead);
@@ -1446,22 +1444,24 @@ try{
                   <div>
                     {/* Was "AI LEAD SCORE — 65/100 Warm", a number with no defensible
                         basis. This states the fact and the next action instead. */}
-                    <div style={{padding:"10px 12px",borderRadius:8,background:att.color+"0E",border:"1px solid "+att.color+"25",marginBottom:12}}>
-                      <div style={{fontSize:9,color:T.textMuted,fontWeight:700,textTransform:"uppercase",letterSpacing:0.7,marginBottom:3}}>Why this one now</div>
-                      <div style={{fontSize:13,fontWeight:700,color:att.color,lineHeight:1.35}}>{att.reason}</div>
-                      <div style={{fontSize:10,color:T.textMuted,marginTop:5,lineHeight:1.5}}>
+                    {(()=>{ const t=ST[attentionTone(selectedLead)]; return (
+                    <div style={{padding:`${S.md}px ${S.base}px`,borderRadius:R.control,
+                                 background:t.bg,border:`1px solid ${t.line}`,marginBottom:S.base}}>
+                      <div style={{...TY.label,color:C.textMuted,marginBottom:5}}>Why this one now</div>
+                      <div style={{...TY.bodyStrong,color:t.fg}}>{att.reason}</div>
+                      <div style={{...TY.small,color:C.textMuted,marginTop:6}}>
                         {att.urgent
                           ? "This is one of the leads the list puts first. Log a call or a message below and it moves down."
                           : "Nothing is overdue on this one. It sits below anything uncontacted or overdue."}
                       </div>
+                    </div>); })()}
+                    <div style={{marginBottom:S.base}}>
+                      <Btn variant="primary" full
+                        onClick={()=>{setShowBook(selectedLead);setBookAt("");setBookWhat("");}}
+                        title="Arrange a viewing. It goes in your week and on this lead's history.">
+                        Book a viewing
+                      </Btn>
                     </div>
-                    <button type="button" onClick={()=>{setShowBook(selectedLead);setBookAt("");setBookWhat("");}}
-                      title="Arrange a viewing. It goes in your week and on this lead's history."
-                      style={{width:"100%",padding:"9px",borderRadius:8,border:"1px solid "+T.gold+"55",
-                              background:"rgba(212,168,67,0.08)",color:T.gold,fontSize:11.5,fontWeight:700,
-                              cursor:"pointer",marginBottom:12,fontFamily:"'Outfit',sans-serif"}}>
-                      Book a viewing
-                    </button>
                     {/* Seventeen fields in one flat column meant a 660px eye-run
                         from every label to its value, and blank rows that said
                         nothing at all. Now three groups in two columns, and a
@@ -1492,7 +1492,7 @@ try{
                         {label:"Campaign",    value:selectedLead.campaign||""},
                         {label:"AD Name",     value:selectedLead.adName||""},
                         {label:"AD Account",  value:selectedLead.adAccount||""},
-                        {label:"Assigned To", value:selectedLead.assignedToName||"Unassigned",color:"#8B5CF6"},
+                        {label:"Assigned To", value:selectedLead.assignedToName||"Unassigned"},
                         {label:"Added",       value:fmtD(selectedLead.createdAt)},
                       ]},
                     ].map(sec=>{
@@ -1501,25 +1501,25 @@ try{
                       const show=sec.fields.filter(f=>f.value||f.chase);
                       if(!show.length) return null;
                       return (
-                        <div key={sec.group} style={{marginBottom:14}}>
-                          <div style={{fontSize:9,fontWeight:700,letterSpacing:0.6,textTransform:"uppercase",
-                                       color:T.textMuted,marginBottom:6}}>{sec.group}</div>
-                          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",
-                                       columnGap:18,rowGap:0}}>
+                        <div key={sec.group} style={{marginBottom:S.lg}}>
+                          <div style={{...TY.label,color:C.textMuted,marginBottom:S.sm}}>{sec.group}</div>
+                          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",
+                                       columnGap:S.xl,rowGap:0}}>
                             {show.map((f,i)=>(
                               <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",
-                                                   gap:10,padding:"5px 0",borderBottom:"1px solid "+T.border+"30"}}>
-                                <span style={{fontSize:11,color:T.textMuted,flexShrink:0}}>{f.label}</span>
+                                                   gap:S.md,minHeight:30,padding:`${S.xs}px 0`,
+                                                   borderBottom:`1px solid ${C.line}`}}>
+                                <span style={{...TY.small,color:C.textMuted,flexShrink:0}}>{f.label}</span>
                                 {f.link
                                   ?<a href={f.link} target={f.ext?"_blank":"_self"} rel="noopener noreferrer"
-                                      style={{fontSize:11,color:T.gold,fontWeight:600,textDecoration:"none",
+                                      className="ds-focus"
+                                      style={{...TY.smallStrong,color:C.accent,textDecoration:"none",
                                               overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.value}</a>
                                   :f.value
-                                    ?<span style={{fontSize:11,color:f.color||T.white,fontWeight:600,textAlign:"right",
+                                    ?<span style={{...TY.smallStrong,color:C.text,textAlign:"right",
                                                    overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{f.value}</span>
                                     :<span title="Nobody has recorded this yet. Ask the client next time you speak to them."
-                                           style={{fontSize:10.5,color:T.textMuted,opacity:0.55,fontStyle:"italic",
-                                                   whiteSpace:"nowrap"}}>not asked yet</span>
+                                           style={{...TY.small,color:C.textFaint,whiteSpace:"nowrap"}}>not asked yet</span>
                                 }
                               </div>
                             ))}
@@ -1527,7 +1527,13 @@ try{
                         </div>
                       );
                     })}
-                    {selectedLead.comment&&<div style={{marginTop:9,padding:"8px 10px",background:"rgba(255,255,255,0.03)",borderRadius:7,fontSize:11,color:T.textSecondary,lineHeight:1.6}}><div style={{fontSize:9,color:T.textMuted,marginBottom:3,fontWeight:700,textTransform:"uppercase",letterSpacing:0.5}}>Comment</div>{selectedLead.comment}</div>}
+                    {selectedLead.comment&&(
+                      <div style={{marginTop:S.md,padding:`${S.md}px ${S.base}px`,
+                                   background:C.panelSunk,borderRadius:R.control,
+                                   border:`1px solid ${C.line}`}}>
+                        <div style={{...TY.label,color:C.textMuted,marginBottom:5}}>Comment</div>
+                        <div style={{...TY.small,color:C.text}}>{selectedLead.comment}</div>
+                      </div>)}
                   </div>
                 );
               })()}
