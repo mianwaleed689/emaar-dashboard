@@ -69,8 +69,13 @@ const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacin
 export default function PipelineTab({
   myDepartment, mySeniority,
   deals = [], dealsLoading, orgName, orgRole, userRole, orgId,
-  firebaseUser, userName, teamMembers = [],
+  firebaseUser, userName, teamMembers = [], orgProfile,
 }) {
+  /* The agency decides whether a tick is enough or the file has to be there.
+     Off by default — see journeys.js#holds for why turning it on is the
+     agency's call and not a default we impose on their first morning. */
+  const strict = Boolean(orgProfile?.requireDocumentFiles);
+  const gateOpts = useMemo(() => ({ strict }), [strict]);
   /* ── WHO MAY SEE THIS ───────────────────────────────────────────────────
      Everyone in the agency. An agent sees their own deals; anyone senior sees
      the agency's. Locking the owner out was the worst thing about the old tab. */
@@ -124,12 +129,12 @@ export default function PipelineTab({
      The owner's brief was a system where every individual's work is defined and
      nobody has to walk over and ask where a deal is. `mine` is that list for
      this person; `byDept` is the same question for the whole company. */
-  const mine_work = useMemo(() => myWork(all, me), [all, me]);
-  const byDept    = useMemo(() => workByDepartment(all), [all]);
+  const mine_work = useMemo(() => myWork(all, me, Date.now(), gateOpts), [all, me, gateOpts]);
+  const byDept    = useMemo(() => workByDepartment(all, Date.now(), gateOpts), [all, gateOpts]);
 
   /* Everything blocked, and by what — the report a manager actually opens. */
-  const blocked = useMemo(() => open.map(d => ({ d, why: canAdvance(d) }))
-    .filter(x => !x.why.ok && x.why.missing.length), [open]);
+  const blocked = useMemo(() => open.map(d => ({ d, why: canAdvance(d, gateOpts) }))
+    .filter(x => !x.why.ok && x.why.missing.length), [open, gateOpts]);
 
   /* See the blockers panel below for why this is not simply blocked.length. */
   const showBlocked = blocked.length > 0 && all.length > 1;
@@ -146,7 +151,7 @@ export default function PipelineTab({
      stop. The note is checked for substance, not just presence, because "ok"
      tells the next person nothing. */
   const advance = useCallback(async (d, note) => {
-    const gate = canAdvance(d);
+    const gate = canAdvance(d, gateOpts);
     if (!gate.ok) { say(gate.reason, true); return false; }
 
     const step = stepRecord(d, nextStage(d).key,
@@ -166,7 +171,7 @@ export default function PipelineTab({
       setSelected(s => s?.id === d.id
         ? { ...s, stage: to, needsReview: false, steps: [...(s.steps || []), step] } : s);
       const moved = { ...d, stage: to, steps: [...(d.steps || []), step] };
-      const turn = whoseTurn(moved);
+      const turn = whoseTurn(moved, Date.now(), gateOpts);
 
       /* TELL WHOEVER IT LANDS ON.
          Recipients come from the workflow rather than a hand-written list, so a
@@ -180,7 +185,8 @@ export default function PipelineTab({
           seniority: m.seniority, managerId: m.managerId,
         }));
         const notes = onStageChange(moved,
-          { id: uid, name: userName || firebaseUser?.email || "" }, roster);
+          { id: uid, name: userName || firebaseUser?.email || "" }, roster,
+          new Date(), gateOpts);
         await Promise.all(notes.map(n =>
           addDoc(collection(db, "notifications"), { ...n, orgId: orgId || "" })));
         if (notes.length) console.log(`[pipeline] notified ${notes.length} on ${d.id}`);
@@ -617,7 +623,7 @@ export default function PipelineTab({
               </button>
             </div>
           ) : mine.map(d => {
-            const st = currentStage(d), gate = canAdvance(d), on = selected?.id === d.id;
+            const st = currentStage(d), gate = canAdvance(d, gateOpts), on = selected?.id === d.id;
             const total = dealTotals(Array.isArray(d.commissionLines) ? d.commissionLines : migrateCommission(d));
             return (
               <div key={d.id} onClick={() => setSelected(on ? null : d)}
@@ -642,7 +648,7 @@ export default function PipelineTab({
                 </div>
 
                 {/* Whose turn, on the card, so nobody has to open it to find out. */}
-                {(() => { const turn = whoseTurn(d);
+                {(() => { const turn = whoseTurn(d, Date.now(), gateOpts);
                   if (turn.done) return null;
                   return (
                     <div style={{ fontSize: 10.5, color: T.textMuted, marginBottom: 5 }}>
@@ -672,7 +678,7 @@ export default function PipelineTab({
             onDoc={(k, v) => markDocument(selected, k, v)}
             onAttach={(k, rec) => attachDocument(selected, k, rec)}
             orgId={orgId} userName={userName} firebaseUser={firebaseUser}
-            canMoveMoney={moneyScope === "org"}
+            canMoveMoney={moneyScope === "org"} strict={strict}
             onMoney={(i, to, detail) => moveCommission(selected, i, to, detail)}
             onDelete={() => remove(selected)} />
         )}
@@ -795,18 +801,23 @@ const Sel = ({ value, onChange, children }) =>
 
 /** One deal: where it is, what it is missing, and what it is worth. */
 function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canDelete, busy,
-                    canMoveMoney, onMoney, onAttach, orgId, userName, firebaseUser }) {
+                    canMoveMoney, onMoney, onAttach, orgId, userName, firebaseUser, strict }) {
   const [moneyRef, setMoneyRef] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [note, setNote] = useState("");
-  const turn = whoseTurn(deal);
+  const turn = whoseTurn(deal, Date.now(), { strict });
   const timeline = dealTimeline(deal);
   const J = journeyOf(deal);
-  const gate = canAdvance(deal);
+  const gate = canAdvance(deal, { strict });
   const req  = requiredDocuments(deal);
   const cond = conditionalDocuments(deal);
   const exp  = expiringDocuments(deal);
-  const held = k => Boolean(deal?.documents?.[k]?.receivedAt);
+  /* What the row shows has to be what the gate enforces. Showing a row green
+     while the gate refuses to move the deal is the kind of disagreement people
+     stop trusting a product over. */
+  const held = k => strict
+    ? isOnFile(deal?.documents?.[k])
+    : Boolean(deal?.documents?.[k]?.receivedAt);
   const lines = Array.isArray(deal.commissionLines) ? deal.commissionLines : migrateCommission(deal);
   const total = dealTotals(lines);
 

@@ -293,8 +293,13 @@ export function notificationsFor(eventKey, ctx = {}, people = [], now = new Date
  * The notifications a stage change produces — the common case, built straight
  * off the workflow so it cannot drift from whose turn it actually is.
  */
-export function onStageChange(deal, by = {}, people = [], now = new Date()) {
-  const turn = whoseTurn(deal, now.getTime());
+export function onStageChange(deal, by = {}, people = [], now = new Date(), opts = {}) {
+  /* Carries the agency's paperwork rule, because the choice below is between
+     announcing "moved" and announcing "blocked". Without it a deal whose next
+     document is ticked but not filed was announced as moving while the board
+     showed it stuck — and the person told it moved is the one who then does
+     nothing about it. */
+  const turn = whoseTurn(deal, now.getTime(), opts);
   const stage = currentStage(deal);
   const dealName = deal.client || deal.leadName || "A deal";
 

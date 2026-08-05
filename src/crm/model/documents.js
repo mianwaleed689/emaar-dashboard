@@ -154,7 +154,13 @@ export function documentAudit(deal = {}, required = [], { strict = false } = {})
 export function evidenceCoverage(deals = [], requiredFor = () => []) {
   let ticked = 0, filed = 0;
   for (const d of deals) {
-    for (const key of requiredFor(d)) {
+    for (const k of requiredFor(d) || []) {
+      /* journeys.requiredDocuments() hands back document definitions, not
+         keys. Taking only the string silently counted nothing and printed a
+         confident 0%, which is worse than an error — an owner would have read
+         "no paperwork is evidenced" off an agency that had evidenced it. */
+      const key = typeof k === "string" ? k : k && k.key;
+      if (!key) continue;
       const doc = (d.documents || {})[key];
       if (isTicked(doc)) { ticked++; if (isOnFile(doc)) filed++; }
     }

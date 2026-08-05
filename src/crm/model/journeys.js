@@ -298,28 +298,48 @@ export function conditionalDocuments(deal) {
 export const allDocuments = deal =>
   [...requiredDocuments(deal), ...conditionalDocuments(deal)];
 
-/** Which document a deal holds. `deal.documents` is { FORM_A: {...}, ... }. */
-const holds = (deal, key) => Boolean(deal?.documents?.[key]?.receivedAt);
+/**
+ * Which document a deal holds. `deal.documents` is { FORM_A: {...}, ... }.
+ *
+ * Under `strict` a tick is not enough — the file has to be there. That is the
+ * agency's setting, not ours: an agency arriving with years of ticked rows and
+ * no files is mid-migration, and refusing to move any of their deals on the
+ * morning they switch over is an outage, not a control. See
+ * documents.js#evidenceCoverage for the number that tells them when it is safe.
+ */
+const holds = (deal, key, strict) => {
+  const d = deal?.documents?.[key];
+  if (!d) return false;
+  return strict ? Boolean(d.file && d.file.path) : Boolean(d.receivedAt);
+};
 
 /**
  * Can this deal move to the next stage — and if not, say why in words a
  * coordinator can act on. This is the whole reason the model exists.
  */
-export function canAdvance(deal) {
+export function canAdvance(deal, { strict = false } = {}) {
   if (isComplete(deal)) {
     return { ok: false, reason: "This deal is already at its final stage.", missing: [] };
   }
   const stage = currentStage(deal);
-  const missing = (stage.requires || []).filter(d => !holds(deal, d));
+  const missing = (stage.requires || []).filter(d => !holds(deal, d, strict));
   if (missing.length) {
+    /* Under strict, "Missing Form A" is wrong and infuriating when Form A is
+       ticked — the person is looking at a tick. Name what is actually wanted. */
+    const ticked = strict
+      ? missing.filter(d => deal?.documents?.[d]?.receivedAt)
+      : [];
+    const label = keys => keys.map(d => DOCUMENTS[d].label).join(" and ");
     return {
       ok: false,
       missing,
-      reason: stage.blockedBy ||
-        `Missing ${missing.map(d => DOCUMENTS[d].label).join(" and ")}.`,
+      unevidenced: ticked,
+      reason: ticked.length === missing.length
+        ? `${label(ticked)} ${ticked.length === 1 ? "is" : "are"} ticked but no file was ever attached. Attach ${ticked.length === 1 ? "it" : "them"} to move on.`
+        : stage.blockedBy || `Missing ${label(missing)}.`,
     };
   }
-  return { ok: true, missing: [], reason: "" };
+  return { ok: true, missing: [], unevidenced: [], reason: "" };
 }
 
 export function nextStage(deal) {

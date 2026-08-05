@@ -201,7 +201,7 @@ const moneyIn = deal => {
   return lines.every(l => l.state === "paid");
 };
 
-export function whoseTurn(deal, now = Date.now()) {
+export function whoseTurn(deal, now = Date.now(), opts = {}) {
   const journey = deal?.journey || "secondary";
 
   /* A deal reaching the last stage is NOT the same as a deal being finished.
@@ -217,7 +217,11 @@ export function whoseTurn(deal, now = Date.now()) {
 
   const stage = currentStage(deal);
   const r = responsibilityFor(journey, stage.key);
-  const gate = canAdvance(deal);
+  /* The agency's paperwork rule has to reach here too. Without it the
+     department panel counted deals as moving while the gate refused them, so
+     an owner who had just switched to requiring files saw the same blocked
+     count as before — a screen disagreeing with the button underneath it. */
+  const gate = canAdvance(deal, opts);
 
   /* A blocked stage is still the SAME person's turn — it is their job to
      unblock it. Saying "waiting on documents" without naming an owner is how a
@@ -243,7 +247,7 @@ export function whoseTurn(deal, now = Date.now()) {
  * Across every deal in the agency, the ones waiting on this person's
  * department. This is the list that replaces walking over and asking.
  */
-export function myWork(deals = [], viewer = {}, now = Date.now()) {
+export function myWork(deals = [], viewer = {}, now = Date.now(), opts = {}) {
   /* The same legacy inference the rest of the model uses, so a viewer with no
      department recorded lands in the same place everywhere. */
   const dept = viewer.department
@@ -253,7 +257,7 @@ export function myWork(deals = [], viewer = {}, now = Date.now()) {
 
   const items = [];
   (deals || []).forEach(d => {
-    const turn = whoseTurn(d, now);
+    const turn = whoseTurn(d, now, opts);
     if (turn.done) return;
     /* Sales work belongs to the agent ON the deal, not to everyone in sales —
        an agent should not open their desk and find a colleague's viewings. */
@@ -283,10 +287,10 @@ export function myWork(deals = [], viewer = {}, now = Date.now()) {
 }
 
 /** Everything waiting on every department — a manager's or owner's view. */
-export function workByDepartment(deals = [], now = Date.now()) {
+export function workByDepartment(deals = [], now = Date.now(), opts = {}) {
   const by = {};
   (deals || []).forEach(d => {
-    const t = whoseTurn(d, now);
+    const t = whoseTurn(d, now, opts);
     if (t.done) return;
     const k = t.department;
     by[k] = by[k] || { department: k, label: t.departmentLabel, total: 0, blocked: 0, deals: [] };

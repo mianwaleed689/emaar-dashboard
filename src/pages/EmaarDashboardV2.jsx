@@ -5827,6 +5827,9 @@ activeProjects={[...projectsWithOverrides,...(Array.isArray(developmentsData)?de
               selectedDeal={selectedDeal} setSelectedDeal={setSelectedDeal}
               pipelineType={pipelineType} setPipelineType={setPipelineType}
               firebaseUser={firebaseUser} orgId={orgId} orgName={orgProfile?.name}
+              /* Carries requireDocumentFiles — the agency's own answer to
+                 whether a tick is enough or the file has to be there. */
+              orgProfile={orgProfile}
               orgRole={orgRole} userRole={userRole} userName={userName}
             />
           )}

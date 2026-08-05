@@ -11,6 +11,7 @@
 import { checkFile, documentRecord, isOnFile, isTicked, documentState,
          documentAudit, evidenceCoverage, humanSize, MAX_FILE_BYTES, ACCEPTED }
   from "../../src/crm/model/documents.js";
+import { canAdvance } from "../../src/crm/model/journeys.js";
 
 let pass = 0, fail = 0;
 const ok = (n, c, got) => {
@@ -126,6 +127,49 @@ const allFiled = evidenceCoverage([{ documents: { a: filed } }], () => ["a"]);
 ok("an agency with every file attached is ready", allFiled.ready === true && allFiled.pct === 100);
 ok("an agency with no deals is not falsely 'ready'",
    evidenceCoverage([], () => []).ready === false);
+
+/* The natural thing to pass is journeys.requiredDocuments(), which returns
+   document DEFINITIONS. Reading a key off those found nothing and printed a
+   confident 0% — an owner would have read "none of your paperwork is
+   evidenced" off an agency that had evidenced all of it. */
+const asDefs = evidenceCoverage(deals, () => [{ key: "a" }, { key: "b" }]);
+ok("definitions count the same as bare keys", asDefs.ticked === 6 && asDefs.filed === 3, asDefs);
+ok("junk in the list is skipped rather than counted",
+   evidenceCoverage(deals, () => ["a", null, undefined, {}]).ticked === 3,
+   evidenceCoverage(deals, () => ["a", null, undefined, {}]));
+
+/* ── THE GATE ITSELF, UNDER BOTH RULES ────────────────────────────────────── */
+/* The model above is only worth anything if canAdvance actually reads it.
+   These test the thing a coordinator meets: does the deal move or not. */
+head("WHAT THE GATE DOES WITH A TICK");
+
+const tickedDeal = { journey: "secondary", stage: "form_a", documents: { FORM_A: tickOnly } };
+const filedDeal  = { journey: "secondary", stage: "form_a", documents: { FORM_A: filed } };
+const bareDeal   = { journey: "secondary", stage: "form_a", documents: {} };
+
+ok("a tick moves the deal on while the agency has not switched over",
+   canAdvance(tickedDeal).ok === true, canAdvance(tickedDeal));
+ok("a tick does NOT move it once the agency requires files",
+   canAdvance(tickedDeal, { strict: true }).ok === false);
+ok("a file moves it under either rule",
+   canAdvance(filedDeal).ok === true && canAdvance(filedDeal, { strict: true }).ok === true);
+ok("nothing at all is blocked under either rule",
+   canAdvance(bareDeal).ok === false && canAdvance(bareDeal, { strict: true }).ok === false);
+
+/* "Missing Form A" is a lie to somebody looking at a ticked Form A, and being
+   told to do the thing you have already done is how people decide the software
+   is broken rather than that they are. */
+const strictWhy = canAdvance(tickedDeal, { strict: true });
+ok("it does not claim the ticked document is missing",
+   !/^Missing/.test(strictWhy.reason), strictWhy.reason);
+ok("it says it was ticked and asks for the file",
+   /ticked/i.test(strictWhy.reason) && /attach/i.test(strictWhy.reason), strictWhy.reason);
+ok("it names which document", /Form A/.test(strictWhy.reason), strictWhy.reason);
+ok("and reports it as unevidenced rather than absent",
+   strictWhy.unevidenced.length === 1 && strictWhy.unevidenced[0] === "FORM_A", strictWhy);
+
+ok("a document nobody ever ticked is still reported as missing, not unevidenced",
+   canAdvance(bareDeal, { strict: true }).unevidenced.length === 0, canAdvance(bareDeal, { strict: true }));
 
 /* ── SIZES READ LIKE SIZES ────────────────────────────────────────────────── */
 head("HUMAN SIZES");

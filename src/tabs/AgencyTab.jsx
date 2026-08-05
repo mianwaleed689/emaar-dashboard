@@ -10,6 +10,8 @@ import React from "react";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { viewerFrom, canSeePay } from "../crm/model/org";
+import { evidenceCoverage } from "../crm/model/documents";
+import { requiredDocuments } from "../crm/model/journeys";
 import { T } from "../data";
 import { SvgIcons } from "../components/Icons";
 import { cleanPhone } from "../utils/helpers";
@@ -162,6 +164,7 @@ function AgencyTab({
   commSaving, setCommSaving,
 }) {
   const _copy = tabCopy("Agency");
+  const [strictSaving, setStrictSaving] = React.useState(false);
 
 
             /* An agency OWNER is not the string "manager". These gates predate
@@ -221,6 +224,39 @@ function AgencyTab({
                 setTimeout(() => setOrgProfileSaved(false), 2500);
               } catch(e) { console.error(e); }
               setOrgProfileSaving(false);
+            };
+
+            /* ── REQUIRE THE DOCUMENT, NOT JUST THE TICK ─────────────────────
+               A stage gate that only asks "did somebody tick this?" is not a
+               gate. Turning this on makes the file itself the thing that opens
+               the gate. It is off until the agency turns it on, because an
+               agency arriving with years of ticked rows and no files is
+               mid-migration, and refusing to move any of their deals on the
+               morning they switch over is an outage rather than a control.
+               The figure beside the switch is what makes the decision safe:
+               how much of what the product currently calls "received" has a
+               file behind it. */
+            /* requiredDocuments returns the document DEFINITIONS, not their
+               keys — passing them straight through looked up deal.documents by
+               object and found nothing, so this read a confident 0% on an
+               agency with hundreds of ticked documents. Only the gating
+               documents are counted: conditional ones never block a stage, so
+               a missing file behind one changes nothing about this decision. */
+            const coverage = evidenceCoverage(deals || [], d => requiredDocuments(d).map(x => x.key));
+            const strictOn = Boolean(orgProfile?.requireDocumentFiles);
+            /* Every manager should see the figure — it is their teams' paperwork.
+               Flipping it stops deals across the whole agency, which is the
+               owner's call, not one sales manager's. */
+            const maySetStrict = orgRole === "owner" || orgRole === "director";
+            const setStrict = async (on) => {
+              if (!orgId) return;
+              setStrictSaving(true);
+              try {
+                await setDoc(doc(db, "organisations", orgId),
+                  { requireDocumentFiles: on, updatedAt: new Date().toISOString() },
+                  { merge: true });
+              } catch (e) { console.error("[agency] could not save the document rule:", e); }
+              setStrictSaving(false);
             };
 
             // Save commission split for an agent
@@ -372,6 +408,69 @@ function AgencyTab({
                         <span style={{ fontSize:13, fontWeight:700, color }}>{count}</span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── PAPERWORK RULE ── */}
+              <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:14, overflow:"hidden" }}>
+                <div style={{ padding:"14px 18px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.gold} strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <div style={{ fontSize:13, fontWeight:700, color:T.white }}>Paperwork rule</div>
+                </div>
+                <div style={{ padding:"16px 18px", display:"grid", gap:18, gridTemplateColumns:"minmax(0,1fr) 210px", alignItems:"start" }}>
+                  <div>
+                    <div style={{ fontSize:12.5, color:T.textSecondary, lineHeight:1.75 }}>
+                      A deal cannot pass a stage until that stage's paperwork is
+                      on file. Today "on file" means somebody ticked it. Turn
+                      this on and it means the document itself is attached —
+                      which is the difference between finding out an NOC expired
+                      before the trustee appointment rather than at it.
+                    </div>
+                    <div style={{ marginTop:12, display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                      <button type="button" onClick={() => maySetStrict && setStrict(!strictOn)}
+                        disabled={strictSaving || !maySetStrict}
+                        title={maySetStrict ? "" : "Only the agency owner or a director can change this"}
+                        style={{ position:"relative", width:44, height:24, borderRadius:12, flexShrink:0,
+                                 border:`1px solid ${strictOn ? T.gold : T.border}`,
+                                 background: strictOn ? "rgba(212,168,67,0.25)" : "rgba(255,255,255,0.04)",
+                                 opacity: maySetStrict ? 1 : 0.45,
+                                 cursor: !maySetStrict ? "not-allowed" : strictSaving ? "wait" : "pointer", padding:0 }}>
+                        <span style={{ position:"absolute", top:2, left: strictOn ? 22 : 2, width:18, height:18,
+                                       borderRadius:"50%", background: strictOn ? T.gold : T.textMuted,
+                                       transition:"left .15s" }}/>
+                      </button>
+                      <div style={{ fontSize:12, fontWeight:700, color: strictOn ? T.gold : T.textMuted }}>
+                        {strictOn ? "The file is required" : "A tick is enough"}
+                      </div>
+                      {!maySetStrict && (
+                        <div style={{ fontSize:10.5, color:T.textMuted }}>
+                          Set by the agency owner
+                        </div>
+                      )}
+                    </div>
+                    {/* The number that makes this a decision rather than a gamble. */}
+                    <div style={{ marginTop:12, fontSize:11.5, lineHeight:1.75,
+                                  color: coverage.ticked === 0 ? T.textMuted
+                                       : coverage.ready ? T.green : "#F59E0B" }}>
+                      {coverage.ticked === 0
+                        ? "Nothing has been marked received yet, so turning this on would change nothing today."
+                        : coverage.ready
+                          ? `All ${coverage.filed} documents marked received have a file behind them. Turning this on blocks nothing that is not already blocked.`
+                          : `${coverage.unevidenced} of ${coverage.ticked} documents marked received have no file attached. Turn this on and every deal waiting on one of them stops where it is until somebody attaches the paper.`}
+                    </div>
+                  </div>
+                  <div style={{ background:T.bg, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
+                    <div style={{ fontSize:26, fontWeight:900, fontFamily:"'Fraunces',serif",
+                                  color: coverage.ticked === 0 ? T.textMuted : coverage.ready ? T.green : "#F59E0B" }}>
+                      {coverage.ticked === 0 ? "—" : `${coverage.pct}%`}
+                    </div>
+                    <div style={{ fontSize:10.5, color:T.textMuted, lineHeight:1.6, marginTop:4 }}>
+                      of received paperwork has the actual document behind it
+                    </div>
+                    <div style={{ fontSize:10.5, color:T.textMuted, marginTop:8, paddingTop:8, borderTop:`1px solid ${T.border}` }}>
+                      {coverage.filed} filed · {coverage.unevidenced} ticked only
+                    </div>
                   </div>
                 </div>
               </div>

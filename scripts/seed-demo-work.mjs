@@ -26,6 +26,14 @@
  *
  *   node scripts/seed-demo-work.mjs
  */
+/* THE SEED READS THE MODEL RATHER THAN RESTATING IT.
+   It used to carry its own list of stage names and its own document keys, and
+   both had drifted from the product: every deal was given resale stages
+   whatever its journey, and 114 ticked documents were written as `formA` where
+   the gate looks for `FORM_A`. The screen then told 45 agents their Form A was
+   missing while showing it ticked. Importing the model is what stops a seed
+   quietly describing a product that does not exist. */
+import { JOURNEYS } from "../src/crm/model/journeys.js";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, collection, query, where, getDocs, writeBatch, doc } from "firebase/firestore";
@@ -166,27 +174,33 @@ await commit(listings, "listings");
 
 /* ── DEALS ───────────────────────────────────────────────────────────────── */
 const JOURNEY = ["secondary", "offplan", "rental"];
-const SEC_STAGES = ["formA","permit","published","buyer","viewings","offer","formF","noc","trustee","transferred","commission"];
 const deals = [];
 agents.slice(0, 70).forEach((a, i) => {
   const journey = JOURNEY[i % 3];
-  const si = int(0, SEC_STAGES.length - 1);
+  /* Each journey has its own stages. An off-plan deal has no Form F and a
+     rental has no trustee appointment, so a resale stage on either is a deal
+     the product cannot place — which is exactly what it reported. */
+  const stages = JOURNEYS[journey].stages;
+  const si = int(0, stages.length - 1);
   const price = pick([1200000,1850000,2600000,3400000,4800000,7200000]);
-  /* A third have paperwork missing, so the gates have something to hold. */
+
+  /* Tick what this journey actually requires up to where the deal has got to,
+     with the model's own keys. A third of deals are left short so the gates
+     have something real to hold. */
   const documents = {};
   if (i % 3 !== 0) {
-    documents.formA = { receivedAt: ago(int(5, 90)), by: a.name };
-    if (si > 1) documents.trakheesi = { receivedAt: ago(int(3, 60)), by: a.name };
-    if (si > 6) documents.formF = { receivedAt: ago(int(1, 30)), by: a.name };
-    if (si > 7) documents.noc = { receivedAt: ago(int(1, 20)), by: a.name };
+    stages.slice(0, si).forEach(st => (st.requires || []).forEach(key => {
+      documents[key] = { receivedAt: ago(int(1, 90)), by: a.name };
+    }));
   }
   /* Money in every state at once, which is what a finance screen is for. */
-  const state = si >= 10 ? pick(["received","paid"]) : si >= 8 ? pick(["due","invoiced"]) : "due";
+  const far = si / Math.max(1, stages.length - 1);
+  const state = far >= 0.95 ? pick(["received","paid"]) : far >= 0.75 ? pick(["due","invoiced"]) : "due";
   deals.push({ _c: "deals", data: {
     client: `${pick(FIRST)} ${pick(LAST)}`,
     property: `${pick(BUILDINGS)}, unit ${int(1,40)}0${int(1,9)}`,
     community: pick(AREAS),
-    journey, stage: SEC_STAGES[si], price,
+    journey, stage: stages[si].key, price,
     agentId: a.uid, agentName: a.name, orgId: ORG_ID,
     documents,
     commissionLines: [{

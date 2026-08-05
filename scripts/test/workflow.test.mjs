@@ -8,7 +8,7 @@
  *
  *     node scripts/test/workflow.test.mjs
  */
-import { JOURNEYS, stagesOf } from "../../src/crm/model/journeys.js";
+import { JOURNEYS, stagesOf, canAdvance } from "../../src/crm/model/journeys.js";
 import {
   RESPONSIBILITY, responsibilityFor, whoseTurn, myWork, workByDepartment,
   stepRecord, stepQuality, dealTimeline, stageDurations,
@@ -185,6 +185,50 @@ ok("stage durations are measured",   durations.length === 3, durations);
 ok("  the first stage took 5 days",  durations[0].days === 5, durations[0]);
 ok("  and the long stall is visible", Math.max(...durations.map(d => d.days)) === 16,
    durations.map(d => `${d.stage}:${d.days}d`));
+
+/* ── THE PANEL AND THE BUTTON MUST AGREE ─────────────────────────────────── */
+/* The department panel counts blocked deals by asking whoseTurn. The button on
+   the deal asks canAdvance. If the paperwork rule reaches one and not the
+   other, an owner who has just switched to requiring files sees the same
+   blocked count as before while every deal refuses to move — which is a screen
+   arguing with the button underneath it. */
+head("THE BOARD CANNOT DISAGREE WITH THE GATE");
+
+const tickedOnly = { journey: "secondary", stage: "form_a", client: "T",
+                     documents: { FORM_A: { receivedAt: "2026-01-01T00:00:00.000Z", by: "x" } } };
+const withFile   = { journey: "secondary", stage: "form_a", client: "F",
+                     documents: { FORM_A: { receivedAt: "2026-01-01T00:00:00.000Z", by: "x",
+                                            file: { path: "p", name: "form-a.pdf", size: 10 } } } };
+
+for (const strict of [false, true]) {
+  for (const deal of [tickedOnly, withFile]) {
+    const gate = canAdvance(deal, { strict });
+    const turn = whoseTurn(deal, NOW, { strict });
+    ok(`${deal.client} · strict ${strict}: the panel says what the gate says`,
+       turn.blocked === !gate.ok, { blocked: turn.blocked, gate: gate.ok });
+  }
+}
+
+const deptLoose  = workByDepartment([tickedOnly], NOW);
+const deptStrict = workByDepartment([tickedOnly], NOW, { strict: true });
+ok("a ticked-only deal is not counted blocked while a tick is enough",
+   deptLoose[0].blocked === 0, deptLoose[0]);
+ok("and IS counted blocked once the agency requires files",
+   deptStrict[0].blocked === 1, deptStrict[0]);
+
+/* Sales work belongs to the agent on the deal, so the deal has to name them. */
+const mineTicked = { ...tickedOnly, agentId: "a1" };
+const workLoose  = myWork([mineTicked], { id: "a1", department: "sales" }, NOW);
+const workStrict = myWork([mineTicked], { id: "a1", department: "sales" }, NOW, { strict: true });
+ok("somebody's own desk shows the deal under either rule",
+   workLoose.total === 1 && workStrict.total === 1,
+   { loose: workLoose.total, strict: workStrict.total });
+ok("  and counts it blocked only once the agency requires files",
+   workLoose.blocked === 0 && workStrict.blocked === 1,
+   { loose: workLoose.blocked, strict: workStrict.blocked });
+ok("  which is what their headline says",
+   /waiting on you\.$/.test(workLoose.headline) && /1 of them blocked/.test(workStrict.headline),
+   { loose: workLoose.headline, strict: workStrict.headline });
 
 console.log(`\n${"═".repeat(62)}`);
 console.log(`  ${pass} passed, ${fail} failed`);
