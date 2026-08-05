@@ -216,6 +216,45 @@ ok("otherwise it counts by event",
      sweepSummary([{ event: "brn_expiring" }, { event: "deal_stalled" }])),
    sweepSummary([{ event: "brn_expiring" }, { event: "deal_stalled" }]));
 
+/* ── THE AGENCY IS IN DUBAI, NOT IN UTC ───────────────────────────────────
+   This suite went red on its own at 00:41 Dubai time with nothing having
+   changed but the clock. Every date in watch.js was the UTC calendar day, and
+   Dubai is four hours ahead with no daylight saving — so between midnight and
+   4am, "tomorrow" in UTC is today in Dubai.
+
+   That window is exactly when this code runs: the digest it builds is the
+   evening-before reminder. An agent with a 9am viewing would get the list for
+   the day that had just ended, and the correct list would never arrive,
+   because the dedupe key for it had already been marked sent.
+
+   The times below are fixed, so this fails wherever it runs if the Dubai day
+   is ever computed as the UTC one again. */
+head("THE DAY IS THE DUBAI DAY");
+
+/* 00:41 Dubai on 6 August = 20:41 UTC on 5 August. */
+const lateNight = Date.parse("2026-08-05T20:41:00.000Z");
+const viewingTomorrow = { id: "vz", agentId: "ag1", propertyName: "Unit Z", leadName: "Yusuf",
+                          at: "2026-08-07T05:00:00.000Z" };   /* 9am Dubai on the 7th */
+const night = sweep({ people: PEOPLE, viewings: [viewingTomorrow] }, new Set(), lateNight);
+ok("at 00:41 Dubai, tomorrow means the 7th and not the 6th",
+   night.some(n => n.event === "viewing_tomorrow"), night.map(n => n.event));
+ok("  and the digest is keyed to the Dubai date",
+   night.find(n => n.event === "viewing_tomorrow")?.dedupeKey?.endsWith("2026-08-07"),
+   night.find(n => n.event === "viewing_tomorrow")?.dedupeKey);
+
+/* A viewing at 9pm Dubai is still that evening, not the next morning. */
+const eveningSlot = { id: "vy", agentId: "ag1", propertyName: "Unit Y", leadName: "Layla",
+                      at: "2026-08-07T17:00:00.000Z" };       /* 9pm Dubai on the 7th */
+const evening = sweep({ people: PEOPLE, viewings: [eveningSlot] }, new Set(), lateNight);
+ok("a 9pm Dubai viewing is filed on its own evening, not the next day",
+   evening.some(n => n.event === "viewing_tomorrow"), evening.map(n => n.event));
+
+/* Midday, well away from any boundary, must be unaffected. */
+const midday = Date.parse("2026-08-06T08:00:00.000Z");        /* noon Dubai */
+ok("nothing changes in the middle of the day",
+   sweep({ people: PEOPLE, viewings: [viewingTomorrow] }, new Set(), midday)
+     .some(n => n.event === "viewing_tomorrow"));
+
 console.log(`\n${"═".repeat(62)}`);
 console.log(`  ${pass} passed, ${fail} failed`);
 console.log("═".repeat(62));

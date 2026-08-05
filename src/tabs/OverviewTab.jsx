@@ -38,6 +38,8 @@
 
 import React, { useState, useMemo } from "react";
 import { T } from "../data";
+import { colour as C, type as TY, space as S, radius as R, state as ST, surface } from "../design/system";
+import { useSystemCSS, PageHead, Empty, Chip } from "../design/ui";
 import { MARKET_FACTS, H1_2026_RANGE } from "../data/marketFacts";
 import SourceBadge from "../components/SourceBadge";
 import { classifyProvenance, PROVENANCE } from "../utils/provenance";
@@ -71,7 +73,7 @@ const ROLES = [
   },
   {
     key: "Agent",
-    color: "#63B3ED",
+    color: C.textMuted,
     desc: "Listings, leads and volume",
     routes: [
       { label: "Browse the project catalogue", tab: "Projects" },
@@ -82,7 +84,7 @@ const ROLES = [
   },
   {
     key: "Developer",
-    color: "#FC8181",
+    color: C.textMuted,
     desc: "Pipeline, supply and competition",
     routes: [
       { label: "What competitors are launching", tab: "Competitors" },
@@ -93,7 +95,7 @@ const ROLES = [
   },
   {
     key: "Buyer",
-    color: "#68D391",
+    color: ST.positive.fg,
     desc: "Pricing, mortgage and value",
     routes: [
       { label: "What a property is worth", tab: "DXB Estimate" },
@@ -139,6 +141,7 @@ export default function OverviewTab({
   teamMembers = [],
   handleTabChange = () => {},
 }) {
+  useSystemCSS();
   /* Land on the view that matches who they are; let them switch. */
   const [view, setView] = useState(() => defaultViewFor({ orgRole, userRole, orgId }));
   const offered = useMemo(() => availableViews({ orgId }), [orgId]);
@@ -165,11 +168,11 @@ export default function OverviewTab({
 
   const len = v => (Array.isArray(v) ? v.length : 0);
   const activity = [
-    { label: "Active leads", count: len(myLeads),     tab: "My Leads",  color: "#63B3ED" },
+    { label: "Active leads", count: len(myLeads),     tab: "My Leads",  color: C.textMuted },
     { label: "Active deals", count: len(deals),       tab: "Pipeline",  color: T.gold || "#D4A843" },
-    { label: "My listings",  count: len(listings),    tab: "Listings",  color: "#68D391" },
-    { label: "Portfolio",    count: len(myPortfolio), tab: "Portfolio", color: "#FC8181" },
-    { label: "Watchlist",    count: len(watchlist),   tab: "Projects",  color: "#9F7AEA" },
+    { label: "My listings",  count: len(listings),    tab: "Listings",  color: ST.positive.fg },
+    { label: "Portfolio",    count: len(myPortfolio), tab: "Portfolio", color: C.textMuted },
+    { label: "Watchlist",    count: len(watchlist),   tab: "Projects",  color: C.text },
   ];
   /* Only worth screen space once there is something in it — a row of zeroes
      tells a new user nothing and pushes the real content down. */
@@ -200,29 +203,23 @@ export default function OverviewTab({
      loading one. Say what is happening instead. */
   if (!liveNeighbourhoods.length) {
     return (
-      <div style={{ padding: "48px 20px", textAlign: "center", fontFamily: "'Outfit',sans-serif" }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: T.white || "#fff", fontFamily: "Fraunces,serif", marginBottom: 8 }}>
-          Loading Dubai community data
-        </div>
-        <p style={{ margin: "0 auto", maxWidth: 420, fontSize: 12, color: T.textMuted || "#8A94A6", lineHeight: 1.6 }}>
-          Prices, yields and service charges for 193 communities are on their way.
-          If this persists, the data feed is unavailable rather than empty — nothing
-          here is being hidden from you.
-        </p>
+      <div className="ds-root" style={{ padding: `${S.huge}px 0` }}>
+        <Empty title="Loading Dubai community data"
+          what="Prices, yields and service charges for 193 communities are on their way. If this persists, the data feed is unavailable rather than empty — nothing here is being hidden from you."/>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+    <div className="ds-root" style={{ display: "flex", flexDirection: "column", gap: S.xl }}>
 
       {/* ── HEADER ───────────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: S.base, flexWrap: "wrap" }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: T.white || "#fff", fontFamily: "Fraunces,serif" }}>
+          <h1 style={{ ...TY.display, margin: 0, color: C.text }}>
             Dubai property intelligence
-          </h2>
-          <p style={{ margin: "6px 0 0", fontSize: 12, color: muted, maxWidth: 620, lineHeight: 1.55 }}>
+          </h1>
+          <p style={{ ...TY.small, margin: `${S.sm}px 0 0`, color: C.textMuted, maxWidth: "88ch" }}>
             Every figure below is either computed from the transaction data this
             platform holds, or carries the source and date it came from.
           </p>
@@ -236,11 +233,11 @@ export default function OverviewTab({
         {freshness.latest && (() => {
           const stale = typeof freshness.ageDays === "number" && freshness.ageDays > 30;
           return (
-            <div style={{ fontSize: 10, color: muted, textAlign: "right", maxWidth: 230 }}>
-              <div style={{ fontWeight: 700, letterSpacing: 0.6, textTransform: "uppercase" }}>
+            <div style={{ ...TY.small, color: C.textMuted, textAlign: "right", maxWidth: 250 }}>
+              <div style={{ ...TY.label, color: C.textMuted }}>
                 Community data
               </div>
-              <div style={{ color: stale ? "#F59E0B" : text, marginTop: 3, fontWeight: stale ? 700 : 400 }}>
+              <div style={{ ...TY.numeric, fontSize: 14, color: stale ? ST.warning.fg : C.text, marginTop: 4 }}>
                 {freshness.latest.toISOString().slice(0, 10)}
                 {typeof freshness.ageDays === "number" && (
                   <span style={{ marginLeft: 6 }}>
@@ -251,7 +248,7 @@ export default function OverviewTab({
                 )}
               </div>
               {stale && (
-                <div style={{ color: "#F59E0B", marginTop: 4, lineHeight: 1.45 }}>
+                <div style={{ ...TY.small, color: ST.warning.fg, marginTop: 6, textAlign: "right" }}>
                   {/* This used to read "Prices and yields below are from this
                       date" — which became false the moment the market section
                       went in above it, because those figures are computed from a
@@ -294,30 +291,34 @@ export default function OverviewTab({
           or from accepting an invite, so nobody is asked a question the system
           can answer. They can still switch. */}
       {offered.length > 1 && (
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          {offered.map(v => {
-            const meta = VIEW_META[v];
-            const active = view === v;
-            return (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setView(v)}
-                title={meta.answers}
-                style={{
-                  padding: "7px 15px", borderRadius: 999, cursor: "pointer",
-                  border: `1px solid ${active ? meta.color : (T.border || "rgba(255,255,255,0.08)")}`,
-                  background: active ? meta.color + "18" : "transparent",
-                  color: active ? meta.color : muted,
-                  fontSize: 12, fontWeight: active ? 700 : 500,
-                  fontFamily: "'Outfit',sans-serif",
-                }}
-              >
-                {meta.label}
-              </button>
-            );
-          })}
-          <span style={{ fontSize: 10.5, color: muted, marginLeft: 2 }}>
+        <div style={{ display: "flex", gap: S.md, alignItems: "center", flexWrap: "wrap" }}>
+          {/* Each view had its own colour, so "Agent" was blue and "Agency" gold
+              whether or not either was selected — the colour said which view
+              you were reading, and also said nothing, because it was there when
+              the view was not selected too. Selected is the only state a picker
+              has, and gold is what this product uses for it. */}
+          <div style={{ display: "flex", gap: 2, background: C.panelSunk,
+                        border: `1px solid ${C.line}`, borderRadius: R.control, padding: 3 }}>
+            {offered.map(v => {
+              const meta = VIEW_META[v];
+              const active = view === v;
+              return (
+                <button key={v} type="button" onClick={() => setView(v)} title={meta.answers}
+                  className="ds-btn ds-focus"
+                  style={{
+                    padding: `0 ${S.base}px`, minHeight: 32, borderRadius: 6, cursor: "pointer",
+                    border: `1px solid ${active ? C.accentLine : "transparent"}`,
+                    background: active ? C.accentSoft : "transparent",
+                    color: active ? C.accent : C.textMuted,
+                    fontFamily: TY.small.fontFamily, fontSize: 13, fontWeight: active ? 700 : 500,
+                    whiteSpace: "nowrap",
+                  }}>
+                  {meta.label}
+                </button>
+              );
+            })}
+          </div>
+          <span style={{ ...TY.small, color: C.textMuted }}>
             {VIEW_META[view]?.hint}
           </span>
         </div>
@@ -366,10 +367,10 @@ export default function OverviewTab({
               onMouseEnter={e => e.currentTarget.style.borderColor = a.color}
               onMouseLeave={e => e.currentTarget.style.borderColor = T.border || "rgba(255,255,255,0.08)"}
             >
-              <div style={{ fontSize: 22, fontWeight: 800, color: a.color, fontFamily: "Fraunces,serif", lineHeight: 1 }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: a.color, fontFamily: TY.figure.fontFamily, lineHeight: 1 }}>
                 {a.count}
               </div>
-              <div style={{ fontSize: 10, color: muted, marginTop: 6, fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase" }}>
+              <div style={{ fontSize: 13, color: muted, marginTop: 6, fontWeight: 600, letterSpacing: 0.4, textTransform: "uppercase" }}>
                 {a.label}
               </div>
             </button>
@@ -455,7 +456,7 @@ export default function OverviewTab({
                 number is the visual version of the errors this page exists to
                 prevent. */}
             <div style={{
-              fontSize: 26, fontWeight: 800, fontFamily: "Fraunces,serif",
+              fontSize: 26, fontWeight: 800, fontFamily: TY.figure.fontFamily,
               color: verifiedPct >= 70 ? "#10B981" : verifiedPct >= 40 ? "#F6AD55" : "#F59E0B",
             }}>
               {verifiedPct}%
@@ -474,7 +475,7 @@ export default function OverviewTab({
             <div style={{ width: `${verifiedPct}%`, background: "#10B981" }} />
             <div style={{ flex: 1, background: "#F59E0B" }} />
           </div>
-          <div style={{ display: "flex", gap: 16, marginTop: 10, flexWrap: "wrap", fontSize: 10, color: muted }}>
+          <div style={{ display: "flex", gap: 16, marginTop: 10, flexWrap: "wrap", fontSize: 13, color: muted }}>
             <span><span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: "#10B981", marginRight: 5 }} />DLD verified {coverage.provenance.verified}</span>
             <span><span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: "#F59E0B", marginRight: 5 }} />Estimate {coverage.provenance.estimate}</span>
             {coverage.provenance.derived > 0 && (
@@ -501,44 +502,44 @@ export default function OverviewTab({
               style={{ flex: "1 1 200px", minWidth: 190, cursor: "pointer" }}
               onClick={() => handleTabChange("Mortgage")}
             >
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: muted, marginBottom: 7 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: muted, marginBottom: 7 }}>
                 EIBOR 3-month
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                <span style={{ fontSize: 20, fontWeight: 800, color: "#9F7AEA", fontFamily: "Fraunces,serif" }}>
+                <span style={{ fontSize: 20, fontWeight: 800, color: C.text, fontFamily: TY.figure.fontFamily }}>
                   {Number(eibor3m).toFixed(2)}%
                 </span>
-                <span style={{ fontSize: 10, color: "#68D391", fontWeight: 700 }}>live</span>
+                <span style={{ fontSize: 13, color: ST.positive.fg, fontWeight: 700 }}>live</span>
               </div>
-              <div style={{ fontSize: 10, color: muted, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 13, color: muted, marginTop: 6, lineHeight: 1.45 }}>
                 Base for variable mortgage pricing
               </div>
-              <div style={{ fontSize: 9, color: muted, marginTop: 8 }}>
+              <div style={{ fontSize: 12, color: muted, marginTop: 8 }}>
                 Central Bank of the UAE{eiborAsOf ? ` · as of ${eiborAsOf}` : ""}
               </div>
             </Card>
           )}
           {contextFacts.map(({ key, label, fact }) => (
             <Card key={key} style={{ flex: "1 1 200px", minWidth: 190 }}>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: muted, marginBottom: 7 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase", color: muted, marginBottom: 7 }}>
                 {label}
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 20, fontWeight: 800, color: T.white || "#fff", fontFamily: "Fraunces,serif" }}>
+                <span style={{ fontSize: 20, fontWeight: 800, color: C.text, fontFamily: TY.figure.fontFamily }}>
                   {fact.value}
                 </span>
                 {fact.change && (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: String(fact.change).startsWith("+") ? "#68D391" : muted }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: String(fact.change).startsWith("+") ? "#68D391" : muted }}>
                     {fact.change}
                   </span>
                 )}
               </div>
               {fact.note && (
-                <div style={{ fontSize: 10, color: muted, marginTop: 6, lineHeight: 1.45 }}>{fact.note}</div>
+                <div style={{ fontSize: 13, color: muted, marginTop: 6, lineHeight: 1.45 }}>{fact.note}</div>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
                 <SourceBadge row={{ source: fact.source, verified: fact.verified, asOf: fact.asOf }} compact />
-                <span style={{ fontSize: 9, color: muted }}>
+                <span style={{ fontSize: 12, color: muted }}>
                   {fact.source || "No source recorded"}{fact.asOf ? ` · as of ${fact.asOf}` : ""}
                 </span>
               </div>
@@ -549,17 +550,17 @@ export default function OverviewTab({
         {/* Where the market itself has not settled, say so rather than pick one. */}
         {H1_2026_RANGE && (
           <Card style={{ borderColor: "rgba(245,158,11,0.28)", background: "rgba(245,158,11,0.04)" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", marginBottom: 6 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: ST.warning.fg, marginBottom: 6 }}>
               {H1_2026_RANGE.label} — published totals disagree
             </div>
-            <div style={{ fontSize: 11, color: text, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13, color: text, lineHeight: 1.6 }}>
               {H1_2026_RANGE.low.value} deals / {H1_2026_RANGE.low.aed}{" "}
               <span style={{ color: muted }}>({H1_2026_RANGE.low.scope}, {H1_2026_RANGE.low.source})</span>
               {"  to  "}
               {H1_2026_RANGE.high.value} deals / {H1_2026_RANGE.high.aed}{" "}
               <span style={{ color: muted }}>({H1_2026_RANGE.high.scope}, {H1_2026_RANGE.high.source})</span>
             </div>
-            <div style={{ fontSize: 10, color: muted, marginTop: 7, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13, color: muted, marginTop: 7, lineHeight: 1.5 }}>
               {H1_2026_RANGE.note} Yield figures for 2026 have not yet been finalised by the bodies
               that publish them, which is why the net yield above is computed here, with its method shown,
               rather than quoted.
@@ -593,10 +594,10 @@ export default function OverviewTab({
                 padding: "9px 12px", borderRadius: 8, marginBottom: 10,
                 background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.25)",
               }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", flexShrink: 0 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: ST.warning.fg, flexShrink: 0 }}>
                   {estimates} of {topYields.length}
                 </span>
-                <span style={{ fontSize: 10.5, color: text, lineHeight: 1.55 }}>
+                <span style={{ fontSize: 13, color: text, lineHeight: 1.55 }}>
                   of these are <strong>estimates</strong>, not measured from transactions — the highest
                   yields in Dubai are often in areas with the thinnest transaction data. Check the badge
                   on each row before quoting one to a client.
@@ -617,8 +618,8 @@ export default function OverviewTab({
                 onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
-                <span style={{ fontSize: 10, color: muted, width: 16 }}>{i + 1}</span>
-                <span style={{ fontSize: 12, color: T.white || "#fff", flex: 1, textTransform: "capitalize" }}>
+                <span style={{ fontSize: 13, color: muted, width: 16 }}>{i + 1}</span>
+                <span style={{ fontSize: 12, color: C.text, flex: 1, textTransform: "capitalize" }}>
                   {String(c.name || c.id || "").replace(/-/g, " ")}
                 </span>
                 {/* The word, not just the dot. And where a figure is shared with
@@ -626,7 +627,7 @@ export default function OverviewTab({
                     between "an estimate" and "this exact number also appears
                     somewhere else". */}
                 {classifyProvenance(c).level === PROVENANCE.VERIFIED ? (
-                  <span style={{ fontSize: 9, fontWeight: 700, color: "#10B981", letterSpacing: 0.3 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: ST.positive.fg, letterSpacing: 0.3 }}>
                     DLD
                   </span>
                 ) : (
@@ -635,7 +636,7 @@ export default function OverviewTab({
                       ? `This figure also appears on ${c.valueSharedWith} other communit${Number(c.valueSharedWith) === 1 ? "y" : "ies"}`
                       : "Estimated, not measured from transactions"}
                     style={{
-                      fontSize: 9, fontWeight: 700, color: "#F59E0B", letterSpacing: 0.3,
+                      fontSize: 12, fontWeight: 700, color: ST.warning.fg, letterSpacing: 0.3,
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -643,15 +644,15 @@ export default function OverviewTab({
                   </span>
                 )}
                 <SourceBadge row={c} compact />
-                <span style={{ fontSize: 10, color: muted, width: 92, textAlign: "right" }}>
+                <span style={{ fontSize: 13, color: muted, width: 92, textAlign: "right" }}>
                   {Number(c.medianPPSF ?? c.avgPpsf ?? c.ppsf) > 0
                     ? `${Number(c.medianPPSF ?? c.avgPpsf ?? c.ppsf).toLocaleString()}/sqft`
                     : ""}
                 </span>
-                <span style={{ fontSize: 10, color: muted, width: 66, textAlign: "right" }}>
+                <span style={{ fontSize: 13, color: muted, width: 66, textAlign: "right" }}>
                   gross {formatPct(c.grossYield)}
                 </span>
-                <span style={{ fontSize: 14, fontWeight: 800, color: "#68D391", width: 54, textAlign: "right", fontFamily: "Fraunces,serif" }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: ST.positive.fg, width: 54, textAlign: "right", fontFamily: TY.figure.fontFamily }}>
                   {formatPct(c.netYield)}
                 </span>
               </div>
@@ -694,14 +695,14 @@ export default function OverviewTab({
                 padding: "13px 15px", borderRadius: 10,
                 border: `1px solid ${T.border || "rgba(255,255,255,0.08)"}`,
                 background: T.card || "rgba(255,255,255,0.03)",
-                color: T.white || "#fff", fontSize: 12, fontWeight: 600,
+                color: C.text, fontSize: 12, fontWeight: 600,
                 fontFamily: "'Outfit',sans-serif",
               }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = T.gold || "#D4A843")}
               onMouseLeave={e => (e.currentTarget.style.borderColor = T.border || "rgba(255,255,255,0.08)")}
             >
               {r.label}
-              <span style={{ display: "block", fontSize: 10, color: muted, marginTop: 4, fontWeight: 500, lineHeight: 1.45 }}>
+              <span style={{ display: "block", fontSize: 13, color: muted, marginTop: 4, fontWeight: 500, lineHeight: 1.45 }}>
                 {r.why}
               </span>
             </button>

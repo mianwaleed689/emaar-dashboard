@@ -37,6 +37,29 @@ import { statusOf, clashes, diary } from "./viewing.js";
 const DAY = 86400000;
 const daysUntil = (d, now) => d ? Math.floor((new Date(d).getTime() - now) / DAY) : null;
 
+/* ── WHAT DAY IS IT, IN DUBAI ──────────────────────────────────────────────
+   Every date in this file was `new Date(...).toISOString().slice(0, 10)`,
+   which is the date in UTC. The agency is in Dubai, four hours ahead, and no
+   part of the UAE observes daylight saving — so for the four hours between
+   midnight and 4am Dubai time, "today" in UTC is still yesterday, and
+   "tomorrow" is today.
+
+   That is not a rounding error, it is the exact window this code runs in. The
+   digest it computes is the EVENING BEFORE reminder — "you have two viewings
+   tomorrow, confirm them tonight" — so the one notification most likely to be
+   generated after midnight was the one asking the wrong question. An agent
+   with a viewing at 9am would be sent the list for the day that had just
+   ended, and the real list would never arrive, because the same key had
+   already been marked sent.
+
+   The other direction bites too: a viewing booked for 9pm Dubai is 5pm UTC on
+   the same day, but one at 1am is the previous day in UTC, so late slots were
+   being filed under the wrong date whatever the hour of the sweep.
+
+   Everything here is now the Dubai calendar day. */
+const DUBAI_OFFSET = 4 * 3600000;   /* UTC+4, all year — the UAE has no DST. */
+const dubaiDay = t => new Date(new Date(t).getTime() + DUBAI_OFFSET).toISOString().slice(0, 10);
+
 /** The thresholds a warning fires at, and nowhere in between. */
 export const THRESHOLDS = [90, 60, 30, 14, 7, 0];
 
@@ -113,7 +136,7 @@ export function sweep(data = {}, sent = new Set(), now = Date.now()) {
     if (posted && !verdict.ok) {
       /* No threshold — this is live and wrong. It repeats daily on purpose,
          because it is not a reminder, it is a violation running right now. */
-      const day = new Date(now).toISOString().slice(0, 10);
+      const day = dubaiDay(now);
       push(key("not_compliant", l.id, day), "listing_not_compliant",
            { listingId: l.id, listingTitle: l.title || l.community || "A listing",
              agentId: l.agentId, reason: verdict.blocking[0]?.fail || verdict.summary });
@@ -174,7 +197,7 @@ export function sweep(data = {}, sent = new Set(), now = Date.now()) {
     const leadName = l.name || "A lead";
 
     if (!l.assignedTo) {
-      const day = new Date(now).toISOString().slice(0, 10);
+      const day = dubaiDay(now);
       push(key("unassigned", l.id, day), "lead_unassigned",
            { leadId: l.id, leadName, routingWhy: l.routingWhy });
       return;
@@ -205,7 +228,7 @@ export function sweep(data = {}, sent = new Set(), now = Date.now()) {
     if (st.key === "unclosed") {
       /* Chased once a day while it stays open. It is outstanding work, not a
          reminder about a date — and it stops the moment somebody closes it. */
-      const day = new Date(now).toISOString().slice(0, 10);
+      const day = dubaiDay(now);
       push(key("viewing_unwritten", v.id, day), "viewing_unwritten",
            { leadId: v.leadId, agentId: v.agentId,
              propertyName: v.propertyName, note: st.note });
@@ -213,10 +236,10 @@ export function sweep(data = {}, sent = new Set(), now = Date.now()) {
   });
 
   /* Tomorrow's list, once, the evening before. */
-  const tomorrow = new Date(now + DAY).toISOString().slice(0, 10);
+  const tomorrow = dubaiDay(now + DAY);
   const byAgent = {};
   viewings.filter(v => (v.outcome || "scheduled") === "scheduled" &&
-                       (v.at || "").slice(0, 10) === tomorrow)
+                       dubaiDay(v.at) === tomorrow)
           .forEach(v => { (byAgent[v.agentId] = byAgent[v.agentId] || []).push(v); });
 
   Object.entries(byAgent).forEach(([agentId, list]) => {
@@ -227,7 +250,7 @@ export function sweep(data = {}, sent = new Set(), now = Date.now()) {
   });
 
   clashes(viewings).forEach(cl => {
-    const day = new Date(cl.second.at).toISOString().slice(0, 10);
+    const day = dubaiDay(cl.second.at);
     push(key("viewing_clash", cl.first.id, cl.second.id, day), "viewing_clash",
          { agentId: cl.first.agentId, note: cl.note });
   });

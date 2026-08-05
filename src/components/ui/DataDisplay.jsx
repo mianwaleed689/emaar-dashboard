@@ -1,5 +1,6 @@
 import React from "react";
-import { T } from "../../data";
+import { colour as C, type as TY, space as S, radius as R, state as ST, surface } from "../../design/system";
+import { useSystemCSS } from "../../design/ui";
 
 /**
  * DXB ANALYTICS — SHARED DATA DISPLAY PRIMITIVES
@@ -16,44 +17,46 @@ import { T } from "../../data";
  * number needs a source. Some showed a figure with no provenance at all. When
  * the primitive does not ask for it, the caller forgets.
  *
- * These are the shared versions. `Kpi` takes a `context` prop and renders a
- * visible warning in development when it is missing, because on this product a
- * number without a sample size, a source or a date is a defect — that is what
- * produced "87% cash" surviving in six places and "Market Health 72/100" with
- * no formula behind it.
+ * ── WHY THEY NOW READ FROM design/system.js ─────────────────────────────────
  *
- * Used by Overview and Market. The remaining tabs should adopt them as they are
- * touched, rather than in one sweep that cannot be reviewed.
+ * These were the right idea implemented one level too low: they still chose
+ * their own hexes and their own font sizes — 9px uppercase labels, 9.5px notes,
+ * an `accent` prop that took any colour a caller fancied. So the primitive that
+ * existed to stop tabs inventing a type scale had invented one of its own, and
+ * a "shared" card did not match the cards on the rebuilt CRM screens.
+ *
+ * The API is unchanged, deliberately: every existing caller keeps working, and
+ * four screens — Overview, Market, the Almanac and both desks — pick up the
+ * system in one edit rather than four.
+ *
+ * `accent` is the one change worth knowing about. It used to take a colour;
+ * it now takes a TONE ("critical" | "warning" | "positive" | "info"), because
+ * a figure should be coloured for what it MEANS. A hex is still accepted so
+ * nothing breaks, but it is the old way and should go as each caller is
+ * touched.
  */
 
-const c = {
-  card: () => T?.card || "rgba(255,255,255,0.03)",
-  border: () => T?.border || "rgba(255,255,255,0.08)",
-  muted: () => T?.textMuted || "#8A94A6",
-  text: () => T?.textSecondary || "#C9D1D9",
-  white: () => T?.white || "#fff",
-  gold: () => T?.gold || "#D4A843",
-};
-
-const SANS = "'Outfit',sans-serif";
-const SERIF = "Fraunces,serif";
+const TONES = { critical: 1, warning: 1, positive: 1, info: 1, neutral: 1 };
+/** A tone name if we were given one; a hex passes through for now. */
+const accentColour = a => (a && TONES[a] ? ST[a].fg : a) || undefined;
 
 /** Surface container. One border radius, one padding scale, everywhere. */
 export function Card({ children, style, onClick, interactive }) {
+  useSystemCSS();
+  const clickable = Boolean(onClick || interactive);
   return (
     <div
       onClick={onClick}
+      className={clickable ? "ds-btn ds-focus" : undefined}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick?.(e); } } : undefined}
       style={{
-        background: c.card(),
-        border: `1px solid ${c.border()}`,
-        borderRadius: 12,
-        padding: "16px 18px",
-        cursor: onClick || interactive ? "pointer" : undefined,
-        transition: "border-color 0.2s",
+        ...surface(),
+        padding: `${S.base}px ${S.lg}px`,
+        cursor: clickable ? "pointer" : undefined,
         ...style,
       }}
-      onMouseEnter={e => { if (onClick || interactive) e.currentTarget.style.borderColor = c.gold(); }}
-      onMouseLeave={e => { if (onClick || interactive) e.currentTarget.style.borderColor = c.border(); }}
     >
       {children}
     </div>
@@ -69,26 +72,21 @@ export function SectionTitle({ children, hint, right, variant = "label", style }
   /* Two weights, deliberately:
        "label"   — uppercase micro-heading for a group of KPIs inside a section
        "heading" — serif headline that opens a major section of a page
-     Both live here so the type scale is decided once. A tab that invents a third
-     is the thing this component exists to prevent. */
+     Both come from the system's type scale now, so a tab that invents a third
+     is visibly different rather than subtly different. */
   const isHeading = variant === "heading";
 
   return (
     <div style={{
       display: "flex", alignItems: isHeading ? "flex-end" : "baseline",
-      gap: 10, marginBottom: isHeading ? 14 : 10,
-      marginTop: isHeading ? 32 : 0, flexWrap: "wrap", ...style,
+      gap: S.md, marginBottom: isHeading ? S.base : S.md,
+      marginTop: isHeading ? S.xxl : 0, flexWrap: "wrap", ...style,
     }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", flex: 1, minWidth: 200 }}>
-        <h3 style={isHeading ? {
-          margin: 0, fontSize: 16, fontWeight: 700, color: c.white(), fontFamily: SERIF,
-        } : {
-          margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: 0.8,
-          textTransform: "uppercase", color: c.text(), fontFamily: SANS,
-        }}>{children}</h3>
-        {hint && (
-          <span style={{ fontSize: isHeading ? 11 : 10, color: c.muted(), lineHeight: 1.5 }}>{hint}</span>
-        )}
+      <div style={{ display: "flex", alignItems: "baseline", gap: S.md, flexWrap: "wrap", flex: 1, minWidth: 200 }}>
+        <h3 style={isHeading
+          ? { ...TY.title, margin: 0, color: C.text }
+          : { ...TY.label, margin: 0, color: C.textMuted }}>{children}</h3>
+        {hint && <span style={{ ...TY.small, color: C.textMuted }}>{hint}</span>}
       </div>
       {right && <span>{right}</span>}
     </div>
@@ -104,27 +102,22 @@ export function SectionTitle({ children, hint, right, variant = "label", style }
  * screen with nothing attached.
  */
 export function Kpi({ label, value, context, accent, large, onClick, style }) {
-  const missingContext = !context;
   return (
-    <Card onClick={onClick} style={{ flex: "1 1 170px", minWidth: 160, ...style }}>
+    <Card onClick={onClick} style={{ flex: "1 1 180px", minWidth: 168, ...style }}>
+      <div style={{ ...TY.label, color: C.textMuted, marginBottom: S.sm }}>{label}</div>
       <div style={{
-        fontSize: 9, fontWeight: 700, letterSpacing: 0.8, textTransform: "uppercase",
-        color: c.muted(), marginBottom: 8, fontFamily: SANS,
-      }}>{label}</div>
-      <div style={{
-        fontSize: large ? 30 : 24, fontWeight: 800, lineHeight: 1.05,
-        color: accent || c.white(), fontFamily: SERIF,
+        ...(large ? TY.figure : TY.figureSm),
+        color: accentColour(accent) || C.text,
       }}>{value ?? "—"}</div>
       {context ? (
-        <div style={{ fontSize: 10, color: c.muted(), marginTop: 7, lineHeight: 1.45 }}>{context}</div>
+        <div style={{ ...TY.small, color: C.textFaint, marginTop: S.sm }}>{context}</div>
       ) : (
         import.meta.env?.DEV && (
-          <div style={{ fontSize: 9, color: "#FC8181", marginTop: 7 }}>
+          <div style={{ ...TY.small, color: ST.critical.fg, marginTop: S.sm }}>
             no context — add a sample size, source or date
           </div>
         )
       )}
-      {missingContext && !import.meta.env?.DEV ? null : null}
     </Card>
   );
 }
@@ -136,16 +129,18 @@ export function Kpi({ label, value, context, accent, large, onClick, style }) {
  */
 export function StatBar({ label, value, pct, color, note }) {
   const width = Math.max(0, Math.min(100, Number(pct) || 0));
+  const fill = accentColour(color) || C.accent;
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 5 }}>
-        <span style={{ fontSize: 11.5, color: c.text(), fontFamily: SANS }}>{label}</span>
-        <span style={{ fontSize: 12, fontWeight: 800, color: color || c.gold(), fontFamily: SERIF }}>{value}</span>
+    <div style={{ marginBottom: S.base }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <span style={{ ...TY.small, color: C.text }}>{label}</span>
+        <span style={{ ...TY.numeric, fontSize: 14, color: C.text }}>{value}</span>
       </div>
-      <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${width}%`, background: color || c.gold(), borderRadius: 3, transition: "width 0.8s ease" }} />
+      <div style={{ height: 6, borderRadius: 3, background: C.panelSunk, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${width}%`, background: fill, borderRadius: 3,
+                      transition: "width 0.6s ease" }}/>
       </div>
-      {note && <div style={{ fontSize: 9.5, color: c.muted(), marginTop: 5, lineHeight: 1.45 }}>{note}</div>}
+      {note && <div style={{ ...TY.small, color: C.textFaint, marginTop: 6 }}>{note}</div>}
     </div>
   );
 }
@@ -158,7 +153,7 @@ export function StatBar({ label, value, pct, color, note }) {
 export function SourceLine({ source, asOf, note }) {
   if (!source && !asOf) return null;
   return (
-    <div style={{ fontSize: 9, color: c.muted(), marginTop: 8, lineHeight: 1.5 }}>
+    <div style={{ ...TY.small, color: C.textFaint, marginTop: S.sm }}>
       {source}{asOf ? ` · as of ${asOf}` : ""}{note ? ` · ${note}` : ""}
     </div>
   );
@@ -167,13 +162,11 @@ export function SourceLine({ source, asOf, note }) {
 /** Amber callout for anything provisional, disputed, or not yet settled. */
 export function Caveat({ title, children, style }) {
   return (
-    <Card style={{ borderColor: "rgba(245,158,11,0.28)", background: "rgba(245,158,11,0.04)", ...style }}>
+    <Card style={{ borderColor: ST.warning.line, background: ST.warning.bg, ...style }}>
       {title && (
-        <div style={{ fontSize: 11, fontWeight: 700, color: "#F59E0B", marginBottom: 6, fontFamily: SANS }}>
-          {title}
-        </div>
+        <div style={{ ...TY.smallStrong, color: ST.warning.fg, marginBottom: 6 }}>{title}</div>
       )}
-      <div style={{ fontSize: 11, color: c.text(), lineHeight: 1.6 }}>{children}</div>
+      <div style={{ ...TY.small, color: C.text }}>{children}</div>
     </Card>
   );
 }

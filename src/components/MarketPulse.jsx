@@ -28,6 +28,7 @@
  */
 import React from "react";
 import { T } from "../data";
+import { colour as C, type as TY, space as S, state as ST } from "../design/system";
 import PULSE from "../data/marketPulse.json";
 
 const MONTH = ["January", "February", "March", "April", "May", "June", "July",
@@ -47,7 +48,7 @@ function Delta({ pct, label }) {
   if (pct == null) return null;
   const up = pct >= 0;
   return (
-    <span style={{ fontSize: 11, color: up ? "#10B981" : "#F59E0B", fontWeight: 600 }}>
+    <span style={{ ...TY.smallStrong, color: up ? ST.positive.fg : ST.warning.fg }}>
       {up ? "▲" : "▼"} {Math.abs(pct).toFixed(1)}% {label}
     </span>
   );
@@ -57,12 +58,12 @@ function Figure({ label, value, sub, note, accent }) {
   return (
     <div style={{ flex: "1 1 190px", minWidth: 170, background: "rgba(255,255,255,0.02)",
                   border: `1px solid ${T.border}`, borderRadius: 12, padding: "13px 15px" }}>
-      <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7,
+      <div style={{ ...TY.label, color: C.textMuted,
                     textTransform: "uppercase", marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 22, fontWeight: 800, color: accent || T.white,
                     fontFamily: "'Fraunces',serif", lineHeight: 1.1 }}>{value}</div>
       {sub && <div style={{ marginTop: 5 }}>{sub}</div>}
-      {note && <div style={{ fontSize: 10, color: T.textMuted, marginTop: 5, lineHeight: 1.5 }}>{note}</div>}
+      {note && <div style={{ ...TY.small, color: C.textFaint, marginTop: 6 }}>{note}</div>}
     </div>
   );
 }
@@ -81,7 +82,7 @@ export default function MarketPulse({ handleTabChange }) {
                      fontFamily: "'Fraunces',serif" }}>
           The Dubai market
         </h3>
-        <span style={{ fontSize: 11.5, color: T.textSecondary }}>
+        <span style={{ ...TY.small, color: C.textMuted }}>
           {covers} · every figure counted from registered Land Department sales
         </span>
       </div>
@@ -90,7 +91,6 @@ export default function MarketPulse({ handleTabChange }) {
         <Figure
           label="Sales registered"
           value={L.deals.toLocaleString()}
-          accent={T.gold}
           sub={<div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <Delta pct={L.dealsVsPrevMonth} label="on last month" />
             <Delta pct={L.dealsVsYearAgo} label="on last year" />
@@ -105,7 +105,6 @@ export default function MarketPulse({ handleTabChange }) {
         <Figure
           label="Total value"
           value={aed(L.valueAed)}
-          accent="#10B981"
           note={`Across ${L.deals.toLocaleString()} registered sales. Averages ${
             aed(L.valueAed / L.deals)} a sale.`}
         />
@@ -127,7 +126,7 @@ export default function MarketPulse({ handleTabChange }) {
       {/* Twelve months of volume. A single month says nothing about direction. */}
       <div style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`,
                     borderRadius: 12, padding: "13px 15px" }}>
-        <div style={{ fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7,
+        <div style={{ ...TY.label, color: C.textMuted,
                       textTransform: "uppercase", marginBottom: 10 }}>
           Sales a month, last twelve
         </div>
@@ -141,14 +140,14 @@ export default function MarketPulse({ handleTabChange }) {
                 <div style={{ width: "100%", height: Math.max(5, (b.deals / peak) * 78),
                               background: last ? T.gold : "rgba(212,168,67,0.62)",
                               borderRadius: "3px 3px 0 0" }}/>
-                <span style={{ fontSize: 8.5, color: last ? T.gold : T.textMuted }}>
+                <span style={{ ...TY.small, fontSize: 12, color: last ? C.accent : C.textMuted }}>
                   {b.month.slice(5)}
                 </span>
               </div>
             );
           })}
         </div>
-        <div style={{ fontSize: 10, color: T.textMuted, marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ ...TY.small, color: C.textFaint, marginTop: S.sm }}>
           The last bar covers {covers} only, so it is shorter than a full month by construction.
         </div>
       </div>
@@ -158,13 +157,13 @@ export default function MarketPulse({ handleTabChange }) {
                     borderRadius: 12, padding: "13px 15px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline",
                       marginBottom: 9, gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7,
+          <span style={{ ...TY.label, color: C.textMuted,
                          textTransform: "uppercase" }}>
             Busiest areas, {covers}
           </span>
           <button type="button" onClick={() => handleTabChange?.("Map")}
             title="See these areas on the map"
-            style={{ background: "none", border: "none", color: T.gold, fontSize: 11,
+            style={{ background: "none", border: "none", color: C.accent, fontSize: 13,
                      cursor: "pointer", fontFamily: "'Outfit',sans-serif", padding: 0 }}>
             See them on the map →
           </button>
@@ -176,10 +175,10 @@ export default function MarketPulse({ handleTabChange }) {
                              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {a.area}
               </span>
-              <span style={{ fontSize: 11, color: T.textSecondary, whiteSpace: "nowrap" }}>
+              <span style={{ ...TY.small, color: C.text, whiteSpace: "nowrap" }}>
                 {a.deals.toLocaleString()} sales
               </span>
-              <span style={{ fontSize: 11, color: T.gold, width: 92, textAlign: "right",
+              <span style={{ ...TY.numeric, fontSize: 13, color: C.textMuted, width: 100, textAlign: "right",
                              whiteSpace: "nowrap" }}>
                 {a.ppsf ? `AED ${a.ppsf.toLocaleString()}/sqft` : "—"}
               </span>
@@ -188,7 +187,7 @@ export default function MarketPulse({ handleTabChange }) {
         </div>
       </div>
 
-      <div style={{ fontSize: 10.5, color: T.textMuted, lineHeight: 1.6 }}>
+      <div style={{ ...TY.small, color: C.textFaint }}>
         Source: Dubai Land Department registered sale transactions, export dated{" "}
         {PULSE.exportDate}. {PULSE.rowsRead.toLocaleString()} transactions on record.
         {PULSE.rowsSkippedBadDate > 0 &&
