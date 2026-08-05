@@ -60,6 +60,8 @@ import { viewerFrom, scopeFor, intentFor, visibleRecords, DEPARTMENTS } from "..
 import { whoseTurn, myWork, workByDepartment, stepRecord, stepQuality,
          dealTimeline, HANDOVER_NOTE } from "../crm/model/workflow";
 import { onStageChange, notificationsFor } from "../crm/model/notify";
+import { checkFile, documentRecord, isOnFile, humanSize, ACCEPT_ATTR } from "../crm/model/documents";
+import { putFile, fileUrl, removeFile, documentPath, storageStatus } from "../services/storage";
 
 const card  = { background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`, borderRadius: 12 };
 const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7, textTransform: "uppercase" };
@@ -211,6 +213,23 @@ export default function PipelineTab({
     } catch (e) {
       console.error("[pipeline] setStage failed:", e);
       say("Could not save that.", true);
+    }
+    setBusy(false);
+  }, [say]);
+
+  /* Attaching a file writes the same document record markDocument writes, plus
+     the file itself. One shape either way, so nothing downstream has to know
+     whether a document arrived as a tick or as paper. */
+  const attachDocument = useCallback(async (d, key, record) => {
+    setBusy(true);
+    try {
+      const documents = { ...(d.documents || {}), [key]: record };
+      await setDoc(doc(db, "deals", d.id), { documents, updatedAt: new Date().toISOString() }, { merge: true });
+      setSelected(s2 => s2?.id === d.id ? { ...s2, documents } : s2);
+      say(`${DOCUMENTS[key]?.label || "Document"} attached — ${record.file?.name || "file"}.`);
+    } catch (e) {
+      console.error("[pipeline] attachDocument failed:", e);
+      say("Could not save that file.", true);
     }
     setBusy(false);
   }, [say]);
@@ -651,6 +670,8 @@ export default function PipelineTab({
             onAdvance={note => advance(selected, note)}
             onSetStage={s => setStage(selected, s)}
             onDoc={(k, v) => markDocument(selected, k, v)}
+            onAttach={(k, rec) => attachDocument(selected, k, rec)}
+            orgId={orgId} userName={userName} firebaseUser={firebaseUser}
             canMoveMoney={moneyScope === "org"}
             onMoney={(i, to, detail) => moveCommission(selected, i, to, detail)}
             onDelete={() => remove(selected)} />
@@ -774,7 +795,7 @@ const Sel = ({ value, onChange, children }) =>
 
 /** One deal: where it is, what it is missing, and what it is worth. */
 function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canDelete, busy,
-                    canMoveMoney, onMoney }) {
+                    canMoveMoney, onMoney, onAttach, orgId, userName, firebaseUser }) {
   const [moneyRef, setMoneyRef] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [note, setNote] = useState("");
@@ -788,6 +809,75 @@ function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canD
   const held = k => Boolean(deal?.documents?.[k]?.receivedAt);
   const lines = Array.isArray(deal.commissionLines) ? deal.commissionLines : migrateCommission(deal);
   const total = dealTotals(lines);
+
+  /* ATTACHING THE ACTUAL PAPER.
+     The tick beside this says somebody asserts the document exists. This puts
+     the document there. Both are kept: an agency mid-migration has years of
+     ticks with no files, and blocking all of them overnight is not a migration
+     it is an outage. What changes is that the file is now possible, visible,
+     and countable — see documents.js for the coverage figure that tells an
+     owner when it is safe to require them. */
+  const Attach = ({ k, doc }) => {
+    const filed = isOnFile(doc);
+    const inputRef = React.useRef(null);
+    const [busy, setBusy] = React.useState(false);
+    const [err, setErr] = React.useState("");
+
+    const choose = async (e) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file) return;
+      const check = checkFile(file);
+      if (!check.ok) { setErr(check.reason); return; }
+      setErr(""); setBusy(true);
+      try {
+        const path = documentPath(deal.orgId || orgId, deal.id, k, file.name);
+        const { backend } = await putFile(path, file);
+        await onAttach(k, documentRecord({ file, path, backend, by: userName || firebaseUser?.email }));
+      } catch (e2) {
+        console.error("[pipeline] attach failed", e2);
+        setErr("That did not save. Try again, or a smaller file.");
+      }
+      setBusy(false);
+    };
+
+    const open = async () => {
+      try {
+        const url = await fileUrl(doc.file.path);
+        if (url) window.open(url, "_blank", "noopener");
+        else setErr("The file is not in this browser. It was attached before storage was connected.");
+      } catch { setErr("Could not open that file."); }
+    };
+
+    return (
+      <div style={{ marginTop: 3 }}>
+        <input ref={inputRef} type="file" accept={ACCEPT_ATTR} onChange={choose} style={{ display: "none" }}/>
+        {filed ? (
+          <div style={{ display: "flex", gap: 7, alignItems: "baseline", flexWrap: "wrap" }}>
+            <button type="button" onClick={open}
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer",
+                       color: T.gold, fontSize: 10.5, textDecoration: "underline" }}>
+              {doc.file.name}
+            </button>
+            <span style={{ fontSize: 9.5, color: T.textMuted }}>
+              {humanSize(doc.file.size)} · {doc.by || "someone"} · {new Date(doc.file.uploadedAt || doc.receivedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}
+            </span>
+            <button type="button" onClick={() => inputRef.current?.click()} disabled={busy}
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer",
+                       color: T.textMuted, fontSize: 9.5 }}>replace</button>
+          </div>
+        ) : (
+          <button type="button" onClick={() => inputRef.current?.click()} disabled={busy}
+            style={{ padding: "2px 8px", borderRadius: 5, cursor: "pointer",
+                     border: `1px solid ${T.border}`, background: "transparent",
+                     color: T.textMuted, fontSize: 9.5, fontFamily: "'Outfit',sans-serif" }}>
+            {busy ? "attaching…" : "attach the file"}
+          </button>
+        )}
+        {err && <div style={{ fontSize: 9.5, color: "#FCA5A5", marginTop: 3, lineHeight: 1.5 }}>{err}</div>}
+      </div>
+    );
+  };
 
   const Tick = ({ k, on }) => (
     <button type="button" onClick={() => onDoc(k, !on)} disabled={busy}
@@ -929,6 +1019,7 @@ function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canD
                     </div>
                     <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5, marginTop: 1 }}>{d.why}</div>
                     {e && <div style={{ fontSize: 10, color: e.expired ? "#EF4444" : "#F59E0B", marginTop: 2, fontWeight: 600 }}>{e.note}</div>}
+                    <Attach k={d.key} doc={(deal.documents || {})[d.key]} />
                   </div>
                 </div>
               );
@@ -946,6 +1037,7 @@ function DealPanel({ deal, onClose, onAdvance, onSetStage, onDoc, onDelete, canD
                       <div>
                         <div style={{ fontSize: 11, fontWeight: 600, color: on ? T.textSecondary : T.white }}>{d.label}</div>
                         <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>If {d.when}.</div>
+                        <Attach k={d.key} doc={(deal.documents || {})[d.key]} />
                       </div>
                     </div>
                   );
