@@ -34,6 +34,7 @@
    missing while showing it ticked. Importing the model is what stops a seed
    quietly describing a product that does not exist. */
 import { JOURNEYS } from "../src/crm/model/journeys.js";
+import { LEAD_STAGES, LEAD_SOURCES } from "../src/crm/model/leads.js";
 import { initializeApp, deleteApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, collection, query, where, getDocs, writeBatch, doc } from "firebase/firestore";
@@ -65,8 +66,13 @@ const ahead= d => new Date(Date.now() + d * 86400000).toISOString();
 
 const AREAS = ["Dubai Marina","Downtown Dubai","Palm Jumeirah","Business Bay","JVC",
   "Dubai Hills Estate","Arabian Ranches","Emaar Beachfront","Creek Harbour","JLT"];
-const SOURCES = ["Property Finder","Bayut","dubizzle","Website","Walk-in","Referral","Instagram","Cold call"];
-const STAGES  = ["New Lead","Contacted","Qualified","Viewing Scheduled","Offer Made","Negotiating","Won","Lost"];
+/* Both of these used to be typed out here, and both had drifted from the
+   product: eight stage names of which ONE matched, and three sources that
+   differed only by case ("dubizzle", "Walk-in", "Cold call"). A filter cannot
+   match a value that does not exist, so most of this tab's controls were
+   quietly dead against its own demo data. */
+const SOURCES = LEAD_SOURCES;
+const STAGES  = LEAD_STAGES.filter(s => s.open).map(s => s.key);
 const FIRST = ["Ahmed","Sarah","Omar","Elena","Rajesh","Priya","James","Chen","Mohammed","Aisha",
   "Daniel","Fatima","Igor","Maria","Hassan","Linda","Yusuf","Nadia","Peter","Zainab"];
 const LAST = ["Khan","Ali","Smith","Petrova","Kumar","Hassan","Brown","Wei","Al Marri","Haddad",
@@ -113,12 +119,99 @@ const commit = async (rows, label) => {
   }
 };
 
+/* ── WHAT HAS ACTUALLY HAPPENED TO A LEAD ─────────────────────────────────
+   The call order in the tab is five rules, in this order:
+
+     0  came in today and nobody has called
+     1  a follow-up you promised is due or overdue
+     2  never contacted, whatever its age
+     3  no contact for more than seven days
+     4  everything else, most recently touched first
+
+   Rules 0 to 3 all read `notes_log`, `updatedAt` and `followUpDate`. The seed
+   wrote none of them, so rule 2 caught every lead and the desk reported 418
+   of 418 needing a call — which is the same as reporting none of them.
+
+   So each lead gets a situation, in roughly the proportions a working desk
+   has. These proportions are invented, as everything about a demo agency is;
+   they are written down here rather than left implied. */
+const AGENT_NOTES = [
+  "Rang, went to voicemail. Left a message.",
+  "Spoke for ten minutes. Wants two bedrooms, ready to move in Q4.",
+  "Sent the three Marina options over WhatsApp.",
+  "Asked for floor plans and the service charge before booking a viewing.",
+  "Called — in a meeting, asked me to try tomorrow morning.",
+  "Emailed the brochure and the payment plan.",
+  "Viewing done. Liked the layout, thought the price was high.",
+  "Wants to see the handover date in writing before going further.",
+  "Discussed mortgage pre-approval. Bank appointment next week.",
+  "Following up after the offer. Waiting on the seller.",
+];
+
+const leadLife = (age, stage) => {
+  const createdAt = ago(age);
+  const contactTypes = ["Call", "WhatsApp", "Email", "Viewing"];
+  /* An enquiry answered in minutes, hours, or not at all — which is what the
+     "Answered in" column and the response report are measuring. */
+  const note = (type, daysBack, minsAfterCreate) => ({
+    type, text: pick(AGENT_NOTES), by: "demo@primeestates.example",
+    at: minsAfterCreate != null
+      ? new Date(new Date(createdAt).getTime() + minsAfterCreate * 60000).toISOString()
+      : ago(daysBack),
+  });
+
+  const trail = (n, lastTouchedDaysAgo) => {
+    const out = [{ type: "Note", text: "Lead created", by: "system", at: createdAt }];
+    out.push(note(pick(contactTypes), null, pick([4, 9, 18, 45, 120, 380])));
+    for (let i = 1; i < n; i++) {
+      out.push(note(pick(contactTypes), int(lastTouchedDaysAgo, Math.max(lastTouchedDaysAgo, age - 1))));
+    }
+    return out;
+  };
+
+  /* A finished lead is finished: it was worked, then it stopped. It must not
+     appear in the call order at all. */
+  if (stage === "Closed Deal" || stage === "Closed Outside" || stage === "Non Potential") {
+    const done = int(1, Math.max(1, age - 1));
+    return { createdAt, updatedAt: ago(done), notes_log: trail(int(3, 6), done), followUpDate: null };
+  }
+
+  const roll = rnd();
+  /* Came in today, nobody has called. */
+  if (roll < 0.05) return {
+    createdAt: ago(0), updatedAt: ago(0), followUpDate: null,
+    notes_log: [{ type: "Note", text: "Lead created", by: "system", at: ago(0) }],
+  };
+  /* A follow-up you promised is due or overdue. */
+  if (roll < 0.14) { const touched = int(1, 6); return {
+    createdAt, updatedAt: ago(touched), followUpDate: ago(int(0, 4)),
+    notes_log: trail(int(2, 4), touched),
+  }; }
+  /* Never contacted, and not new — the ones that quietly rot. */
+  if (roll < 0.24) return {
+    createdAt, updatedAt: createdAt, followUpDate: null,
+    notes_log: [{ type: "Note", text: "Lead created", by: "system", at: createdAt }],
+  };
+  /* Gone quiet: worked once, then nothing for over a week. */
+  if (roll < 0.40) { const touched = int(8, Math.max(9, age)); return {
+    createdAt: ago(Math.max(age, touched + 1)), updatedAt: ago(touched),
+    followUpDate: null, notes_log: trail(int(2, 4), touched),
+  }; }
+  /* Everything else: being worked, touched in the last week. */
+  const touched = int(0, 6);
+  return {
+    createdAt, updatedAt: ago(touched), notes_log: trail(int(2, 5), touched),
+    followUpDate: rnd() < 0.3 ? ago(-int(1, 10)) : null,   /* a promise still in the future */
+  };
+};
+
 /* ── LEADS ───────────────────────────────────────────────────────────────── */
 const leads = [];
 agents.forEach((a, ai) => {
   for (let k = 0; k < int(2, 6); k++) {
     const age = int(0, 26);
-    const stage = age > 18 ? pick(["Contacted","Qualified","Lost"]) : pick(STAGES);
+    const stage = age > 18 ? pick(["Potential","No Answer","Closed Outside","Closed Deal"]) : pick(STAGES);
+    const life = leadLife(age, stage);
     leads.push({ _c: "leads", data: {
       name: `${pick(FIRST)} ${pick(LAST)}`,
       phone: `+9715${int(0,9)}${int(1000000,9999999)}`,
@@ -139,9 +232,15 @@ agents.forEach((a, ai) => {
       directorId: directorUid,
       /* A spread of ages so the desk has something to order by: the ones that
          came in today, and the ones nobody has touched for three weeks. */
-      createdAt: ago(age),
-      lastContactedAt: stage === "New Lead" ? null : ago(Math.max(0, age - int(0, 4))),
       demoSeed: true,
+      /* createdAt, updatedAt, followUpDate and notes_log — the four fields the
+         call order is actually computed from. The seed used to write
+         `lastContactedAt`, which nothing in the product reads, and no
+         notes_log at all: so contacted() was false for all 418 leads, four of
+         the five call-order rules could never fire, and every lead on the desk
+         reported "never contacted". A screen where everything is urgent says
+         nothing. */
+      ...life,
     }});
   }
 });

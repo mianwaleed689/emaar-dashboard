@@ -17,6 +17,8 @@ import { responseTime, responseReport } from "../crm/model/intake";
 import { viewerFrom, scopeFor, intentFor, visibleRecords, canSeeClientContact } from "../crm/model/org";
 import { diary, statusOf, newViewing, OUTCOMES, VERDICTS, FEEDBACK_PROMPT } from "../crm/model/viewing";
 import NationalitySelect from "../components/NationalitySelect";
+import { LEAD_STAGES, STAGE_MEANING, LEAD_SOURCES, NOTE_TYPES,
+         CLOSED_STAGES, WON_STAGE, madeContact } from "../crm/model/leads";
 /* THE SCREEN IS BUILT FROM THE SYSTEM NOW, NOT FROM GUESSES.
    Measured before this: 1,672 text nodes at 10px and 670 at 9px on this one
    tab, eleven text colours, and 8,195 of 8,615 clickable things under 32px
@@ -25,54 +27,17 @@ import { colour as C, type as TY, space as S, radius as R, state as ST, surface 
 import { useSystemCSS, useViewport, PageHead, Card, Figure, FigureRow, Btn, Chip, Dot,
          Field, Input, Select, Toolbar, DataList, Empty, Toast as DsToast, Sheet } from "../design/ui";
 
-//  PIPELINE 
-const PIPELINE = [
-  { key:"Hot Case",        color:"#EF4444", bg:"rgba(239,68,68,0.1)" },
-  { key:"New Lead",        color:"#3B82F6", bg:"rgba(59,130,246,0.1)" },
-  { key:"Potential",       color:"#10B981", bg:"rgba(16,185,129,0.1)" },
-  { key:"No Answer",       color:"#F59E0B", bg:"rgba(245,158,11,0.1)" },
-  { key:"Low Budget",      color:"#8B5CF6", bg:"rgba(139,92,246,0.1)" },
-  { key:"Non Potential",   color:"#6B7280", bg:"rgba(107,114,128,0.1)" },
-  { key:"Whats app",       color:"#25D366", bg:"rgba(37,211,102,0.1)" },
-  { key:"Resale/buy/Rent", color:"#14B8A6", bg:"rgba(20,184,166,0.1)" },
-  { key:"EOI",             color:"#D4A843", bg:"rgba(212,168,67,0.1)" },
-  { key:"Closed Deal",     color:"#10B981", bg:"rgba(16,185,129,0.15)" },
-  { key:"Closed Outside",  color:"#EF4444", bg:"rgba(239,68,68,0.08)" },
-];
-
-/* These eleven stages are this agency's own, not an industry standard, and the
-   tab never said what any of them meant — a new agent had to guess whether a
-   buyer belonged in "Potential" or "Resale/buy/Rent". Written as instructions
-   for when to use each one, so two agents on the same desk agree. */
-const STAGE_MEANING = {
-  "Hot Case":        "Ready now — viewing booked, offer being drafted, or asking to sign.",
-  "New Lead":        "Just arrived. Nobody has spoken to them yet.",
-  "Potential":       "You have spoken and they are genuinely looking. Keep working it.",
-  "No Answer":       "You tried to reach them and could not. Try again before this goes quiet.",
-  "Low Budget":      "Real buyer, but their budget does not reach what they asked for.",
-  "Non Potential":   "Not a buyer — wrong market, testing prices, or a wrong number.",
-  "Whats app":       "Only ever messaged you. No call has connected yet.",
-  "Resale/buy/Rent": "Wants the resale market or a rental rather than a new launch.",
-  "EOI":             "Expression of Interest lodged on a launch. Money or paperwork is in.",
-  "Closed Deal":     "Signed with you. This is the only stage that counts as a sale.",
-  "Closed Outside":  "Bought or rented, but not through you. Kept so the loss is visible.",
-};
-
-const SRC_COLOR = {
-  "Property Finder":"#00C08B","Bayut":"#FF6B35","Dubizzle":"#E8003D",
-  "Meta/Facebook":"#1877F2","Instagram":"#E1306C","WhatsApp":"#25D366",
-  "Google Ads":"#4285F4","Referral":"#8B5CF6","Website":"#14B8A6",
-  "Cold Call":"#F59E0B","TikTok":"#FF0050","LinkedIn":"#0A66C2",
-  "Email Campaign":"#EA4335","Walk In":"#6B7280","Manual":"#94A3B8",
-};
-
-const LEAD_SOURCES   = Object.keys(SRC_COLOR);
+/*  THE STAGES LIVE IN THE MODEL NOW, NOT HERE.
+    They used to be declared in this component, which a plain Node script
+    cannot read — so the demo seed wrote its own list of eight and the two
+    shared exactly one name. See src/crm/model/leads.js for what that cost. */
+const PIPELINE = LEAD_STAGES;
 const SERVICE_TYPES  = ["Buyer","Seller","Tenant","Investor"];
 const REQUEST_TYPES  = ["Off-Plan","Ready","Resale","Rental","Investment","Commercial"];
 const CHANNELS       = ["WhatsApp","Phone Call","Email","In Person","Video Call","Social DM"];
 const NATS           = ["Indian","British","Russian","Chinese","French","Pakistani","Saudi","Egyptian","German","American","Italian","Canadian","Australian","Japanese","Korean","Emirati","Filipino","Lebanese","Jordanian","Other"];
 const TIMELINES      = ["Immediate","1-3 months","3-6 months","6-12 months","Just browsing"];
-const NOTE_TYPES     = ["Note","Call","Email","WhatsApp","Viewing","Offer","Follow Up","Status Update"];
+
 const GV_MIN         = typeof GOLDEN_VISA_THRESHOLD !== "undefined" ? GOLDEN_VISA_THRESHOLD : 2000000;
 
 const WA_TEMPLATES = [
@@ -124,8 +89,9 @@ const escCSV    = v => '"'+String(v==null?"":v).replace(/"/g,'""')+'"';
  * words on its own row. There is no number to argue with because there is no
  * number — and no claim of intelligence that the code cannot support.
  */
-const OPEN      = l => !["Closed Deal","Closed Outside","Non Potential"].includes(l.status);
-const contacted = l => (l.notes_log||[]).some(n=>["Call","WhatsApp","Email","Viewing","Offer"].includes(n.type));
+/* Which stages are still work is the model's answer, not a list retyped here. */
+const OPEN      = l => !CLOSED_STAGES.includes(l.status);
+const contacted = madeContact;
 
 /** The order, in the words shown to the user. Printed in full by CALL_ORDER. */
 const CALL_ORDER = [
@@ -317,7 +283,7 @@ export default function MyLeadsTab({
      none of which can be expressed as an inline style. Injected once however
      many screens use it. `phone` decides list versus cards. */
   useSystemCSS();
-  const { phone } = useViewport();
+  const { phone, width } = useViewport();
 
   /* WHO IS LOOKING, AND HOW MUCH OF THE DESK THEY SEE.
      ─────────────────────────────────────────────────────────────────────────
@@ -1097,7 +1063,7 @@ try{
                      out of 418. The reason is a fact about the lead, so it
                      gets its own column and can be scanned down like any
                      other. The avatar was decoration and is gone. */
-                  { key:"client", head:"Client", width:186, phone:"title",
+                  { key:"client", head:"Client", width:172, phone:"title",
                     cell:l=>{
                       const isGV=parseFloat(l.budget||0)>=GV_MIN;
                       return (
@@ -1112,27 +1078,27 @@ try{
                         </span>
                       );
                     }},
-                  { key:"why", head:"Why it is next", width:198, phone:"sub",
+                  { key:"why", head:"Why it is next", width:218, phone:"sub",
                     cell:l=><WhyNow lead={l}/> },
-                  { key:"stage", head:"Stage", width:132, phone:"trail",
+                  { key:"stage", head:"Stage", width:118, phone:"trail",
                     cell:l=><PBadge status={l.status||"New Lead"}/> },
-                  { key:"budget", head:"Budget", width:112, align:"right", phone:"meta",
+                  { key:"budget", head:"Budget", width:104, align:"right", phone:"meta",
                     cell:l=><span style={{...TY.numeric,fontSize:13,color:C.text}}>{fmtB(l.budget)||"—"}</span> },
-                  { key:"service", head:"Looking to", width:100, phone:"meta",
+                  { key:"service", head:"Looking to", width:92, phone:"meta",
                     cell:l=><span style={{color:l.serviceType||l.type?C.text:C.textFaint}}>
                       {l.serviceType||l.type||"—"}</span> },
-                  { key:"source", head:"Came from", width:124, phone:"meta",
+                  { key:"source", head:"Came from", width:112, phone:"meta",
                     /* The dot here was one of fifteen brand colours — Bayut
                        orange, Dubizzle red, Instagram pink. A source is not a
                        state, so it is now simply its name. */
                     cell:l=><span style={{color:C.textMuted}}>{l.source||"—"}</span> },
-                  { key:"reply", head:"Answered in", width:96, align:"right",
+                  { key:"reply", head:"Answered in", width:88, align:"right", wide:true,
                     cell:l=>{ const r=responseTime(l);
                       if(!r.answered) return <span style={{color:C.textFaint}}>—</span>;
                       return <span title={`How long this lead waited for a first call, message or email. ${r.note}`}
                         style={{...TY.numeric,fontSize:13,color:C.textMuted}}>
                         {r.minutes<60?`${r.minutes}m`:`${Math.floor(r.minutes/60)}h`}</span>; } },
-                  { key:"agent", head:"Agent", width:132, phone:"meta",
+                  { key:"agent", head:"Agent", width:124, phone:"meta",
                     cell:l=>l.assignedToName
                       ? <span style={{color:C.text}}>{l.assignedToName}</span>
                       : canManage
@@ -1152,7 +1118,7 @@ try{
                                   border:`1px solid ${C.line}`,color:C.textMuted,...TY.label,fontSize:12}}>
                           WA</a>
                       : null },
-                ].filter(c=>!compact||["client","why"].includes(c.key))}
+                ].filter(c=>(!compact||["client","why"].includes(c.key)) && (!c.wide||width>=1500))}
               />
             )}
           </div>
@@ -1193,7 +1159,7 @@ try{
                             <div style={{fontSize:9,color:att.color,fontWeight:att.urgent?700:400,marginBottom:4,
                                          overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{att.reason}</div>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                              <span style={{fontSize:9,color:SRC_COLOR[lead.source]||T.textMuted}}>{lead.source||"Manual"}</span>
+                              <span style={{fontSize:9,color:C.textMuted}}>{lead.source||"Manual"}</span>
                             </div>
                             {lead.assignedToName&&<div style={{fontSize:9,color:"#8B5CF6",marginTop:3,fontWeight:600}}>{lead.assignedToName}</div>}
                           </div>
@@ -1338,12 +1304,12 @@ try{
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8}}>
                 {srcStats.slice(0,8).map((s,i)=>(
                   <div key={i} style={{background:"rgba(255,255,255,0.03)",borderRadius:8,padding:"10px"}}>
-                    <div style={{fontSize:11,fontWeight:700,color:SRC_COLOR[s.src]||T.textMuted,marginBottom:5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.src}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:C.text,marginBottom:5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.src}</div>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
                       <div><div style={{fontSize:18,fontWeight:900,color:T.white,fontFamily:"'Fraunces',serif",lineHeight:1}}>{s.total}</div><div style={{fontSize:9,color:T.textMuted}}>leads</div></div>
                       <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:900,color:s.rate>=10?"#10B981":s.rate>=5?"#D4A843":"#EF4444",fontFamily:"'Fraunces',serif",lineHeight:1}}>{s.rate}%</div><div style={{fontSize:9,color:T.textMuted}}>closed</div></div>
                     </div>
-                    <div style={{height:2,background:T.border,borderRadius:1,marginTop:7}}><div style={{height:"100%",width:Math.min(s.total,100)+"%",background:SRC_COLOR[s.src]||T.gold,borderRadius:1,opacity:0.7}}/></div>
+                    <div style={{height:2,background:T.border,borderRadius:1,marginTop:7}}><div style={{height:"100%",width:Math.min(s.total,100)+"%",background:C.accent,borderRadius:1,opacity:0.7}}/></div>
                   </div>
                 ))}
                 {srcStats.length===0&&<div style={{color:T.textMuted,fontSize:12,padding:"20px",textAlign:"center"}}>No source data yet</div>}

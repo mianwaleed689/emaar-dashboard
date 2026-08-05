@@ -142,7 +142,7 @@ export const type = {
    That is the whole reason the system exists. */
 export const density = {
   page: { rowH: 48, padY: 12, padX: 16, font: size.base },
-  grid: { rowH: 36, padY: 7,  padX: 12, font: size.sm },
+  grid: { rowH: 36, padY: 7,  padX: 10, font: size.sm },
 };
 
 /* ── SPACE, SHAPE, TARGETS ────────────────────────────────────────────────── */
