@@ -61,10 +61,14 @@ import { whoseTurn, myWork, workByDepartment, stepRecord, stepQuality,
          dealTimeline, HANDOVER_NOTE } from "../crm/model/workflow";
 import { onStageChange, notificationsFor } from "../crm/model/notify";
 import { checkFile, documentRecord, isOnFile, humanSize, ACCEPT_ATTR } from "../crm/model/documents";
+/* The screen is built from the system now. See src/design/system.js. */
+import { colour as C, type as TY, space as S, radius as R, state as ST, surface, density as DEN } from "../design/system";
+import { useSystemCSS, useViewport, PageHead, Card as DsCard, Figure as DsFigure, FigureRow,
+         Btn, Chip, Dot, DataList, Empty, Toolbar } from "../design/ui";
 import { putFile, fileUrl, removeFile, documentPath, storageStatus } from "../services/storage";
 
-const card  = { background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`, borderRadius: 12 };
-const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7, textTransform: "uppercase" };
+const card  = surface();
+const muted = { ...TY.label, color: C.textMuted };
 
 export default function PipelineTab({
   myDepartment, mySeniority,
@@ -74,6 +78,8 @@ export default function PipelineTab({
   /* The agency decides whether a tick is enough or the file has to be there.
      Off by default — see journeys.js#holds for why turning it on is the
      agency's call and not a default we impose on their first morning. */
+  useSystemCSS();
+  const { phone, width } = useViewport();
   const strict = Boolean(orgProfile?.requireDocumentFiles);
   const gateOpts = useMemo(() => ({ strict }), [strict]);
   /* ── WHO MAY SEE THIS ───────────────────────────────────────────────────
@@ -115,6 +121,21 @@ export default function PipelineTab({
     [me, deals]);
 
   const mine        = useMemo(() => all.filter(d => d.journey === journey), [all, journey]);
+  /* Clicking a segment of the funnel narrows the list to that stage. The rail
+     used to be eleven read-only boxes: it told you nine deals were sitting at
+     "Permit issued" and then made you find them yourself. */
+  const [stageFilter, setStageFilter] = useState(null);
+  /* Same for the department strip: it said 25 deals were sitting with Sales
+     admin and then left you to find them. */
+  const [deptFilter, setDeptFilter] = useState(null);
+  const shown = useMemo(() => {
+    /* The department strip counts every journey, so clicking it has to show
+       every journey — otherwise you click "25 with Sales admin" and get four,
+       because the other twenty-one are off-plan and rental. The count you
+       press and the list you get are the same set. */
+    if (deptFilter) return all.filter(d => whoseTurn(d, Date.now(), gateOpts).department === deptFilter);
+    return stageFilter ? mine.filter(d => d.stage === stageFilter) : mine;
+  }, [all, mine, stageFilter, deptFilter, gateOpts]);
   const needsReview = useMemo(() => all.filter(d => d.needsReview), [all]);
   const open        = useMemo(() => all.filter(d => !isComplete(d)), [all]);
 
@@ -376,235 +397,210 @@ export default function PipelineTab({
   return (
     <div style={{ paddingBottom: 80 }}>
 
-      {/* WHAT THIS IS */}
-      <div style={{ padding: "14px 4px 12px", borderBottom: `1px solid ${T.border}` }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
-          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>
-            {intent?.title || "Deals"}{orgName ? ` — ${orgName}` : ""}
-          </h2>
-          <button type="button" onClick={() => setShowHelp(v => !v)}
-            style={{ background: "none", border: `1px solid ${T.border}`, borderRadius: 14, padding: "3px 11px",
-                     color: showHelp ? T.gold : T.textSecondary, fontSize: 11, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-            {showHelp ? "Hide the guide" : "How this works"}
-          </button>
-        </div>
-        <div style={{ fontSize: 12, color: T.textSecondary, lineHeight: 1.6, maxWidth: 780 }}>
-          {intent?.question} {scope === "own"
-            ? "These are your deals."
+      {/* WHAT THIS IS. One title, the count, and the one action — on one line. */}
+      <PageHead
+        title={intent?.title || "Deals"}
+        count={all.length ? `${open.length} open · ${all.length} on record${blocked.length ? ` · ${blocked.length} blocked` : ""}` : null}
+        question={`${scope === "own"
+            ? "Your deals."
             : scope === "team"
-            ? "These are your team's deals, and your own."
-            : "Every deal the agency is working."}{" "}
-          A deal cannot pass a stage until the paperwork that stage needs is on file — which is how
-          you find out an NOC has expired before the trustee appointment, rather than at it.
-        </div>
+            ? "Your team's deals, and your own."
+            : "Every deal the agency is working."} A deal cannot pass a stage until the paperwork that stage needs is on file — which is how you find out an NOC has expired before the trustee appointment, rather than at it.`}
+        action={<>
+          <Btn onClick={() => setShowHelp(v => !v)}>{showHelp ? "Hide the guide" : "How this works"}</Btn>
+          <Btn variant="primary" onClick={openNew} title="Record a new deal">+ New deal</Btn>
+        </>}>
 
         {showHelp && (
-          <div style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ marginTop: S.lg, display: "grid", gap: S.md,
+                        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))" }}>
             {JOURNEY_KEYS.map(k => {
               const j = JOURNEYS[k];
               return (
-                <div key={k} style={{ ...card, flex: "1 1 300px", minWidth: 265, padding: "12px 14px" }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: j.colour, marginBottom: 3 }}>{j.label}</div>
-                  <div style={{ fontSize: 11, color: T.textSecondary, marginBottom: 9, lineHeight: 1.5 }}>{j.what}</div>
-                  <ol style={{ margin: 0, paddingLeft: 16, fontSize: 10.5, color: T.textSecondary, lineHeight: 1.8 }}>
+                <DsCard key={k} title={j.label} note={j.what}>
+                  <ol style={{ margin: 0, paddingLeft: 18, ...TY.small, color: C.text, lineHeight: 1.9 }}>
                     {j.stages.map(s => (
                       <li key={s.key}>
                         {s.label}
                         {(s.requires || []).length > 0 &&
-                          <span style={{ color: T.gold }}> — needs {s.requires.map(d => DOCUMENTS[d].label).join(" + ")}</span>}
+                          <span style={{ color: C.textMuted }}> — needs {s.requires.map(d => DOCUMENTS[d].label).join(" + ")}</span>}
                       </li>
                     ))}
                   </ol>
-                </div>
+                </DsCard>
               );
             })}
-            <div style={{ flex: "1 1 100%", fontSize: 10.5, color: T.textMuted, lineHeight: 1.65,
-                          background: "rgba(255,255,255,0.015)", border: `1px solid ${T.border}`, borderRadius: 10, padding: "11px 14px" }}>
-              <b style={{ color: T.textSecondary }}>What this tab does not do.</b>{" "}
-              It does not file anything with the Land Department, book a trustee appointment, or check
-              that a document you tick is genuine — ticking records that you hold it, nothing more. It
-              does not predict which deals will close. Commission is what you agreed, not money you
-              have, until you mark the line received.
+            <div style={{ gridColumn: "1 / -1" }}>
+              <DsCard title="What this tab does not do">
+                <p style={{ ...TY.small, color: C.textMuted, margin: 0 }}>
+                  It does not file anything with the Land Department, book a trustee appointment, or check
+                  that a document you tick is genuine — ticking records that you hold it, nothing more. It
+                  does not predict which deals will close. Commission is what you agreed, not money you
+                  have, until you mark the line received.
+                </p>
+              </DsCard>
             </div>
           </div>
         )}
-      </div>
+      </PageHead>
 
       {/* ON YOUR DESK — the list that replaces walking over and asking.
           Every deal in the agency currently waiting on THIS person's
           department, blocked ones first, each with the instruction. */}
       {mine_work.total > 0 && (
-        <div style={{ ...card, margin: "12px 4px", padding: "13px 15px",
-                      borderColor: mine_work.blocked ? "rgba(239,68,68,0.3)" : T.gold + "44" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 9 }}>
-            <span style={{ ...muted, color: mine_work.blocked ? "#EF4444" : T.gold }}>On your desk</span>
-            <span style={{ fontSize: 11, color: T.textSecondary }}>{mine_work.headline}</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {mine_work.items.slice(0, 6).map(({ deal: d, turn }) => (
-              <div key={d.id} onClick={() => { setJourney(d.journey); setSelected(d); }}
-                style={{ cursor: "pointer", display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 10, fontWeight: 700, minWidth: 74, flexShrink: 0,
-                               color: turn.blocked ? "#EF4444" : T.gold }}>
-                  {turn.blocked ? "Blocked" : turn.stageLabel}
-                </span>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 11.5, color: T.white, fontWeight: 600 }}>
-                    {d.client || d.leadName || "Untitled deal"}
-                  </div>
-                  <div style={{ fontSize: 10.5, color: T.textSecondary, lineHeight: 1.5 }}>
-                    {turn.blocked ? turn.blockedBy : turn.does}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div style={{ marginBottom: S.lg }}>
+        <DsCard title="On your desk" note={mine_work.headline}
+          tone={mine_work.blocked ? "critical" : undefined} pad={false}>
+          <DataList
+            rows={mine_work.items.slice(0, 6)}
+            rowKey={x => x.deal.id}
+            onRowClick={x => { setJourney(x.deal.journey); setSelected(x.deal); }}
+            columns={[
+              { key: "state", head: " ", width: 128, phone: "trail",
+                cell: x => <Chip tone={x.turn.blocked ? "critical" : "neutral"}>
+                  {x.turn.blocked ? "Blocked" : x.turn.stageLabel}</Chip> },
+              { key: "deal", head: "Deal", width: 190, phone: "title",
+                cell: x => <span style={{ ...TY.smallStrong, color: C.text }}>
+                  {x.deal.client || x.deal.leadName || "Untitled deal"}</span> },
+              { key: "do", head: "What to do", phone: "sub",
+                cell: x => <span style={{ color: x.turn.blocked ? ST.critical.fg : C.textMuted }}>
+                  {x.turn.blocked ? x.turn.blockedBy : x.turn.does}</span> },
+            ]}/>
+        </DsCard>
         </div>
       )}
 
-      {/* WHERE EVERY DEAL IS SITTING — for anyone who sees the whole agency. */}
+      {/* WHERE EVERY DEAL IS SITTING — for anyone who sees the whole agency.
+
+          ONE LINE, NOT FIVE CARDS. Five 27px figures in their own bordered
+          boxes inside another bordered box cost 170px of the screen to say
+          five short facts, and pushed the deals — the thing the tab is for —
+          below the fold. A department with nothing blocked has nothing to
+          report, so it says its number quietly and gets out of the way. */}
       {scope === "org" && byDept.length > 0 && (
-        <div style={{ ...card, margin: "0 4px 12px", padding: "13px 15px" }}>
-          <div style={{ ...muted, marginBottom: 9 }}>Which department each deal is waiting on</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {byDept.map(d => (
-              <div key={d.department} title={`${d.total} deal${d.total === 1 ? "" : "s"} with ${d.label}${d.blocked ? `, ${d.blocked} blocked` : ""}`}
-                style={{ flex: "1 1 150px", minWidth: 140, padding: "9px 11px", borderRadius: 8,
-                         background: d.blocked ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.02)",
-                         border: `1px solid ${d.blocked ? "rgba(239,68,68,0.28)" : T.border}` }}>
-                <div style={{ fontSize: 17, fontWeight: 800, fontFamily: "'Fraunces',serif",
-                              color: d.blocked ? "#EF4444" : T.gold }}>{d.total}</div>
-                <div style={{ fontSize: 10.5, color: T.textSecondary, marginTop: 2 }}>{d.label}</div>
-                {d.blocked > 0 && (
-                  <div style={{ fontSize: 9.5, color: "#EF4444", marginTop: 2 }}>{d.blocked} blocked</div>
-                )}
-              </div>
-            ))}
-          </div>
+        <div style={{ display: "flex", gap: S.sm, flexWrap: "wrap", alignItems: "center",
+                      marginBottom: S.base }}>
+          <span style={{ ...TY.label, color: C.textMuted, marginRight: S.xs }}>Waiting on</span>
+          {byDept.map(d => (
+            <button key={d.department} type="button" className="ds-btn ds-focus"
+              title={`${d.total} deal${d.total === 1 ? "" : "s"} with ${d.label}${d.blocked ? `, ${d.blocked} blocked` : ""}`}
+              onClick={() => setDeptFilter(f => f === d.department ? null : d.department)}
+              style={{ display: "inline-flex", alignItems: "center", gap: S.sm, minHeight: 32,
+                       padding: `0 ${S.md}px`, borderRadius: R.control, cursor: "pointer",
+                       background: deptFilter === d.department ? C.accentSoft : C.panelSunk,
+                       border: `1px solid ${deptFilter === d.department ? C.accentLine
+                                          : d.blocked ? ST.critical.line : C.line}`,
+                       fontFamily: TY.small.fontFamily, fontSize: 13 }}>
+              <span style={{ ...TY.numeric, fontSize: 14, color: C.text }}>{d.total}</span>
+              <span style={{ color: C.textMuted }}>{d.label}</span>
+              {d.blocked > 0 && (
+                <span style={{ ...TY.numeric, fontSize: 12.5, color: ST.critical.fg }}>
+                  {d.blocked} blocked
+                </span>
+              )}
+            </button>
+          ))}
+          {deptFilter && <Btn variant="ghost" onClick={() => setDeptFilter(null)}>Show every department</Btn>}
         </div>
       )}
 
       {/* DEALS THE OLD PIPELINE COULD NOT DESCRIBE */}
       {needsReview.length > 0 && (
-        <div style={{ margin: "12px 4px", padding: "12px 14px", borderRadius: 10,
-                      background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.28)" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#F59E0B", marginBottom: 4 }}>
-            {needsReview.length} deal{needsReview.length === 1 ? "" : "s"} need
-            {needsReview.length === 1 ? "s" : ""} the stage confirming
-          </div>
-          <div style={{ fontSize: 11, color: T.textSecondary, lineHeight: 1.6 }}>
+        <div style={{ marginBottom: S.lg }}>
+        <DsCard tone="warning"
+          title={`${needsReview.length} deal${needsReview.length === 1 ? "" : "s"} need${needsReview.length === 1 ? "s" : ""} the stage confirming`}>
+          <p style={{ ...TY.small, color: C.textMuted, margin: 0 }}>
             These were recorded on the old pipeline, which used one set of stages for every kind of
             deal. Their stage does not exist in the journey they belong to, so rather than guess at
             it, open each one and set where the deal actually is.
-          </div>
+          </p>
+        </DsCard>
         </div>
       )}
 
       {/* MONEY — the questions one typed number could not answer */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", padding: "12px 4px" }}>
-        <Figure label="Open deals" value={open.length} accent={T.gold}
+      <div style={{ display: "flex", gap: S.md, flexWrap: "wrap", marginBottom: S.lg }}>
+        <Figure label="Open deals" value={open.length}
                 note={`${all.length} on record in total, across all three journeys.`} />
         {/* Sales admin and the listings desk work these deals every day and have
             no business seeing what the agency billed. Money is its own scope. */}
         {moneyScope === "org" && <>
           <Figure label="Not invoiced yet" value={fmt(money.notYetInvoiced)}
                   note="Earned on deals nobody has billed for. Raise the invoices." />
-          <Figure label="Invoiced, not paid" value={fmt(money.outstanding)} accent="#F59E0B" note={money.note} />
-          <Figure label="Collected" value={fmt(money.collected)} accent="#10B981"
+          <Figure label="Invoiced, not paid" value={fmt(money.outstanding)} tone={money.outstanding>0?"warning":undefined} note={money.note} />
+          <Figure label="Collected" value={fmt(money.collected)} tone="positive"
                   note={`Of which ${fmt(money.owedToAgents)} is owed out to agents.`} />
         </>}
-        {moneyScope === "own" && <Figure label="Owed to you" value={fmt(myMoney.owedToYou)} accent="#10B981" note={myMoney.note} />}
+        {moneyScope === "own" && <Figure label="Owed to you" value={fmt(myMoney.owedToYou)} tone="positive" note={myMoney.note} />}
       </div>
 
-      {/* WHAT IS HOLDING DEALS UP
-
-          A summary that lists everything it summarises is not a summary. With
-          a single deal on the books, this panel printed the same sentence the
-          deal card below it already prints, and the department strip above
-          prints a third time — an agent reads three lines and looks for three
-          problems. The blocked list therefore appears once there is more than
-          one deal to condense; it still spans all three journeys, which the
-          list below does not, so it earns its place as soon as it has anything
-          to add.
-
-          An expiring or expired document is not summary — it is a deadline,
-          and it shows whatever the count. */}
-      {(showBlocked || expiring.length > 0) && (
-        <div style={{ ...card, margin: "0 4px 12px", padding: "12px 14px" }}>
-          <div style={{ ...muted, marginBottom: 8 }}>What is holding deals up</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            {expiring.map(e => (
-              <div key={e.deal.id + e.key} onClick={() => { setJourney(e.deal.journey); setSelected(e.deal); }}
-                   style={{ display: "flex", gap: 9, alignItems: "baseline", cursor: "pointer" }}>
-                <span style={{ color: e.expired ? "#EF4444" : "#F59E0B", fontSize: 10.5, fontWeight: 700, flexShrink: 0 }}>
-                  {e.expired ? "Expired" : "Expiring"}
-                </span>
-                <span style={{ fontSize: 11.5, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <b style={{ color: T.white }}>{e.deal.client || e.deal.leadName || "Untitled deal"}</b> — {e.note}
-                </span>
-              </div>
-            ))}
-            {showBlocked && blocked.slice(0, 8).map(({ d, why }) => (
-              <div key={d.id} onClick={() => { setJourney(d.journey); setSelected(d); }}
-                   style={{ display: "flex", gap: 9, alignItems: "baseline", cursor: "pointer" }}>
-                <span style={{ color: T.textMuted, fontSize: 10.5, fontWeight: 700, flexShrink: 0 }}>Blocked</span>
-                <span style={{ fontSize: 11.5, color: T.textSecondary, lineHeight: 1.5 }}>
-                  <b style={{ color: T.white }}>{d.client || d.leadName || "Untitled deal"}</b> — {why.reason}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* JOURNEY PICKER */}
-      <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${T.border}`, paddingLeft: 4, overflowX: "auto", alignItems: "center" }}>
-        {JOURNEY_KEYS.map(k => {
-          const j = JOURNEYS[k], n = all.filter(d => d.journey === k).length, on = journey === k;
-          return (
-            <button key={k} type="button" title={j.what} onClick={() => { setJourney(k); setSelected(null); }}
-              style={{ padding: "10px 15px", border: "none", background: "transparent",
-                       borderBottom: on ? `2px solid ${j.colour}` : "2px solid transparent",
-                       color: on ? T.white : T.textMuted, fontSize: 12, fontWeight: on ? 700 : 400,
-                       cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'Outfit',sans-serif" }}>
-              {j.label} <span style={{ fontSize: 10, color: on ? j.colour : T.textMuted }}>{n}</span>
-            </button>
-          );
-        })}
-        <button type="button" onClick={openNew} title="Record a new deal"
-          style={{ marginLeft: "auto", marginRight: 4, padding: "7px 16px", borderRadius: 7, border: "none",
-                   background: "linear-gradient(135deg,#D4A843,#B8902E)", color: "#0A0E1A",
-                   fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
-          + New deal
-        </button>
-      </div>
-
-      {/* STAGE RAIL
-
-          Eleven stages at a 92px floor need 1062px inside a container that has
-          about 985px, so the rail scrolled sideways and sliced the last card
-          down the middle. A funnel has to read as one left-to-right
-          progression — you cannot see the shape of it through a scrollbar.
-          The cards shrink to fit instead, and the labels wrap. */}
-      {mine.length > 0 && (
-        <div style={{ display: "flex", gap: 5, padding: "12px 4px" }}>
-          {J.stages.map(s => {
-            const n = mine.filter(d => d.stage === s.key).length;
+      {/* JOURNEY PICKER — the same segmented control My Leads uses for its
+          views, so two screens in the same product stop inventing two ways to
+          switch between three things. */}
+      <Toolbar>
+        <div style={{ display: "flex", gap: 2, background: C.panelSunk,
+                      border: `1px solid ${C.line}`, borderRadius: R.control, padding: 3 }}>
+          {JOURNEY_KEYS.map(k => {
+            const j = JOURNEYS[k], n = all.filter(d => d.journey === k).length, on = journey === k;
             return (
-              <div key={s.key} title={s.what}
-                style={{ flex: "1 1 0", minWidth: 0, padding: "8px 6px", borderRadius: 8, textAlign: "center",
-                         background: n ? `${J.colour}10` : "rgba(255,255,255,0.02)",
-                         border: `1px solid ${n ? J.colour + "40" : T.border}` }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: n ? J.colour : T.textMuted, fontFamily: "'Fraunces',serif" }}>{n}</div>
-                <div style={{ fontSize: 9, color: T.textMuted, marginTop: 2, lineHeight: 1.3 }}>{s.label}</div>
-              </div>
+              <button key={k} type="button" title={j.what} onClick={() => { setJourney(k); setSelected(null); setStageFilter(null); }}
+                className="ds-btn ds-focus"
+                style={{ padding: `0 ${S.base}px`, minHeight: 32, borderRadius: 6, cursor: "pointer",
+                         fontFamily: TY.small.fontFamily, fontSize: 13, fontWeight: on ? 700 : 500,
+                         border: on ? `1px solid ${C.accentLine}` : "1px solid transparent",
+                         background: on ? C.accentSoft : "transparent",
+                         color: on ? C.accent : C.textMuted, whiteSpace: "nowrap" }}>
+                {j.label} <span style={{ ...TY.numeric, fontSize: 12.5, opacity: .75 }}>{n}</span>
+              </button>
             );
           })}
         </div>
-      )}
+
+        {/* THE FUNNEL, AS A FUNNEL.
+            Eleven boxes each with a number and a wrapped label took a whole
+            band of the screen to say what a single line says better. Each
+            stage is now a segment whose width is its share, so the shape of
+            the funnel is the shape you see — and stages holding nothing take
+            up nothing rather than eleven equal boxes mostly reading zero. */}
+        {mine.length > 0 && (
+          <div style={{ display: "flex", flex: "1 1 320px", minWidth: 260, gap: 2,
+                        alignItems: "stretch", height: 34 }}>
+            {J.stages.map(s => {
+              const n = mine.filter(d => d.stage === s.key).length;
+              if (!n) return null;
+              /* A segment holding one deal out of thirty-five is 12px wide, and
+                 a label in 12px of space is three characters and an ellipsis —
+                 which reads as damage rather than as data. Below a tenth of the
+                 journey a segment shows its number only, and the name stays in
+                 the tooltip where it is still readable. */
+              const showLabel = n / mine.length >= 0.1;
+              return (
+                <button key={s.key} type="button" title={`${n} at ${s.label}. ${s.what}`}
+                  onClick={() => setStageFilter(f => f === s.key ? null : s.key)}
+                  className="ds-btn ds-focus"
+                  style={{ flex: `${n} 1 0`, minWidth: 34, borderRadius: 6, cursor: "pointer",
+                           display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                           border: `1px solid ${stageFilter === s.key ? C.accentLine : C.line}`,
+                           background: stageFilter === s.key ? C.accentSoft : C.panelSunk,
+                           color: stageFilter === s.key ? C.accent : C.text,
+                           overflow: "hidden", whiteSpace: "nowrap",
+                           fontFamily: TY.small.fontFamily, fontSize: 12.5, fontWeight: 600 }}>
+                  <span style={{ ...TY.numeric, fontSize: 13 }}>{n}</span>
+                  {showLabel && (
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis",
+                                   color: stageFilter === s.key ? C.accent : C.textMuted }}>{s.label}</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {stageFilter && <Btn variant="ghost" onClick={() => setStageFilter(null)}>Show every stage</Btn>}
+      </Toolbar>
 
       {/* THE DEALS */}
-      <div style={{ display: "grid", gridTemplateColumns: selected ? "1fr 400px" : "1fr", gap: 12, alignItems: "start", padding: "0 4px" }}>
+      <div style={{ display: "grid", gap: S.base, alignItems: "start",
+                   gridTemplateColumns: (selected && !phone) ? "minmax(0,1fr) 420px" : "minmax(0,1fr)" }}>
         <div>
           {mine.length === 0 ? (
             <div style={{ padding: "38px 20px 44px", textAlign: "center" }}>
@@ -622,52 +618,72 @@ export default function PipelineTab({
                 Record the first one
               </button>
             </div>
-          ) : mine.map(d => {
-            const st = currentStage(d), gate = canAdvance(d, gateOpts), on = selected?.id === d.id;
-            const total = dealTotals(Array.isArray(d.commissionLines) ? d.commissionLines : migrateCommission(d));
-            return (
-              <div key={d.id} onClick={() => setSelected(on ? null : d)}
-                style={{ ...card, padding: "12px 14px", marginBottom: 8, cursor: "pointer",
-                         borderColor: on ? T.gold : d.needsReview ? "rgba(245,158,11,0.35)" : T.border }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.white }}>{d.client || d.leadName || "Untitled deal"}</div>
-                    <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>{d.property || d.project || "No property recorded"}</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: T.gold }}>{d.price ? fmt(d.price) : "—"}</div>
-                    {total.gross > 0 && <div style={{ fontSize: 10.5, color: T.textMuted }}>{fmt(total.gross)} commission</div>}
-                  </div>
-                </div>
+          ) : (
+            /* A CARD PER DEAL WAS A CARD TOO MANY.
+               Each one carried the client, the property, the price, an
+               eleven-segment progress bar, whose desk it is, the stage and the
+               blocker — 145px tall, so five deals filled the screen out of
+               sixty-nine. None of it lined up, so you could not run an eye
+               down "which are blocked" or "which are worth the most".
 
-                <div style={{ display: "flex", gap: 3, margin: "10px 0 7px" }}>
-                  {J.stages.map((s, i) => (
-                    <div key={s.key} style={{ flex: 1, height: 3, borderRadius: 2,
-                      background: i <= stageIndex(d) ? J.colour : "rgba(255,255,255,0.07)" }} />
-                  ))}
-                </div>
-
-                {/* Whose turn, on the card, so nobody has to open it to find out. */}
-                {(() => { const turn = whoseTurn(d, Date.now(), gateOpts);
-                  if (turn.done) return null;
-                  return (
-                    <div style={{ fontSize: 10.5, color: T.textMuted, marginBottom: 5 }}>
-                      With <b style={{ color: turn.blocked ? "#EF4444" : T.textSecondary }}>{turn.departmentLabel}</b>
-                      {" — "}{turn.does}
-                    </div>
-                  );
-                })()}
-                <div style={{ display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: J.colour }}>{st.label}</span>
-                  <span style={{ fontSize: 11, color: gate.ok ? T.textMuted : "#F59E0B", lineHeight: 1.5 }}>
-                    {d.needsReview ? "Stage needs confirming."
+               The progress bar went with it: eleven 3px segments said where a
+               deal is less precisely than the stage name beside them, and it
+               was the only thing on the row that could not be read. */
+            <DataList
+              rows={shown}
+              rowKey={d => d.id}
+              onRowClick={d => setSelected(selected?.id === d.id ? null : d)}
+              stack={Boolean(selected) && !phone}
+              maxHeightOffset={360}
+              columns={[
+                { key: "client", head: "Client", width: 176, phone: "title",
+                  cell: d => {
+                    const turn = whoseTurn(d, Date.now(), gateOpts);
+                    return (
+                      <span style={{ display: "flex", alignItems: "center", gap: S.sm, minWidth: 0 }}>
+                        {!turn.done && <Dot tone={turn.blocked ? "critical" : "neutral"}/>}
+                        <span style={{ ...TY.smallStrong, color: C.text, overflow: "hidden",
+                                       textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {d.client || d.leadName || "Untitled deal"}
+                        </span>
+                      </span>
+                    );
+                  }},
+                { key: "property", head: "Property", width: 190, phone: "sub",
+                  cell: d => <span style={{ color: d.property || d.project ? C.textMuted : C.textFaint }}>
+                    {d.property || d.project || "No property recorded"}</span> },
+                { key: "stage", head: "Stage", width: 148, phone: "trail",
+                  cell: d => <Chip tone={d.needsReview ? "warning" : "neutral"} title={currentStage(d).what}>
+                    {currentStage(d).label}</Chip> },
+                { key: "next", head: "What is holding it", width: 250, phone: "meta",
+                  cell: d => {
+                    const gate = canAdvance(d, gateOpts);
+                    const tone = d.needsReview ? "warning" : gate.ok ? null : "critical";
+                    const text = d.needsReview ? "Stage needs confirming."
                       : gate.ok ? (isComplete(d) ? "Done." : `Next: ${nextStage(d).label}`)
-                      : gate.reason}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+                      : gate.reason;
+                    /* A blocker sentence is longer than its column, so the full
+                       one is on hover as well as in the panel. Truncating the
+                       one thing somebody needs to act on without offering it
+                       anywhere is how a row becomes decoration. */
+                    return <span title={text} style={{ color: tone ? ST[tone].fg : C.textMuted }}>{text}</span>;
+                  }},
+                { key: "desk", head: "Whose desk", width: 134, phone: "meta",
+                  cell: d => { const turn = whoseTurn(d, Date.now(), gateOpts);
+                    return turn.done
+                      ? <span style={{ color: C.textFaint }}>Finished</span>
+                      : <span title={turn.does} style={{ color: C.text }}>{turn.departmentLabel}</span>; }},
+                { key: "price", head: "Price", width: 108, align: "right", phone: "meta",
+                  cell: d => <span style={{ ...TY.numeric, fontSize: 13, color: C.text }}>
+                    {d.price ? fmt(d.price) : "—"}</span> },
+                { key: "comm", head: "Commission", width: 116, align: "right", wide: true, phone: "meta",
+                  cell: d => { const t = dealTotals(Array.isArray(d.commissionLines) ? d.commissionLines : migrateCommission(d));
+                    return <span style={{ ...TY.numeric, fontSize: 13, color: t.gross > 0 ? C.textMuted : C.textFaint }}>
+                      {t.gross > 0 ? fmt(t.gross) : "—"}</span>; }},
+              ].filter(c => (!selected || phone || ["client", "stage"].includes(c.key))
+                         && (!c.wide || width >= 1500) && (moneyScope === "org" || c.key !== "comm"))}
+            />
+          )}
         </div>
 
         {selected && (
@@ -683,6 +699,54 @@ export default function PipelineTab({
             onDelete={() => remove(selected)} />
         )}
       </div>
+
+      /* MOVED BELOW THE LIST. This is a summary of the same deals the grid
+         above now shows, and the grid carries a "What is holding it" column of
+         its own — so as the first thing on the screen it pushed the deals off
+         the fold to repeat what they were about to say. It earns its place
+         underneath, where it condenses all three journeys rather than the one
+         being looked at. */
+
+      {/* WHAT IS HOLDING DEALS UP
+
+          A summary that lists everything it summarises is not a summary. With
+          a single deal on the books, this panel printed the same sentence the
+          deal card below it already prints, and the department strip above
+          prints a third time — an agent reads three lines and looks for three
+          problems. The blocked list therefore appears once there is more than
+          one deal to condense; it still spans all three journeys, which the
+          list below does not, so it earns its place as soon as it has anything
+          to add.
+
+          An expiring or expired document is not summary — it is a deadline,
+          and it shows whatever the count. */}
+      {(showBlocked || expiring.length > 0) && (
+        <div style={{ marginBottom: S.lg }}>
+        <DsCard title="What is holding deals up"
+          note={blocked.length > 8 ? `The 8 most urgent of ${blocked.length}. The rest are on the list below.` : null}
+          pad={false}>
+          <DataList
+            rows={[
+              ...expiring.map(e => ({ k: e.deal.id + e.key, deal: e.deal,
+                tone: e.expired ? "critical" : "warning",
+                label: e.expired ? "Expired" : "Expiring", why: e.note })),
+              ...(showBlocked ? blocked.slice(0, 8).map(({ d, why }) => ({
+                k: d.id, deal: d, tone: "critical", label: "Blocked", why: why.reason })) : []),
+            ]}
+            rowKey={r => r.k}
+            onRowClick={r => { setJourney(r.deal.journey); setSelected(r.deal); }}
+            columns={[
+              { key: "what", head: " ", width: 96, phone: "trail",
+                cell: r => <Chip tone={r.tone}>{r.label}</Chip> },
+              { key: "deal", head: "Deal", width: 190, phone: "title",
+                cell: r => <span style={{ ...TY.smallStrong, color: C.text }}>
+                  {r.deal.client || r.deal.leadName || "Untitled deal"}</span> },
+              { key: "why", head: "Why", phone: "sub",
+                cell: r => <span style={{ color: C.textMuted }}>{r.why}</span> },
+            ]}/>
+        </DsCard>
+        </div>
+      )}
 
       {/* NEW DEAL */}
       {showNew && (
@@ -769,15 +833,16 @@ export default function PipelineTab({
 
 /* ── PARTS ─────────────────────────────────────────────────────────────────── */
 
-function Figure({ label, value, note, accent }) {
+/* Tone, not a hex. A figure is coloured because it carries a STATE, not
+   because a colour would look nice there — see system.js rule 2. */
+function Figure({ label, value, note, tone }) {
   return (
-    <div title={note} style={{ ...card, flex: "1 1 180px", minWidth: 162, padding: "13px 15px" }}>
-      <div style={{ ...muted, marginBottom: 5 }}>{label}</div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: accent || T.white, fontFamily: "'Fraunces',serif" }}>{value}</div>
-      {note && <div style={{ fontSize: 9.5, color: T.textMuted, marginTop: 5, lineHeight: 1.5 }}>{note}</div>}
+    <div style={{ ...surface(), flex: "1 1 190px", minWidth: 170, padding: S.base }}>
+      <DsFigure value={value} label={label} note={note} tone={tone} small/>
     </div>
   );
 }
+
 
 const Field = ({ label, hint, children }) => (
   <div>
