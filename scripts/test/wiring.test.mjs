@@ -168,6 +168,51 @@ for (const f of GATED) {
 }
 
 
+/* ── THE FORM MUST WRITE WHAT THE MODEL READS ─────────────────────────────
+   The Listings tab exists to answer one question: may this be advertised. It
+   answered it wrongly for every listing any customer had ever created, because
+   three files used three names for the same field:
+
+       the new-listing form saved   permitNo
+       the compliance model read    permitNumber
+       the demo seed wrote          trakheesiPermit
+
+   An agency typed in their Trakheesi permit, saw it in the drawer, and the tab
+   still told them the listing had no permit and could not be advertised. There
+   was no error anywhere — a missing field is just undefined.
+
+   Types would catch this; this codebase has none. So the source is read and
+   the names are compared, which is cheap and catches the whole class. */
+head("A FIELD IS ONE NAME, ACROSS EVERY FILE THAT TOUCHES IT");
+
+const listingModel = readFileSync("src/crm/model/listing.js", "utf8");
+const listingsTab  = readFileSync("src/tabs/ListingsTab.jsx", "utf8");
+const seedWork     = readFileSync("scripts/seed-demo-work.mjs", "utf8");
+const dashboard    = readFileSync("src/pages/EmaarDashboardV2.jsx", "utf8");
+
+/* Every field canAdvertise() decides on, and what it must be called. */
+const COMPLIANCE_FIELDS = ["permitNumber", "permitExpiresAt", "formA"];
+
+for (const field of COMPLIANCE_FIELDS) {
+  ok(`listing.js reads ${field}`, listingModel.includes(field));
+  ok(`  the tab uses the same name`, listingsTab.includes(field), field);
+  ok(`  and so does the seed`, seedWork.includes(field), field);
+}
+
+/* The old names must be gone from the CODE — matched as a property being
+   written or read (`name:` or `.name`), not as the bare word. Naming a
+   retired field in a comment is how the next person understands why the
+   check exists, so forbidding the word outright would delete the
+   explanation along with the bug. */
+for (const [bad, good] of [["permitNo", "permitNumber"],
+                           ["trakheesiPermit", "permitNumber"],
+                           ["permitExpiry", "permitExpiresAt"]]) {
+  const asCode = new RegExp(`(?:\\.|\\b)${bad}\\s*(?::|=[^=]|\\b\\s*[,})\\]])`);
+  ok(`no code still uses ${bad} instead of ${good}`,
+     !asCode.test(listingsTab) && !asCode.test(seedWork) && !asCode.test(dashboard),
+     [listingsTab, seedWork, dashboard].map(f => (f.match(asCode) || [""])[0]).filter(Boolean));
+}
+
 console.log(`\n${"═".repeat(62)}`);
 console.log(`  ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -2608,7 +2608,7 @@ export default function EmaarDashboardV2() {
   const [showNewListing, setShowNewListing] = useState(false);
   const [listingForm, setListingForm] = useState({
     title:"", type:"Apartment", beds:"1", baths:"1", size:"", price:"", community:"",
-    building:"", unitNo:"", floor:"", description:"", permitNo:"", status:"Available",
+    building:"", unitNo:"", floor:"", description:"", permitNumber:"", status:"Available",
     furnishing:"Unfurnished", offplan:false,
   });
   const [listingFormLoading, setListingFormLoading] = useState(false);

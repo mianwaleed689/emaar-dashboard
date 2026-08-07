@@ -55,7 +55,7 @@ export default function TabIntro({ title, what, detail, includes, excludes, warn
     <button type="button" onClick={() => setOpen(o => !o)}
       title="What this tab covers, and a worked example"
       style={{ padding: "3px 10px", borderRadius: 20, border: "1px solid " + T.border,
-               background: "transparent", color: T.textMuted, fontSize: 10.5,
+               background: "transparent", color: T.textMuted, fontSize:13,
                cursor: "pointer", fontFamily: "'Outfit',sans-serif" }}>
       {open ? "Hide the detail" : "What this covers"}
     </button>
@@ -87,14 +87,14 @@ export default function TabIntro({ title, what, detail, includes, excludes, warn
       )}
 
       {open && includes && (
-        <div style={{ marginTop: 8, fontSize: 11.5, lineHeight: 1.6, color: T.textMuted }}>
+        <div style={{ marginTop: 8, fontSize:13, lineHeight: 1.6, color: T.textMuted }}>
           <span style={{ color: T.green, fontWeight: 700 }}>Covers</span> — {includes}
         </div>
       )}
 
       {/* Never folded. A user must not have to go looking for the limits. */}
       {excludes && (
-        <div style={{ marginTop: 9, fontSize: 11.5, lineHeight: 1.6, color: T.textMuted }}>
+        <div style={{ marginTop: 9, fontSize:13, lineHeight: 1.6, color: T.textMuted }}>
           <span style={{ color: T.textMuted, fontWeight: 700 }}>Not covered</span> — {excludes}
         </div>
       )}

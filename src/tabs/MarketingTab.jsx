@@ -36,14 +36,18 @@ import React, { useMemo, useState, useEffect } from "react";
 import { doc, setDoc, collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { T } from "../data";
+import { colour as C, type as TY, space as S, radius as R, state as ST, surface } from "../design/system";
+import { useSystemCSS, useViewport, PageHead, Card as DsCard, Figure as DsFigure, Btn, Input, Empty } from "../design/ui";
 import { sourcePerformance, marketingTotals, demandByArea, headline } from "../crm/model/marketing";
 
-const card  = { background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}`, borderRadius: 12 };
-const muted = { fontSize: 9.5, fontWeight: 700, color: T.textMuted, letterSpacing: .7, textTransform: "uppercase" };
+const card  = surface();
+const muted = { ...TY.label, color: C.textMuted };
 const aed   = n => `AED ${Math.round(Number(n) || 0).toLocaleString("en-AE")}`;
 const COLS  = "1.4fr 68px 68px 96px 118px 100px 116px";
 
 function MarketingTab({ myLeads = [], orgId, orgName, canEditSpend = true }) {
+  useSystemCSS();
+  const { phone } = useViewport();
   const [spend, setSpend]   = useState({});
   const [draft, setDraft]   = useState({});
   const [saving, setSaving] = useState({});
@@ -78,45 +82,41 @@ function MarketingTab({ myLeads = [], orgId, orgName, canEditSpend = true }) {
 
   const inp = { width: 100, padding: "5px 8px", background: "rgba(255,255,255,0.04)",
                 border: `1px solid ${T.border}`, borderRadius: 6, color: T.white,
-                fontSize: 11.5, fontFamily: "'Outfit',sans-serif", outline: "none", textAlign: "right" };
+                fontSize:13, fontFamily: "'Outfit',sans-serif", outline: "none", textAlign: "right" };
 
   if (!myLeads.length) return (
-    <div style={{ padding: "60px 20px", textAlign: "center", color: T.textSecondary,
-                  fontSize: 12.5, lineHeight: 1.8, maxWidth: 520, margin: "0 auto" }}>
-      No leads on record yet, so there is nothing to judge a channel by. Once enquiries
-      start arriving this shows which of them turn into deals, and what each deal cost to win.
+    <div className="ds-root" style={{ padding: `${S.huge}px 0` }}>
+      <Empty title="Nothing to judge a channel by yet"
+        what="No leads on record. Once enquiries start arriving this shows which of them turn into deals, and what each deal cost to win."/>
     </div>
   );
 
   return (
-    <div style={{ paddingBottom: 80 }}>
-      <div style={{ padding: "14px 4px 12px", borderBottom: `1px solid ${T.border}` }}>
-        <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: T.white, fontFamily: "'Fraunces',serif" }}>
-          Marketing{orgName ? ` — ${orgName}` : ""}
-        </h2>
-        <p style={{ fontSize: 12.5, color: T.textSecondary, lineHeight: 1.7, margin: "8px 0 0", maxWidth: 780 }}>
-          {line}
-        </p>
-        <div style={{ marginTop: 9, fontSize: 11, lineHeight: 1.6, color: T.textMuted }}>
-          <span style={{ fontWeight: 700 }}>Not covered</span> — spend is not read from any
+    <div className="ds-root" style={{ paddingBottom: S.page }}>
+      <PageHead
+        title={`Marketing${orgName ? ` — ${orgName}` : ""}`}
+        count={`${totals.leads} leads · ${totals.won} closed${totals.costPerWon ? ` · ${aed(totals.costPerWon)} a deal` : ""}`}
+        question={line}>
+        <p style={{ ...TY.small, color: C.textFaint, margin: `${S.md}px 0 0`, maxWidth: "96ch" }}>
+          <b style={{ color: C.textMuted }}>Not covered</b> — spend is not read from any
           advertising platform. There is no Meta, Google or portal billing connection in this
           product, so what a channel cost is what somebody records below. Anything unpriced
           reads “not recorded”, never zero.
-        </div>
-      </div>
+        </p>
+      </PageHead>
 
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", padding: "14px 4px" }}>
+      <div style={{ display: "flex", gap: S.md, flexWrap: "wrap", marginBottom: S.lg }}>
         {[["Leads", String(totals.leads), `across ${rows.length} channel${rows.length === 1 ? "" : "s"}`],
           ["Closed", String(totals.won), `${totals.conversionPct}% of the ${totals.settled} that settled`],
           ["Spend recorded", totals.spend ? aed(totals.spend) : "—", `for ${totals.spendCoverage} channels`],
+          /* Not knowing is a state worth flagging: a cost per deal computed
+             from half the channels is not a cost per deal. */
           ["Cost per deal", totals.costPerWon ? aed(totals.costPerWon) : "not known",
-            totals.spendComplete ? "every channel priced" : "only where spend is recorded"],
-        ].map(([label, value, note]) => (
-          <div key={label} style={{ ...card, padding: "12px 15px", flex: "1 1 190px", minWidth: 168 }}>
-            <div style={muted}>{label}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: T.white,
-                          fontFamily: "'Fraunces',serif", margin: "4px 0 2px" }}>{value}</div>
-            <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>{note}</div>
+            totals.spendComplete ? "every channel priced" : "only where spend is recorded",
+            totals.spendComplete ? undefined : "warning"],
+        ].map(([label, value, note, tone]) => (
+          <div key={label} style={{ ...surface(), padding: S.base, flex: "1 1 190px", minWidth: 168 }}>
+            <DsFigure small value={value} label={label} note={note} tone={tone}/>
           </div>
         ))}
       </div>
@@ -136,7 +136,7 @@ function MarketingTab({ myLeads = [], orgId, orgName, canEditSpend = true }) {
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 12, color: T.white, fontWeight: 600 }}>{r.source}</div>
               {r.spentWithNothingWon > 0 && (
-                <div style={{ fontSize: 9.5, color: "#FCA5A5", marginTop: 1 }}>
+                <div style={{ fontSize:12, color: "#FCA5A5", marginTop: 1 }}>
                   {aed(r.spentWithNothingWon)} spent, nothing closed
                 </div>
               )}
@@ -147,7 +147,7 @@ function MarketingTab({ myLeads = [], orgId, orgName, canEditSpend = true }) {
               <div style={{ fontSize: 12, color: T.textSecondary }}>
                 {r.settled ? `${r.conversionPct}%` : "—"}
               </div>
-              <div style={{ fontSize: 9, color: T.textMuted }}>
+              <div style={{ fontSize:12, color: T.textMuted }}>
                 {r.settled ? `of ${r.settled} settled` : "none settled yet"}
               </div>
             </div>
@@ -162,7 +162,7 @@ function MarketingTab({ myLeads = [], orgId, orgName, canEditSpend = true }) {
                   {r.spend ? aed(r.spend) : "not recorded"}
                 </span>
               )}
-              {saving[r.source] && <span style={{ fontSize: 9, color: T.textMuted }}> …</span>}
+              {saving[r.source] && <span style={{ fontSize:12, color: T.textMuted }}> …</span>}
             </div>
             <div style={{ fontSize: 12, textAlign: "right",
                           color: r.costPerLead != null ? T.white : T.textMuted }}>
@@ -182,11 +182,11 @@ function MarketingTab({ myLeads = [], orgId, orgName, canEditSpend = true }) {
           {areas.map(a => (
             <div key={a.area} style={{ padding: "8px 11px", borderRadius: 9, minWidth: 152,
                                        background: "rgba(255,255,255,0.02)", border: `1px solid ${T.border}` }}>
-              <div style={{ fontSize: 11.5, color: T.white, fontWeight: 600 }}>{a.area}</div>
-              <div style={{ fontSize: 10, color: T.textMuted, marginTop: 2 }}>
+              <div style={{ fontSize:13, color: T.white, fontWeight: 600 }}>{a.area}</div>
+              <div style={{ fontSize:13, color: T.textMuted, marginTop: 2 }}>
                 {a.leads} lead{a.leads === 1 ? "" : "s"}{a.won ? ` · ${a.won} closed` : ""}
               </div>
-              <div style={{ fontSize: 10, color: T.gold, marginTop: 1 }}>
+              <div style={{ fontSize:13, color: T.gold, marginTop: 1 }}>
                 {a.averageBudget ? `avg ${aed(a.averageBudget)}` : "no budgets stated"}
               </div>
             </div>
@@ -194,7 +194,7 @@ function MarketingTab({ myLeads = [], orgId, orgName, canEditSpend = true }) {
         </div>
       </div>
 
-      <div style={{ margin: "0 4px", fontSize: 10.5, color: T.textMuted, lineHeight: 1.7 }}>
+      <div style={{ margin: "0 4px", fontSize:13, color: T.textMuted, lineHeight: 1.7 }}>
         Every figure is counted from this agency's own leads. Client names, phone numbers and
         email addresses are never shown here — marketing measures channels, not people.
       </div>

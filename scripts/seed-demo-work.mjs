@@ -254,17 +254,33 @@ agents.slice(0, 60).forEach((a, i) => {
      permit that has already lapsed. "May this be advertised" is the whole
      question that tab answers, and it cannot answer it about nothing. */
   const shape = i % 3;
+  /* THE FIELD NAMES ARE THE MODEL'S, NOT INVENTED HERE.
+     This wrote `trakheesiPermit` and `permitExpiry`; listing.js reads
+     `permitNumber` and `permitExpiresAt`. So the tab whose entire job is
+     answering "may this be advertised" reported that all sixty listings had no
+     permit at all — and the three deliberately different shapes below were
+     indistinguishable, because none of them had a permit either way.
+
+     A listing also has to be internally coherent. The title picked one
+     building, `building` picked a second and `community` a third, and the bed
+     count in the title was a different random number from the `beds` field —
+     so the demo showed "4 bed · Creek Rise" in "Downtown Dubai · Sunset Mall
+     Residences", specified as 3 BR. */
+  const beds = int(1, 4);
+  const building = pick(BUILDINGS);
   listings.push({ _c: "listings", data: {
-    title: `${int(1,4)} bed · ${pick(BUILDINGS)}`,
-    community: pick(AREAS), building: pick(BUILDINGS),
-    unit: `${int(1,40)}0${int(1,9)}`,
+    title: `${beds} bed · ${building}`,
+    community: pick(AREAS), building,
+    unitNo: `${int(1,40)}0${int(1,9)}`,
     price: pick([950000,1450000,2100000,2900000,3800000,5200000,8500000]),
-    beds: int(1,4), baths: int(1,4), size: int(650, 3200),
+    beds, baths: Math.max(1, beds - int(0, 1)), size: 480 * beds + int(120, 640),
     status: pick(["Available","Available","Available","Reserved","Sold"]),
     agentId: a.uid, agentName: a.name, orgId: ORG_ID,
+    /* Three shapes, and now genuinely three: cleared, no Form A, and a permit
+       that lapsed. "May this be advertised" cannot be demonstrated otherwise. */
     formA: shape === 1 ? null : { signedAt: ago(int(20, 200)), by: a.name },
-    trakheesiPermit: shape === 2 ? `TRK-${int(100000,999999)}` : `TRK-${int(100000,999999)}`,
-    permitExpiry: shape === 2 ? ago(int(1, 40)) : ahead(int(30, 300)),
+    permitNumber: shape === 0 || shape === 2 ? `TRK-${int(100000,999999)}` : null,
+    permitExpiresAt: shape === 2 ? ago(int(1, 40)) : shape === 0 ? ahead(int(30, 300)) : null,
     createdAt: ago(int(2, 180)), demoSeed: true,
   }});
 });

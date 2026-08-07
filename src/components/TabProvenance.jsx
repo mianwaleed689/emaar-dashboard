@@ -25,13 +25,14 @@
  */
 import React from "react";
 import { T } from "../data";
+import { state as ST } from "../design/system";
 
 const TONE = {
   market:   { c: "#D4A843", bg: "rgba(212,168,67,0.03)", b: "rgba(212,168,67,0.14)",
               label: "Where these numbers come from" },
   own:      { c: "#14B8A6", bg: "rgba(20,184,166,0.03)", b: "rgba(20,184,166,0.18)",
               label: "This is your own data" },
-  estimate: { c: "#F59E0B", bg: "rgba(245,158,11,0.03)", b: "rgba(245,158,11,0.20)",
+  estimate: { c: ST.warning.fg, bg: "rgba(245,158,11,0.03)", b: "rgba(245,158,11,0.20)",
               label: "This is an estimate, not a recorded figure" },
 };
 
@@ -52,7 +53,7 @@ export default function TabProvenance({
   return (
     <div style={{ background: tone.bg, border: `1px solid ${tone.b}`,
                   borderRadius: 14, padding: "14px 18px", marginTop: 14 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: tone.c, letterSpacing: .7,
+      <div style={{ fontSize:13, fontWeight: 700, color: tone.c, letterSpacing: .7,
                     textTransform: "uppercase", marginBottom: 8 }}>
         {tone.label}
       </div>
@@ -61,7 +62,7 @@ export default function TabProvenance({
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 9 }}>
           {sources.map(s => (
             <span key={typeof s === "string" ? s : s.name}
-              style={{ fontSize: 11, color: T.textSecondary, padding: "3px 9px",
+              style={{ fontSize:13, color: T.textSecondary, padding: "3px 9px",
                        borderRadius: 6, border: `1px solid ${T.border}`,
                        background: "rgba(255,255,255,0.02)" }}>
               {typeof s === "string" ? s : s.name}
@@ -78,7 +79,7 @@ export default function TabProvenance({
         {coverage && <><br/><span style={{ color: T.textMuted }}>{coverage}</span></>}
         {caveat && <><br/><span style={{ color: T.textMuted }}>{caveat}</span></>}
         {asOf && (
-          <><br/><span style={{ color: stale ? "#F59E0B" : T.textMuted }}>
+          <><br/><span style={{ color: stale ? ST.warning.fg : T.textMuted }}>
             Last updated {asOf}.{stale ? ` ${stale}` : ""}
           </span></>
         )}
